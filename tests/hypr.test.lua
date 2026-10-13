@@ -97,6 +97,31 @@ local unknown, why = pcall(register, { binds = { { keys = "SUPER + NN", event = 
 hl.bind = realBind
 check(not unknown and tostring(why):find("didn't take it", 1, true), "unknown keys are named: " .. tostring(why))
 
+-- A rule Hyprland refuses is reported, and tried again with the same
+-- settings: never "ok" with a rule missing, and the ones that did register
+-- are not made twice.
+local realRule = hl.window_rule
+local refusing = true
+hl.window_rule = function(spec)
+  if refusing and spec.size and spec.size[1] == 1234 then error("window rule refused") end
+  return realRule(spec)
+end
+local odd = { binds = options.binds, window = { floating = true, width = 1234, height = 800 } }
+local made = #fake.rules
+local first, firstWhy = pcall(register, odd)
+check(not first and tostring(firstWhy):find("notebook window: ", 1, true), "a refused rule is named: " .. tostring(firstWhy))
+check(#fake.rules == made + 3, "the other three registered")
+local second, secondWhy = pcall(register, odd)
+check(not second and tostring(secondWhy):find("notebook window: ", 1, true), "the same settings again: still raised: " .. tostring(secondWhy))
+check(#fake.rules == made + 3, "nothing registered twice")
+refusing = false
+check(register(odd) == "ok", "once Hyprland takes it, ok")
+check(#fake.rules == made + 4, "only the missing rule made")
+check(#fake.enabled_rules() == 4 and find_rule("^Uber Notebook$", "float").spec.size[1] == 1234, "all four on, the notebook window among them")
+check(register(odd) == "ok", "and again")
+check(#fake.rules == made + 4, "no new rules")
+hl.window_rule = realRule
+
 -- Removing takes everything back out; registering again turns the rules back on.
 check(register({ remove = true }) == "ok", "removes")
 check(#fake.active_binds() == 0, "no shortcuts left")
