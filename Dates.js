@@ -141,9 +141,16 @@ function parse(text, now) {
     if (/^\d{4}$/.test(words[i] || "")) { yy = Number(words[i]); i++ }
     var year = yy > 0 ? yy : n.getFullYear()
     day = new Date(year, mo, dd)
-    if (day.getMonth() !== mo) return null
-    // A date without a year that's gone by this year is next year's.
-    if (yy < 0 && day < startOfDay(n)) day = new Date(year + 1, mo, dd)
+    if (yy < 0) {
+      // A date without a year that's gone by this year, or isn't in it
+      // (29 Feb), is the next one there is (up to 8 years on).
+      for (var k = 0; k <= 8; k++) {
+        day = new Date(year + k, mo, dd)
+        if (day.getMonth() === mo && day >= startOfDay(n)) break
+        day = null
+      }
+      if (!day) return null
+    } else if (day.getMonth() !== mo) return null
   }
   // Then, maybe, a time: "9am", "at 9:30".
   if (words[i] === "at") i++
