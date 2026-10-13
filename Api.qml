@@ -1888,11 +1888,15 @@ QtObject {
       return { id: n.id, title: n.title, pages: nb && nb.pages ? nb.pages.length : 0, modified: n.modified }
     }))
   }
+  // A notebook by its id, or null (never anything an object has by itself, like __proto__).
+  function notebookOf(id) {
+    return files && files.index && Object.prototype.hasOwnProperty.call(files.index, id) ? files.index[id] : null
+  }
   // A notebook's pages in order: [{ id, n, title, day, text }] (text: its first words).
   function notebook(id) {
     var nu = notebooksUnready()
     if (nu) return fail(nu)
-    var nb = files && files.index ? files.index[id] : null
+    var nb = notebookOf(id)
     if (!nb) return fail("there's no notebook with that id (notebooks lists them)")
     var out = []
     if (!notebookPages(id)) return fail("reading the notebook first: run the same command again in a moment")
@@ -1906,7 +1910,7 @@ QtObject {
   function readNotebook(id, pageId) {
     var nu = notebooksUnready()
     if (nu) return fail(nu)
-    var nb = files && files.index ? files.index[id] : null
+    var nb = notebookOf(id)
     if (!nb) return fail("there's no notebook with that id (notebooks lists them)")
     if (nb.pages.indexOf(String(pageId || "")) < 0) return fail("there's no page with that id in it (notebook <id> lists them)")
     var r = notebookPage(id, pageId)
@@ -1918,7 +1922,7 @@ QtObject {
   function addToNotebook(id, path) {
     var nu = notebooksUnready()
     if (nu) return fail(nu)
-    var nb = files && files.index ? files.index[id] : null
+    var nb = notebookOf(id)
     if (!nb) return fail("there's no notebook with that id (notebooks lists them)")
     var md = readMarkdown(path)
     if (md.error) return fail(md.error)
