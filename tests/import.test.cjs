@@ -136,6 +136,13 @@ check("code keeps every tab and space", () => {
 
 check("titles: front matter, a first heading", () => {
   assert.equal(md("---\ntitle: \"From front matter\"\ntags: [a]\n---\n\ntext").title, "From front matter");
+  assert.equal(md("---\nTitle: Obsidian\ntags:\n  - a\n- b\n---\n\ntext").title, "Obsidian");
+  assert.deepEqual(shape(md("---\ntags:\n- a\n- b\n---\n\ntext").blocks), ["p:0:text"], "a list under a key is front matter");
+  const spaced = md("---\ntitle: Kept\ndate created: 2024-01-02\n---\n\ntext");
+  assert.equal(spaced.title, "Kept", "a key with a space in it");
+  assert.deepEqual(shape(spaced.blocks), ["p:0:text"], "a key with a space in it is front matter");
+  assert.ok(shape(md("---\nMeeting notes\n---\nDecisions\n").blocks).join("|").includes("Meeting notes"), "words between rules stay");
+  assert.ok(shape(md("---\n\n# Real title\n\nKeep this paragraph.\n\n---\n\nBody stays", null, { titleFromHeading: true }).blocks).join("|").includes("Keep this paragraph."), "a heading and paragraph between rules stay");
   const h = md("# The title\n\ntext", null, { titleFromHeading: true });
   assert.equal(h.title, "The title");
   assert.deepEqual(shape(h.blocks), ["p:0:text"]);

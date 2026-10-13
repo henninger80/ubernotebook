@@ -1236,6 +1236,19 @@ function frontMatter(line) {
   return TERMINATOR.test(v) ? null : { key: m[1].toLowerCase(), value: v }
 }
 
+// Whether the lines between two --- are YAML: a key: line at least, and
+// every other line a key, a line indented under one, a - list item or blank.
+// (A key can have spaces, "date created: ...", as Obsidian's do.)
+function isYaml(lines) {
+  var keys = 0
+  for (var i = 0; i < lines.length; i++) {
+    var l = lines[i]
+    if (/^[^\s#:-][^:]*:(\s|$)/.test(l)) keys++
+    else if (!/^\s*$/.test(l) && !/^\s+\S/.test(l) && !/^\s*-(\s|$)/.test(l)) return false
+  }
+  return keys > 0
+}
+
 // Columns, in an agent's Markdown (options.columns; as `read` gives them):
 // "::columns" (each one's share, if you like: "::columns 60 40"), a column's
 // blocks, "::next" and the next one's, "::end". Six at most: what's past the
@@ -1319,10 +1332,11 @@ function fromMarkdown(text, ctx, options) {
     var status = ""
     var due = ""
     // Front matter (--- at the top, key: value lines, ---): a title, an icon,
-    // and a project's status and due date.
+    // and a project's status and due date. Between two rules, words that
+    // aren't key: value lines are the note's own.
     if (lines[0] === "---") {
       var end = lines.slice(0, 80).indexOf("---", 1)
-      if (end > 0) {
+      if (end > 0 && isYaml(lines.slice(1, end))) {
         lines.slice(1, end).forEach(function(l) {
           var m = frontMatter(l)
           if (!m) return
