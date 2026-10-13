@@ -362,7 +362,7 @@ function fromVcard(source) {
     else if (key === "N") {
       var n = splitV(value).map(unescapeV)
       cur.last = (n[0] || "").trim()
-      cur.first = [n[2] || "", n[1] || ""].join(" ").replace(/\s+/g, " ").trim()
+      cur.first = [n[1] || "", n[2] || ""].join(" ").replace(/\s+/g, " ").trim()
     }
     else if (key === "TEL") cur.phones.push({ label: types, value: unescapeV(value) })
     else if (key === "EMAIL") cur.emails.push({ label: types, value: unescapeV(value) })

@@ -57,6 +57,13 @@ check("vCard written and read back", () => {
   assert.equal(orig.created, "2026-10-02T12:00:00.000Z");
 });
 
+check("a card with only N: given name, then middle name, then family name", () => {
+  const phone = plain(K.fromVcard("BEGIN:VCARD\nVERSION:2.1\nN:Rivera;Sam;Quincy;;\nTEL:555 123 4567\nEND:VCARD\n"))[0];
+  assert.equal(phone.name, "Sam Quincy Rivera");
+  assert.equal(plain(K.fromVcard("BEGIN:VCARD\nN:Rivera;Sam;;;\nEND:VCARD\n"))[0].name, "Sam Rivera", "no middle name");
+  assert.equal(plain(K.fromVcard("BEGIN:VCARD\nN:Rivera;;Quincy;;\nEND:VCARD\n"))[0].name, "Quincy Rivera", "no given name");
+});
+
 check("a backslash before an n in a note isn't a new line", () => {
   const book = K.withContact(K.make(), { id: "p2", name: "Sam Rivera", notes: "C:\\new\\temp" }, new Date("2026-10-02T12:00:00Z"));
   assert.equal(plain(K.fromVcard(K.toVcard(book)))[0].notes, "C:\\new\\temp");
