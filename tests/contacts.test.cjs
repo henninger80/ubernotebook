@@ -57,6 +57,11 @@ check("vCard written and read back", () => {
   assert.equal(orig.created, "2026-10-02T12:00:00.000Z");
 });
 
+check("a backslash before an n in a note isn't a new line", () => {
+  const book = K.withContact(K.make(), { id: "p2", name: "Sam Rivera", notes: "C:\\new\\temp" }, new Date("2026-10-02T12:00:00Z"));
+  assert.equal(plain(K.fromVcard(K.toVcard(book)))[0].notes, "C:\\new\\temp");
+});
+
 check("CSV: Google's and Outlook's", () => {
   const google = "Name,Given Name,Family Name,Birthday,Notes,Organization 1 - Name,Organization 1 - Title,E-mail 1 - Type,E-mail 1 - Value,Phone 1 - Type,Phone 1 - Value,Phone 2 - Type,Phone 2 - Value\n"
     + "Sam Rivera,Sam,Rivera,1990-04-12,\"Met at the launch, \"\"the\"\" one\",Acme,Designer,* Work,sam@acme.com ::: sam@home.org,Mobile,+1 555 123 4567,Work,+1 555 000 1111\n";

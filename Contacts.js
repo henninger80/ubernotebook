@@ -298,7 +298,7 @@ function splitV(s) {
   return out
 }
 function unescapeV(s) {
-  return String(s).replace(/\\n/gi, "\n").replace(/\\([,;:\\])/g, "$1")
+  return String(s).replace(/\\([nN,;:\\])/g, function(_, c) { return c === "n" || c === "N" ? "\n" : c })
 }
 function escapeV(s) {
   return String(s).replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/([,;])/g, "\\$1")

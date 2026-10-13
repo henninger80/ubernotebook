@@ -477,7 +477,7 @@ function fromIcs(text) {
   var out = []
   var ev = null
   var alarm = false
-  function unescape(v) { return v.replace(/\\[nN]/g, "\n").replace(/\\([,;\\])/g, "$1") }
+  function unescape(v) { return v.replace(/\\([nN,;\\])/g, function(_, c) { return c === "n" || c === "N" ? "\n" : c }) }
   // "20261011", "20261011T072500", "20261011T072500Z": { day: "2026-10-11", time: "07:25" or "" }.
   function when(v) {
     var m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?(Z)?)?$/.exec(String(v || "").trim())

@@ -225,4 +225,10 @@ check("an event's alert doesn't replace its notes", () => {
   assert.deepEqual([g.title, g.detail, g.start], ["Lunch", "Table for two", "2026-10-11T07:25"], "Google's");
 });
 
+check("a backslash before an n in notes isn't a new line", () => {
+  const cal = { events: [ev({ title: "Backup", detail: "C:\\new\\temp" })] };
+  assert.ok(C.toIcs(cal).includes("DESCRIPTION:C:\\\\new\\\\temp\r\n"), "written with each backslash doubled");
+  assert.equal(plain(C.fromIcs(C.toIcs(cal)))[0].detail, "C:\\new\\temp");
+});
+
 console.log(`calendar: ${passed} checks passed`);
