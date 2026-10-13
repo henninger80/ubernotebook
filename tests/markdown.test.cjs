@@ -227,4 +227,14 @@ check("a code block with a fence in it", () => {
   });
 });
 
+check("a heading with a line break stays one heading", () => {
+  const Import = load("Import.js");
+  const Html = load("Html.js");
+  const blocks = [b("h2", { html: "a<br />b" })];
+  [Markdown.fromBlocks(blocks), docPage(blocks)].forEach((md) => {
+    const back = plain(Import.fromMarkdown(md)).blocks;
+    assert.deepEqual(back.map((x) => x.type + ":" + Html.plainText(x.html || "")), ["h2:a b"], md);
+  });
+});
+
 console.log(`markdown: ${passed} checks passed`);

@@ -196,9 +196,9 @@ function fromBlocks(blocks, assetPrefix) {
     // Markdown only numbers 1, 2, 3; nested a./i. items are numbered by the reader.
     var number = /^\d+\.$/.test(numbers[b.uid] || "") ? numbers[b.uid] : "1."
     var line
-    if (b.type === "h1") line = "# " + text
-    else if (b.type === "h2") line = "## " + text
-    else if (b.type === "h3") line = "### " + text
+    if (b.type === "h1") line = "# " + text.replace(/\\\n/g, " ")
+    else if (b.type === "h2") line = "## " + text.replace(/\\\n/g, " ")
+    else if (b.type === "h3") line = "### " + text.replace(/\\\n/g, " ")
     else if (b.type === "bullet") line = lead + "- " + text
     else if (b.type === "number") line = lead + number + " " + text
     else if (b.type === "check") line = lead + (b.checked ? "- [x] " : "- [ ] ") + text
@@ -366,7 +366,7 @@ function fromDocPage(page, lookup, options) {
       return head + "\n\n" + cols.map(function(x) { return x.content ? list(x.content) : "" }).join("\n\n::next\n\n") + "\n\n::end"
     }
     var line
-    if (b.type === "h1" || b.type === "h2" || b.type === "h3") line = new Array(Number(b.type.charAt(1)) + 1).join("#") + " " + text
+    if (b.type === "h1" || b.type === "h2" || b.type === "h3") line = new Array(Number(b.type.charAt(1)) + 1).join("#") + " " + text.replace(/\\\n/g, " ")
     else if (b.type === "bullet" || b.type === "toggle") line = "- " + text
     else if (b.type === "number") line = n + ". " + text
     else if (b.type === "check") line = (b.checked ? "- [x] " : "- [ ] ") + text
