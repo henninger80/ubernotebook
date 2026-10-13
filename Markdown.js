@@ -41,6 +41,13 @@ function escapeLineStarts(text) {
     .replace(/^([ \t]*\d{1,9})([.)])(?=[ \t]|$)/gm, "$1\\$2")
 }
 
+// The backticks that fence a code block: more than any line of it starts with.
+function codeFence(lines) {
+  var fence = "```"
+  while (lines.some(function(l) { return l.replace(/^[ \t]*/, "").indexOf(fence) === 0 })) fence += "`"
+  return fence
+}
+
 function flags(run) {
   var s = run.style || {}
   return {
@@ -197,7 +204,7 @@ function fromBlocks(blocks, assetPrefix) {
     else if (b.type === "check") line = lead + (b.checked ? "- [x] " : "- [ ] ") + text
     else if (b.type === "quote") line = text.split("\n").map(function(l) { return "> " + l }).join("\n")
     else if (b.type === "callout") line = "> [!NOTE]\n" + text.split("\n").map(function(l) { return "> " + l }).join("\n")
-    else if (b.type === "code") line = "```\n" + plainLines(b.html || "").join("\n") + "\n```"
+    else if (b.type === "code") { var cl = plainLines(b.html || ""); var cf = codeFence(cl); line = cf + "\n" + cl.join("\n") + "\n" + cf }
     else if (b.type === "divider") line = "---"
     else if (b.type === "image") line = b.src ? "![](" + prefix + b.src + ")" : ""
     else if (b.type === "time") line = "- " + (b.label ? "**" + escapeText(b.label) + "**" + (text ? " " : "") : "") + text
@@ -366,7 +373,7 @@ function fromDocPage(page, lookup, options) {
     else if (b.type === "quote") return quoted(text + (kids ? "\n\n" + kids : ""))
     else if (b.type === "callout") return quoted((b.icon ? b.icon + " " : "") + text + (kids ? "\n\n" + kids : ""))
     else if (b.type === "code" && Equations.isLang(b.lang)) line = Equations.fence(Html.plainText(b.html || ""))
-    else if (b.type === "code") line = "```" + (b.lang ? b.lang.toLowerCase().replace(/\s+/g, "") : "") + "\n" + plainLines(b.html || "").join("\n") + "\n```"
+    else if (b.type === "code") { var cl = plainLines(b.html || ""); var cf = codeFence(cl); line = cf + (b.lang ? b.lang.toLowerCase().replace(/\s+/g, "") : "") + "\n" + cl.join("\n") + "\n" + cf }
     else if (b.type === "divider") line = "---"
     else if (b.type === "image") line = b.src ? "![](" + (opts.assetPrefix || "") + b.src + ")" : ""
     else if (opts.fences && b.type === "gallery" && b.data) line = "```gallery\ncolumns: " + b.data.columns + (b.data.height ? "\nheight: " + b.data.height : "") + b.data.images.map(function(x) { return "\n![" + (x.caption || "") + "](" + x.src + ")" }).join("") + "\n```"

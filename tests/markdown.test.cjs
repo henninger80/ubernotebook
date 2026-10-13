@@ -210,4 +210,21 @@ check("text that looks like a marker stays text", () => {
   assert.equal(Markdown.inline("####### seven"), "####### seven", "seven are not a heading");
 });
 
+function docPage(list) {
+  const ids = list.map((x, i) => "n" + i);
+  const map = {};
+  list.forEach((x, i) => { map[ids[i]] = x; });
+  return Markdown.fromDocPage({ title: "T", content: ids, blocks: map }, () => null, {}).replace(/^# T\n\n/, "");
+}
+
+check("a code block with a fence in it", () => {
+  const Import = load("Import.js");
+  const Html = load("Html.js");
+  const blocks = [b("code", { html: "a<br />```<br />b" }), b("p", { html: "after" })];
+  [Markdown.fromBlocks(blocks), docPage(blocks)].forEach((md) => {
+    const back = plain(Import.fromMarkdown(md)).blocks;
+    assert.deepEqual(back.map((x) => x.type + ":" + Html.plainText(x.html || "")), ["code:a\n```\nb", "p:after"], md);
+  });
+});
+
 console.log(`markdown: ${passed} checks passed`);
