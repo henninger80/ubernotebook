@@ -200,6 +200,14 @@ check("HTML from Word and LibreOffice", () => {
   assert.deepEqual(shape(r.blocks), ["bullet:0:North", "bullet:0:South", "bullet:1:deep", "number:0:first"]);
 });
 
+check("HTML with a <p> left open: a block that starts ends it", () => {
+  const h = (html) => shape(plain(Import.fromHtml(html)).blocks);
+  assert.deepEqual(h("<p>Intro\n<h2>Title</h2>\n<p>After</p>"), ["p:0:Intro", "h2:0:Title", "p:0:After"]);
+  assert.deepEqual(h("<p>Intro\n<ul><li>One</li><li>Two</li></ul>"), ["p:0:Intro", "bullet:0:One", "bullet:0:Two"]);
+  assert.deepEqual(h("<p>Hello\n<div>World</div>\n<p>Next</p>"), ["p:0:Hello", "p:0:World", "p:0:Next"]);
+  assert.deepEqual(h("<p>Hello</p><div>World</div><p>Next</p>"), ["p:0:Hello", "p:0:World", "p:0:Next"], "with end tags, as before");
+});
+
 check("plain text and Evernote", () => {
   assert.deepEqual(shape(plain(Import.fromText("one\ntwo\n\n\nthree  spaced\n")).blocks), ["p:0:one", "p:0:two", "p:0:", "p:0:three  spaced"]);
   const enex = `<?xml version="1.0"?><en-export><note><title>Groceries &amp; more</title><content><![CDATA[<?xml version="1.0"?><en-note><div><en-todo checked="true"/>Milk</div><div><en-todo/>Eggs</div></en-note>]]></content><created>20260930T101500Z</created></note></en-export>`;

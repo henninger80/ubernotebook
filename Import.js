@@ -1487,6 +1487,8 @@ function fromText(text) {
 // ---- HTML ---------------------------------------------------------------------------------------
 
 var VOID = { br: 1, img: 1, hr: 1, input: 1, meta: 1, link: 1, col: 1, source: 1, wbr: 1, area: 1, base: 1, embed: 1, param: 1, track: 1 }
+// The tags that end an open <p> where they start.
+var P_CLOSERS = { address: 1, article: 1, aside: 1, blockquote: 1, details: 1, div: 1, dl: 1, fieldset: 1, figcaption: 1, figure: 1, footer: 1, form: 1, h1: 1, h2: 1, h3: 1, h4: 1, h5: 1, h6: 1, header: 1, hgroup: 1, hr: 1, main: 1, menu: 1, nav: 1, ol: 1, p: 1, pre: 1, section: 1, table: 1, ul: 1 }
 var SKIP = { script: 1, style: 1, head: 1, noscript: 1, template: 1, svg: 1, iframe: 1, object: 1, button: 1, select: 1, textarea: 1 }
 var BLOCK = { p: 1, div: 1, section: 1, article: 1, main: 1, header: 1, footer: 1, nav: 1, aside: 1, figure: 1, figcaption: 1, h1: 1, h2: 1, h3: 1, h4: 1, h5: 1, h6: 1,
   ul: 1, ol: 1, li: 1, blockquote: 1, pre: 1, hr: 1, table: 1, details: 1, summary: 1, img: 1, dl: 1, dt: 1, dd: 1, body: 1, html: 1, form: 1, fieldset: 1, center: 1 }
@@ -1561,6 +1563,8 @@ function tree(html) {
     var st = startTag(tags, at)
     if (st) {
       var tag = st.name.toLowerCase()
+      // An open <p> also ends where a block starts, as a browser reads it.
+      if (top.tag === "p" && P_CLOSERS[tag]) { popTo(stack.length - 1); top = stack[stack.length - 1] }
       // An open <p> or <li> ends where the next one starts.
       if ((tag === "p" || tag === "li" || tag === "dt" || tag === "dd") && top.tag === tag) { popTo(stack.length - 1); top = stack[stack.length - 1] }
       var node = { tag: tag, attrs: attrsOf(st.attrs), kids: [] }
