@@ -48,6 +48,14 @@ check("Markdown's footnotes: their words at the end, taken out", () => {
   assert.deepEqual(d.lines, ["Text[^1] and[^a].", "", "After.", "```", "[^x]: in code", "```"]);
 });
 
+check("Markdown's footnotes: a fence-like line in a code block doesn't end it", () => {
+  const d = plain(N.definitions(["```", "docs", "```md", "[^1]: in code", "more", "```", "[^2]: real"]));
+  assert.deepEqual(d.notes, { 2: "real" });
+  assert.deepEqual(d.lines, ["```", "docs", "```md", "[^1]: in code", "more", "```"]);
+  const t = plain(N.definitions(["~~~~", "```", "[^1]: in code", "~~~~", "[^2]: real"]));
+  assert.deepEqual(t.notes, { 2: "real" });
+});
+
 check("a footnote's words from Markdown read without the marks", () => {
   assert.equal(N.fromMarkdown("Euclid, *Elements*, Book I"), "Euclid, Elements, Book I");
   assert.equal(N.fromMarkdown("**Heath** (1908), _trans._ `p. 4` ~~old~~"), "Heath (1908), trans. p. 4 old");

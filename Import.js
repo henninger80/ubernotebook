@@ -870,10 +870,11 @@ function isTableRule(line) {
 function collectRefs(lines) {
   var refs = {}
   var out = []
-  var inFence = false
+  var fence = null
   lines.forEach(function(line) {
-    if (fenceStart(line)) inFence = !inFence
-    var m = !inFence ? /^ {0,3}\[([^\]]+)\]:\s*<?([^\s>]+)>?(?:\s+("[^"]*"|'[^']*'|\([^)]*\)))?\s*$/.exec(line) : null
+    if (fence) { if (fenceEnd(line, fence)) fence = null }
+    else fence = fenceStart(line)
+    var m = !fence ? /^ {0,3}\[([^\]]+)\]:\s*<?([^\s>]+)>?(?:\s+("[^"]*"|'[^']*'|\([^)]*\)))?\s*$/.exec(line) : null
     if (m && m[1].charAt(0) !== "^") refs[m[1].toLowerCase().replace(/\s+/g, " ").trim()] = m[2]
     else out.push(line)
   })

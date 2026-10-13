@@ -39,6 +39,10 @@ check("links: inline, references, bare addresses, wiki links", () => {
   assert.equal(md("[[Plans]] and [[Plans|the plan]] and [[Nope]]", ctx).blocks[0].html, `<a href="uber-notebook://page/${id}">Plans</a> and <a href="uber-notebook://page/${id}">the plan</a> and Nope`);
   assert.equal(md("[plan](Plans.md)", ctx).blocks[0].html, `<a href="uber-notebook://page/${id}">plan</a>`, "a link to another page imported");
   assert.equal(one("[js](javascript:alert(1))"), "js", "no odd links");
+  const refs = (text) => shape(md(text).blocks).join("|");
+  assert.equal(refs("~~~~\nexample\n```\n[secret]: https://example.invalid/p\nstill code\n~~~~\n\nSee [secret]."), "code:0:example\n```\n[secret]: https://example.invalid/p\nstill code|p:0:See [secret].", "a ``` line in a ~~~~ fence");
+  assert.equal(refs("```\nsample\n```js\n[secret]: https://example.invalid/p\nmore code\n```\n\nSee [secret]."), "code:0:sample\n```js\n[secret]: https://example.invalid/p\nmore code|p:0:See [secret].", "a ```js line in a ``` fence");
+  assert.equal(refs("```\ndocs\n```md\n[^1]: in code\nmore\n```\n\nA note[^1]."), "code:0:docs\n```md\n[^1]: in code\nmore|p:0:A note[^1].", "a footnote line in a code sample");
 });
 
 check("headings, paragraphs, line breaks", () => {

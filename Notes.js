@@ -150,10 +150,17 @@ function definitions(lines) {
   var out = []
   var notes = {}
   var current = ""
-  var inFence = false
+  var fence = ""
   ;(lines || []).forEach(function(line) {
-    if (/^ {0,3}(```|~~~)/.test(line)) { inFence = !inFence; current = ""; out.push(line); return }
-    if (inFence) { out.push(line); return }
+    if (fence) {
+      // (Only as many of its character, or more, and white space, ends it.)
+      var end = /^ {0,3}(`{3,}|~{3,})\s*$/.exec(line)
+      if (end && end[1].charAt(0) === fence.charAt(0) && end[1].length >= fence.length) fence = ""
+      out.push(line)
+      return
+    }
+    var open = /^ {0,3}(`{3,}|~{3,})/.exec(line)
+    if (open && (open[1].charAt(0) !== "`" || line.slice(open[0].length).indexOf("`") < 0)) { fence = open[1]; current = ""; out.push(line); return }
     var m = /^ {0,3}\[\^([^\]\s]+)\]:\s?(.*)$/.exec(line)
     if (m) {
       current = m[1]
