@@ -194,4 +194,20 @@ check("synced blocks in Markdown: never the page itself, only so many", () => {
   assert.ok(out[0].includes("y".repeat(1000)), "the first pages as always");
 });
 
+check("text that looks like a marker stays text", () => {
+  const Import = load("Import.js");
+  const Html = load("Html.js");
+  const texts = ["# not a heading", "###### six", "- x", "+ x", "1. x", "12) x", "---", "-", "first<br />---", "first<br />- x"];
+  texts.forEach((t) => {
+    const back = plain(Import.fromMarkdown(Markdown.fromBlocks([b("p", { html: t })]))).blocks;
+    assert.deepEqual(back.map((x) => x.type), ["p"], t + " -> " + JSON.stringify(Markdown.fromBlocks([b("p", { html: t })])));
+    assert.equal(Html.plainText(back[0].html), Html.plainText(t), t);
+  });
+  assert.equal(Markdown.inline("  - indented"), "  \\- indented", "after leading spaces too");
+  assert.equal(Markdown.inline("#idea"), "#idea", "a tag is not a heading");
+  assert.equal(Markdown.inline("-5 degrees"), "-5 degrees");
+  assert.equal(Markdown.inline("2024. A year"), "2024\\. A year");
+  assert.equal(Markdown.inline("####### seven"), "####### seven", "seven are not a heading");
+});
+
 console.log(`markdown: ${passed} checks passed`);

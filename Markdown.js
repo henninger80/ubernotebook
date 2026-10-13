@@ -34,6 +34,13 @@ function escapeText(text) {
   return String(text).replace(/([\\`*_\[\]<>~=|])/g, "\\$1")
 }
 
+// A line that starts like a heading, list item or divider keeps its words as words.
+function escapeLineStarts(text) {
+  return text
+    .replace(/^([ \t]*)(#(?=#{0,5}(?:[ \t]|$))|[-+](?=[ \t]|$)|-(?=[- \t]*$))/gm, "$1\\$2")
+    .replace(/^([ \t]*\d{1,9})([.)])(?=[ \t]|$)/gm, "$1\\$2")
+}
+
 function flags(run) {
   var s = run.style || {}
   return {
@@ -116,7 +123,7 @@ function inline(inner, notes) {
     if (g.href) body = "[" + body + "](" + g.href.replace(/^omanote:\/\//, "uber-notebook://").replace(/[()\s]/g, function(c) { return encodeURIComponent(c) }) + ")"
     out += lead + body + trail
   })
-  return out
+  return escapeLineStarts(out)
 }
 
 function plainLines(inner) {
