@@ -61,15 +61,22 @@ return function(options)
   local key = (floating and "float" or "tile") .. ":" .. width .. "x" .. height
 
   local set = state.rules[key]
+  local failed = {}
+  local function add(label, spec)
+    local ok, rule = pcall(hl.window_rule, spec)
+    if ok and rule then set[#set + 1] = rule else
+      failed[#failed + 1] = { label = label, spec = spec }
+      problem(label .. ": " .. tostring(rule))
+    end
+  end
   if set then
     for _, rule in ipairs(set) do pcall(function() rule:set_enabled(true) end) end
+    -- A rule that didn't register last time is tried again, and said again
+    -- if it still won't. (Ones that did are never made twice.)
+    for _, item in ipairs(set.failed or {}) do add(item.label, item.spec) end
+    set.failed = failed
   else
     set = {}
-    local function add(label, spec)
-      local ok, rule = pcall(hl.window_rule, spec)
-      if ok and rule then set[#set + 1] = rule else problem(label .. ": " .. tostring(rule)) end
-    end
-
     -- Paper isn't see-through: keep the notebook fully opaque, like Omarchy
     -- does for video players.
     add("notebook opacity", { match = { class = CLASS, title = MAIN_TITLE }, tag = "-default-opacity", opacity = "1 1" })
@@ -93,6 +100,7 @@ return function(options)
       no_blur = true,
       decorate = false,
     })
+    set.failed = failed
     state.rules[key] = set
   end
 

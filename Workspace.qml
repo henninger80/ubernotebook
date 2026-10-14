@@ -1636,7 +1636,9 @@ Item {
 
   // Every file under the paths given ("R\t<root>" before each one's files),
   // each ended by a NUL (a name can't have one; it can have a newline).
-  readonly property string scanScript: "for p in \"$@\"; do if [ -d \"$p\" ]; then printf 'R\\t%s\\0' \"$p\"; /usr/bin/find \"$p\" -maxdepth 12 -type f ! -path '*/.*' -print0; elif [ -f \"$p\" ]; then printf 'R\\t%s\\0%s\\0' \"$p\" \"$p\"; fi; done"
+  // Hidden files and folders inside a folder are left out (.git, .obsidian);
+  // the folder itself can be hidden, or under one.
+  readonly property string scanScript: "for p in \"$@\"; do if [ -d \"$p\" ]; then printf 'R\\t%s\\0' \"$p\"; /usr/bin/find \"$p\" -mindepth 1 -maxdepth 12 -name '.*' -prune -o -type f -print0; elif [ -f \"$p\" ]; then printf 'R\\t%s\\0%s\\0' \"$p\" \"$p\"; fi; done"
 
   function importPaths(paths, parent, done) {
     var list = (paths || []).filter(function(p) { return /^\/[^\u0000-\u001f]{1,4000}$/.test(String(p)) }).slice(0, 200)

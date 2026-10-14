@@ -3,6 +3,10 @@
 // Usage (from the plugin directory): node tests/import.test.cjs
 
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
+const { spawnSync } = require("node:child_process");
 const { load, plain } = require("./load.cjs");
 
 const Import = load("Import.js");
@@ -335,6 +339,35 @@ check("an agent's columns: ::columns, ::next, ::end", () => {
   assert.equal(shape(seven).slice(-2).join("|"), "p:2:6|p:2:7", "the seventh's in the sixth");
   assert.equal(shape(md("::columns\na\n::next\nb\n::end").blocks).join("|"), "p:0:::columns a ::next b ::end",
     "without the option (a file being imported), they're text");
+});
+
+// The folder scan (Workspace.qml's scanScript), run with the real find: hidden
+// files and folders inside the chosen folder are left out, but the chosen
+// folder can itself be hidden, or sit under a hidden one.
+check("folder scan: hidden inside is skipped, a hidden folder itself is not", () => {
+  const source = fs.readFileSync(path.join(__dirname, "..", "Workspace.qml"), "utf8");
+  const script = JSON.parse(source.match(/scanScript: ("(?:[^"\\\n]|\\.)*")/)[1]);
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), "uber-notebook-scan-test-"));
+  try {
+    const make = (root, files) => files.forEach((f) => { fs.mkdirSync(path.dirname(path.join(root, f)), { recursive: true }); fs.writeFileSync(path.join(root, f), "x"); });
+    const scan = (root) => {
+      const r = spawnSync("/usr/bin/bash", ["-c", script, "scan-test", root], { encoding: "utf8" });
+      return r.stdout.split("\0").filter(Boolean).map((e) => e.startsWith("R\t") ? "R" : path.relative(root, e)).sort();
+    };
+    const visible = ["R", "a.md", "sub/b.md"];
+    const hidden = path.join(base, ".notes/vault");
+    make(hidden, ["a.md", "sub/b.md"]);
+    assert.deepEqual(scan(hidden), visible, "a hidden folder");
+    const under = path.join(base, ".local/share/notes/vault");
+    make(under, ["a.md", "sub/b.md"]);
+    assert.deepEqual(scan(under), visible, "under a hidden folder");
+    const plainRoot = path.join(base, "vault");
+    make(plainRoot, ["a.md", "sub/b.md", ".hidden.md", "sub/.c.md", ".obsidian/app.json", ".git/HEAD", "sub/.trash/d.md"]);
+    assert.deepEqual(scan(plainRoot), visible, "hidden files and folders inside still skipped");
+    const deep = path.join(base, "deep");
+    make(deep, ["l1/l2/l3/l4/l5/l6/l7/l8/l9/l10/l11/ok.md", "l1/l2/l3/l4/l5/l6/l7/l8/l9/l10/l11/l12/too-deep.md"]);
+    assert.deepEqual(scan(deep), ["R", "l1/l2/l3/l4/l5/l6/l7/l8/l9/l10/l11/ok.md"], "twelve levels down, no more");
+  } finally { fs.rmSync(base, { recursive: true, force: true }); }
 });
 
 console.log(`import: ${passed} checks passed`);
