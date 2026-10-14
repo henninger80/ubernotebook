@@ -756,6 +756,17 @@ Item {
       compare(page.blocks.map(function(b) { return Html.plainText(b.html) }).join("|"), "Saturday|::columns|left|::next|right|::end")
     }
 
+    // A notebook's id is a key: names every object has aren't notebooks.
+    function test_21d_notebook_ids_every_object_has_are_refused() {
+      fresh()
+      files.index = ({ "journal-ab12": { title: "Journal", modified: "2026-10-01T09:00:00.000Z", pages: [] } })
+      ;["__proto__", "constructor", "toString"].forEach(function(id) {
+        compare(json(api.notebook(id)).ok, false, "notebook " + id)
+        compare(json(api.readNotebook(id, "p")).ok, false, "readNotebook " + id)
+        compare(json(api.addToNotebook(id, file("n.md", "x"))).ok, false, "addToNotebook " + id)
+      })
+    }
+
     // What read gives as fenced blocks is what add takes.
     function test_22_fenced_blocks_round_trip() {
       fresh()

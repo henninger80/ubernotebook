@@ -35,6 +35,12 @@ check("names", () => {
   assert.ok(Html.isInternal(T.href("caf\u00e9/x")));
 });
 
+check("names every object has aren't tags", () => {
+  for (const name of ["__proto__", "constructor", "Constructor", "#constructor"]) assert.equal(T.clean(name), "", name);
+  assert.equal(T.clean("constructors"), "constructors", "only the whole name");
+  for (const name of ["idea", "constructor/x", "work/constructor"]) assert.equal(typeof W.tagColorOf({}, T.clean(name)).color, "string", name + " has no color, not a function");
+});
+
 check("in a block", () => {
   const inner = "Buy milk " + T.html("Errand") + " and " + T.html("home") + " " + T.html("errand");
   assert.equal(T.html("Errand"), '<a href="uber-notebook://tag/errand">#Errand</a>');

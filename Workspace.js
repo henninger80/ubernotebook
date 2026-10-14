@@ -1426,7 +1426,7 @@ function tagColorOf(colors, name) {
   var c = colors || {}
   var n = String(name || "")
   while (n) {
-    if (c[n]) return { color: c[n], from: n }
+    if (Object.prototype.hasOwnProperty.call(c, n) && c[n]) return { color: c[n], from: n }
     var i = n.lastIndexOf("/")
     n = i > 0 ? n.slice(0, i) : ""
   }
