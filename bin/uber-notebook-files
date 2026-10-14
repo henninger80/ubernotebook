@@ -1087,11 +1087,14 @@ def read_text_files(paths, limit, total):
                 raise Refused("more than %d bytes in all" % total)
             fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK | os.O_CLOEXEC)
             with os.fdopen(fd, "rb") as f:
-                if not stat.S_ISREG(os.fstat(f.fileno()).st_mode):
+                info = os.fstat(f.fileno())
+                if not stat.S_ISREG(info.st_mode):
                     raise Refused("not a plain file")
                 data = f.read(limit + 1)
             if len(data) > limit:
                 raise Refused("more than %d bytes" % limit)
+            if len(data) > info.st_size:
+                raise Refused("not a plain file")
             text = data.decode("utf-8", "replace")
             sent = len(json.dumps(text))
             if sent > 3 * limit:
@@ -1244,11 +1247,14 @@ def cmd_read(max_bytes, path, within=None):
         else:
             f = open_regular(path)
         with f:
-            if os.fstat(f.fileno()).st_size > limit:
+            size = os.fstat(f.fileno()).st_size
+            if size > limit:
                 raise Refused("more than %d bytes" % limit)
             data = f.read(limit + 1)
             if len(data) > limit:
                 raise Refused("more than %d bytes" % limit)
+            if len(data) > size:
+                raise Refused("not a plain file")
     except FileNotFoundError:
         print(json.dumps({"ok": False, "error": "there's no file there"}))
         return

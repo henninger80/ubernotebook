@@ -5,6 +5,8 @@
 // Usage (from the plugin directory): node tests/starter.test.cjs
 
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const { execFileSync } = require("node:child_process");
 const { load, plain } = require("./load.cjs");
 
@@ -19,9 +21,12 @@ const now = new Date(2026, 9, 2, 9, 0);
 const made = plain(S.build(now, { folder: "~/Documents/Uber Notebook" }));
 const byTitle = (t) => made.pages.find((m) => m.page.title === t);
 
-check("StarterContent.js is made from starter/", () => {
-  execFileSync(process.execPath, ["dev/starter", "--check"], { stdio: "pipe" });
-});
+// (dev/ isn't in a fresh clone.)
+if (fs.existsSync(path.join(__dirname, "..", "dev", "starter"))) {
+  check("StarterContent.js is made from starter/", () => {
+    execFileSync(process.execPath, ["dev/starter", "--check"], { stdio: "pipe" });
+  });
+} else console.log("starter: no dev/starter here; the StarterContent.js check skipped");
 
 check("the pages, the templates, the people and the events", () => {
   const pages = made.pages.filter((m) => !m.template);

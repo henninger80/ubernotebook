@@ -221,6 +221,10 @@ try {
     for (const dev of ["/dev/zero", "//dev/zero", "/tmp/../dev/zero", "/./dev/zero", "/proc/self/environ"]) {
       assert.equal(JSON.parse(helperRun(["read", "1000", dev]).out).ok, false, dev);
     }
+    // (A file that says it's empty but has bytes in it is no plain file, whatever the cap.)
+    for (const dev of ["/proc/self/environ", "/proc/self/status"]) {
+      if (fs.existsSync(dev)) assert.equal(JSON.parse(helperRun(["read", "10000000", dev]).out).ok, false, dev);
+    }
     fs.writeFileSync(path.join(d, "big.md"), "x".repeat(2000));
     assert.match(JSON.parse(helperRun(["read", "1000", path.join(d, "big.md")]).out).error, /more than 1000 bytes/);
     fs.symlinkSync(path.join(d, "a.md"), path.join(d, "l.md"));
