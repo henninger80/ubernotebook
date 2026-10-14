@@ -1380,6 +1380,7 @@ Rectangle {
       theme: bar.theme
       service: bar.view.service
       onNotesRequested: bar.view.releaseNotesRequested()
+      onWhatsNewRequested: bar.view.whatsNewRequested()
     }
   }
 

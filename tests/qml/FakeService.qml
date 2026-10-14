@@ -80,6 +80,10 @@ QtObject {
   property var meetings: FakeMeetings {}
   // The update check (Updates.qml) and backups (Backups.qml), when a test has them.
   property var updates: null
+  // Just updated (the sidebar says so once), and how often it's been seen.
+  property bool justUpdated: false
+  property int updatesSeen: 0
+  function updateSeen() { updatesSeen++; justUpdated = false }
   property var backups: null
 
   // While an agent works in the panel (Service.qml: Scope.js): what it's

@@ -9,6 +9,7 @@ import "Scope.js" as Scope
 import "Agent.js" as Agent
 import "QuickQueue.js" as QuickQueue
 import "Dates.js" as Dates
+import "Updates.js" as Updates
 
 // Uber Notebook: notebooks that look and feel like paper, and pages made of
 // blocks (Pages), on Omarchy.
@@ -83,6 +84,18 @@ Item {
   // The panel's been shown: it doesn't open by itself again.
   function setupSeen() { if (settings.setupShown !== true) setSetting("setupShown", true) }
 
+  // Updated to a newer version than the one whose notes you've seen: the
+  // sidebar says so once, till it's opened or dismissed (updateSeen). What
+  // Uber Notebook first starts with is seen; before there was seenVersion,
+  // one whose setup panel has been shown was updated.
+  property bool seenSettled: false
+  readonly property bool justUpdated: seenSettled && (settings.seenVersion !== "" ? Updates.compare(version, settings.seenVersion) > 0 : settings.setupShown === true)
+  function settleSeenVersion() {
+    if (settings.seenVersion === "" && settings.setupShown !== true) setSetting("seenVersion", version)
+    seenSettled = true
+  }
+  function updateSeen() { if (settings.seenVersion !== version) setSetting("seenVersion", version) }
+
   readonly property string pluginId: "marcho78.uber-notebook"
   readonly property string pluginDir: decodeURIComponent(Qt.resolvedUrl(".").toString().replace(/^file:\/\//, "").replace(/\/$/, ""))
   readonly property string home: Quickshell.env("HOME")
@@ -124,7 +137,7 @@ Item {
   Timer {
     id: settleTimer
     interval: 400
-    onTriggered: profilesItem.settle()
+    onTriggered: { profilesItem.settle(); root.settleSeenVersion() }
   }
 
   // ---- profiles ----------------------------------------------------------------------
@@ -194,7 +207,7 @@ Item {
   // (and the setup panel, not opened by itself again).
   function resetSettings() {
     var keep = {}
-    ;["profiles", "profile", "folder", "setupShown"].concat(Settings.PROFILE_KEYS).forEach(function(k) { if (root.user[k] !== undefined) keep[k] = root.user[k] })
+    ;["profiles", "profile", "folder", "setupShown", "seenVersion"].concat(Settings.PROFILE_KEYS).forEach(function(k) { if (root.user[k] !== undefined) keep[k] = root.user[k] })
     user = keep
     persistTimer.restart()
   }

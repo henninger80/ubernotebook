@@ -44,6 +44,8 @@ FocusScope {
   signal sidebarChoicesRequested()
   // What's new in a newer version (the sidebar's foot says there's one).
   signal releaseNotesRequested()
+  // Settings → What's new (just updated: the sidebar said so).
+  signal whatsNewRequested()
   signal toast(string text)
   // A message with a way to take back what it says was done.
   signal toastUndo(string text, var undo)

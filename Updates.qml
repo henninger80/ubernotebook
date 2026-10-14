@@ -72,6 +72,13 @@ Item {
     return { title: "What's in " + current, markdown: own ? own.notes : "The notes for this version aren't here.", url: "" }
   }
 
+  // Every version's notes, newest first, from CHANGELOG.md (it comes with
+  // Uber Notebook): [{ version, date, notes }] (Settings → What's new).
+  function history() {
+    var text = files ? files.readNow(pluginDir + "/CHANGELOG.md", 4 * 1024 * 1024) : null
+    return text ? Updates.changelog(text) : []
+  }
+
   // How it is, for agents: { version, latest, updateAvailable, status, ... }.
   function summary() {
     return {

@@ -76,4 +76,19 @@ check("the version running's notes, from CHANGELOG.md", () => {
   assert.ok(real && real.notes.length > 200, "CHANGELOG.md has notes for " + manifest.version);
 });
 
+check("every version's notes, from CHANGELOG.md", () => {
+  const text = "# Changelog\n\nIntro.\n\n## [1.1.0] - 2026-11-01\n\nA line.\n\n### Added\n\n- New thing\n\n## [1.0.0] - Unreleased\n\nThe first version.\n\n[1.1.0]: https://github.com/a/b/releases/tag/v1.1.0\n[1.0.0]: https://github.com/a/b/releases/tag/v1.0.0\n";
+  assert.deepEqual(plain(U.changelog(text)), [
+    { version: "1.1.0", date: "2026-11-01", notes: "A line.\n\n### Added\n\n- New thing" },
+    { version: "1.0.0", date: "", notes: "The first version." }
+  ], "newest first, no link lines");
+  assert.equal(U.fromChangelog(text, "1.0.0").notes, "The first version.", "the last one's notes without the links");
+  assert.deepEqual(plain(U.changelog("no versions here")), []);
+  const real = plain(U.changelog(fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8")));
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, "manifest.json"), "utf8"));
+  assert.ok(real.length >= 5 && real.every((r) => r.notes.length > 20 && !/^\[[^\]]+\]:/m.test(r.notes)), "every version has notes, no link lines");
+  assert.ok(real.some((r) => U.compare(r.version, manifest.version) === 0), "the manifest's version is there");
+  for (let i = 1; i < real.length; i++) assert.equal(U.compare(real[i - 1].version, real[i].version), 1, "newest first");
+});
+
 console.log(`updates: ${passed} checks passed`);

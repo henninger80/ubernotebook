@@ -282,6 +282,43 @@ Item {
       app.showSpace("pages")
     }
 
+    // Just updated: the sidebar's foot says so, once; × puts it away, its
+    // words open Settings → What's new: every version's notes from
+    // CHANGELOG.md, the newest open (no link lines), the others a click away.
+    function test_2b_whats_new() {
+      fresh()
+      files.disk["/tmp/uber-notebook-plugin/CHANGELOG.md"] = "# Changelog\n\nIntro.\n\n## [1.1.0] - 2026-11-01\n\nNewer things.\n\n### Fixed\n\n- A fix\n\n## [1.0.0] - 2026-10-08\n\nThe first one.\n\n[1.1.0]: https://example.invalid/a\n[1.0.0]: https://example.invalid/b\n"
+      service.updatesSeen = 0
+      service.justUpdated = false
+      compare(named(win(), "footerUpdated"), null, "not updated: nothing said")
+      service.justUpdated = true
+      var line = null
+      tryVerify(function() { line = named(win(), "footerUpdated"); return line !== null }, 1000)
+      verify(find(line, function(it) { return it.text === "Updated to 1.0.0 · What's new" }) !== null)
+      click(named(line, "footerUpdatedClose"))
+      compare(service.updatesSeen, 1, "dismissed: seen")
+      tryVerify(function() { return named(win(), "footerUpdated") === null }, 1000)
+      compare(panel(), null, "and nothing opened")
+      service.justUpdated = true
+      tryVerify(function() { line = named(win(), "footerUpdated"); return line !== null }, 1000)
+      wait(120)
+      mouseClick(line, 40, line.height / 2)
+      tryVerify(function() { return panel() !== null }, 1000, "Settings")
+      tryCompare(named(win(), "settingsTitle"), "text", "What's new", 1000)
+      compare(service.updatesSeen, 2, "opened: seen")
+      var newest = named(win(), "release-1.1.0")
+      var older = named(win(), "release-1.0.0")
+      verify(newest !== null && older !== null, "both versions")
+      var text = named(newest, "releaseNotesText")
+      verify(text !== null && text.text.indexOf("A fix") >= 0, "the newest open")
+      compare(named(older, "releaseNotesText"), null, "the others folded")
+      reach(older)
+      mouseClick(older, 40, 24)
+      tryVerify(function() { var t = named(older, "releaseNotesText"); return t !== null && t.text.indexOf("The first one.") >= 0 }, 1000, "a click opens one")
+      verify(named(older, "releaseNotesText").text.indexOf("example.invalid") < 0, "no link lines in its notes")
+      closeAll()
+    }
+
     function test_3_a_newer_version() {
       fresh()
       files.http[root.releases] = { code: 200, body: JSON.stringify([

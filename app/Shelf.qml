@@ -26,6 +26,8 @@ Item {
   signal aboutRequested()
   // What's new in a newer version (the corner says there's one).
   signal releaseNotesRequested()
+  // Settings → What's new (just updated: the corner said so).
+  signal whatsNewRequested()
   signal resultOpened(string notebookId, string pageId, string query)
   // Pages (or notebooks, where it is): the switch at the top.
   signal spaceRequested(string space)
@@ -314,6 +316,7 @@ Item {
     theme: shelf.theme
     service: shelf.service
     onNotesRequested: shelf.releaseNotesRequested()
+    onWhatsNewRequested: shelf.whatsNewRequested()
   }
 
   // ---- search results ---------------------------------------------------------------------

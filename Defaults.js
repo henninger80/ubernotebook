@@ -86,6 +86,10 @@ var DEFAULTS = {
   // ("skill", "reminders"): turned on or off by you, or the strip dismissed.
   setupShown: false,
   setupSettled: [],
+  // The version whose release notes you've seen: after an update to a newer
+  // one, the sidebar says so once (Settings → What's new). "" till
+  // Uber Notebook first starts.
+  seenVersion: "",
   // How People shows everyone: a list beside the one picked ("list"), or cards.
   peopleLayout: "list",
   // As cards, how People groups everyone: A to Z ("letter") or by company.
@@ -158,6 +162,7 @@ var SCHEMA = {
     agentSkill: "bool",
     setupShown: "bool",
     setupSettled: "list",
+    seenVersion: "string",
     lastNotebook: "id",
     zoom: "int",
     space: "string",

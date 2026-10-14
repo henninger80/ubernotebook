@@ -133,6 +133,7 @@ FocusScope {
     onSettingsRequested: settingsPanel.open()
     onAboutRequested: settingsPanel.openAt("about")
     onReleaseNotesRequested: releaseNotes.show()
+    onWhatsNewRequested: settingsPanel.openAt("whatsnew")
     onResultOpened: function(notebookId, pageId, query) {
       var meta = null
       root.store.notebooks.forEach(function(n) { if (n.id === notebookId) meta = n })
@@ -350,6 +351,7 @@ FocusScope {
     onAboutRequested: settingsPanel.openAt("about")
     onSidebarChoicesRequested: settingsPanel.openAt("appearance", "sidebarChoices")
     onReleaseNotesRequested: releaseNotes.show()
+    onWhatsNewRequested: settingsPanel.openAt("whatsnew")
     onToast: function(text) { root.toast(text) }
     onToastUndo: function(text, undo) { root.toastWithUndo(text, undo) }
     onToastAction: function(text, label, action) { root.toastWithAction(text, label, action) }

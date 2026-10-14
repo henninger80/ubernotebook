@@ -8,6 +8,7 @@ import "../Backups.js" as Backups
 import "../Colors.js" as Colors
 import "../Dates.js" as Dates
 import "../Sidebar.js" as Sidebar
+import "../MarkdownView.js" as MarkdownView
 
 // Uber Notebook's settings, in sections (the list at the left): General,
 // Appearance, Writing, AI, Audio, Profiles, Backups, Notifications and About.
@@ -32,6 +33,8 @@ Popup {
   property bool addingProfile: false
   // Whether there's a newer Uber Notebook (Updates.qml), and backups (Backups.qml).
   readonly property var updates: service && service.updates ? service.updates : null
+  // Every version's notes (What's new), read as it's opened.
+  readonly property var releases: section === "whatsnew" && updates && typeof updates.history === "function" ? updates.history() : []
   readonly property var backups: service && service.backups ? service.backups : null
 
   // The section shown.
@@ -49,6 +52,7 @@ Popup {
     { id: "profiles", label: "Profiles", icon: icons.people || "", note: "Notes kept apart, each profile in a folder of its own." },
     { id: "backups", label: "Backups", icon: icons.archive || "", note: "Your profiles in one file each, to keep safe or move, and put back." },
     { id: "notifications", label: "Notifications", icon: icons.bell || "", note: "What reminders' and events' notifications show." },
+    { id: "whatsnew", label: "What's new", icon: icons.history || "", note: "What each version brought, newest first." },
     { id: "about", label: "About", icon: icons.info || "", note: "The version you have, updates, and who makes Uber Notebook." }
   ]
   readonly property var current: sections.filter(function(x) { return x.id === panel.section })[0] || sections[0]
@@ -1523,6 +1527,111 @@ Popup {
           Line {
             label: "Show reminder details in notifications"
             Toggle { objectName: "reminderWordsToggle"; theme: panel.theme; checked: panel.s.reminderWords === true; onToggled: function(on) { panel.set("reminderWords", on) } }
+          }
+        }
+
+        // ======== What's new ========
+
+        // Every version's notes, newest first, as they came with this
+        // Uber Notebook (CHANGELOG.md, so they're there offline): the newest
+        // open, the others a click away.
+        Column {
+          objectName: "whatsNew"
+          visible: panel.section === "whatsnew"
+          width: parent.width
+          spacing: 10
+          Repeater {
+            model: panel.releases
+            delegate: Rectangle {
+              id: release
+              required property var modelData
+              required property int index
+              property bool open: index === 0
+              objectName: "release-" + modelData.version
+              width: parent.width
+              height: releaseHead.height + (open ? releaseNotes.height + 18 : 0)
+              radius: 10
+              color: Qt.alpha(panel.theme.text, 0.025)
+              border.width: 1
+              border.color: panel.theme.line
+              clip: true
+              Item {
+                id: releaseHead
+                width: parent.width
+                height: 48
+                Row {
+                  x: 16
+                  anchors.verticalCenter: parent.verticalCenter
+                  spacing: 10
+                  Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    textFormat: Text.PlainText
+                    text: release.modelData.version
+                    font.family: panel.theme.uiFont
+                    font.pixelSize: 14
+                    font.weight: Font.DemiBold
+                    color: panel.theme.text
+                  }
+                  Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    textFormat: Text.PlainText
+                    readonly property var parts: /^(\d{4})-(\d{2})-(\d{2})$/.exec(release.modelData.date)
+                    text: parts ? Qt.formatDate(new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3])), "d MMM yyyy") : ""
+                    font.family: panel.theme.uiFont
+                    font.pixelSize: 12
+                    color: panel.theme.muted
+                  }
+                  Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: panel.service !== null && release.modelData.version === panel.service.version
+                    textFormat: Text.PlainText
+                    text: "Yours"
+                    font.family: panel.theme.uiFont
+                    font.pixelSize: 11
+                    color: panel.theme.accent
+                  }
+                }
+                Text {
+                  anchors.right: parent.right
+                  anchors.rightMargin: 16
+                  anchors.verticalCenter: parent.verticalCenter
+                  textFormat: Text.PlainText
+                  text: release.open ? "Hide" : "Show"
+                  font.family: panel.theme.uiFont
+                  font.pixelSize: 12
+                  color: panel.theme.muted
+                }
+                HoverHandler { cursorShape: Qt.PointingHandCursor }
+                TapHandler { gesturePolicy: TapHandler.ReleaseWithinBounds; onTapped: release.open = !release.open }
+              }
+              Text {
+                id: releaseNotes
+                objectName: "releaseNotesText"
+                visible: release.open
+                x: 16
+                y: releaseHead.height
+                width: parent.width - 32
+                wrapMode: Text.Wrap
+                // (Rich text Qt draws without fetching anything: MarkdownView.js.)
+                textFormat: Text.RichText
+                text: release.open ? MarkdownView.rich(release.modelData.notes, 13) : ""
+                font.family: panel.theme.uiFont
+                font.pixelSize: 13
+                lineHeight: 1.2
+                color: panel.theme.text
+                linkColor: panel.theme.accent
+                onLinkActivated: function(link) { if (/^https?:/.test(link) && panel.service && panel.service.store) panel.service.store.openUrl(link) }
+                HoverHandler { cursorShape: releaseNotes.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor }
+              }
+            }
+          }
+          Text {
+            visible: panel.releases.length === 0
+            textFormat: Text.PlainText
+            text: "The notes aren't here."
+            font.family: panel.theme.uiFont
+            font.pixelSize: 13
+            color: panel.theme.muted
           }
         }
 

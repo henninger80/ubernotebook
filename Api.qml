@@ -1629,7 +1629,7 @@ QtObject {
   // ---- settings ----
 
   // Every setting there is to change (with `set`): [{ key, value, kind, choices, range }].
-  readonly property var internalSettings: ["profiles", "profile", "folder", "lastNotebook", "lastPage", "inbox", "recentColors", "space"]
+  readonly property var internalSettings: ["profiles", "profile", "folder", "lastNotebook", "lastPage", "inbox", "recentColors", "space", "seenVersion"]
   function preferences() {
     var s = settings || {}
     return answer(Object.keys(Defaults.DEFAULTS).filter(function(k) { return internalSettings.indexOf(k) < 0 }).map(function(k) {

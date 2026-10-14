@@ -119,5 +119,29 @@ function fromChangelog(text, version) {
   }
   if (start < 0) return null
   if (start > 0) lines = lines.slice(start)
-  return { title: title, notes: cleanNotes(lines.join("\n")) }
+  return { title: title, notes: cleanNotes(lines.filter(function(l) { return !LINK_LINE.test(l) }).join("\n")) }
+}
+
+// "[1.1.2]: https://..." at the end of CHANGELOG.md: where each version is,
+// not part of the last one's notes.
+var LINK_LINE = /^ {0,3}\[[^\]]+\]:\s*\S/
+
+// Every version in CHANGELOG.md, in its order (newest first): [{ version,
+// date ("2026-10-09", or "" if it has none yet), notes }].
+function changelog(text) {
+  var out = []
+  var cur = null
+  function close() {
+    if (cur) out.push({ version: cur.version, date: cur.date, notes: cleanNotes(cur.lines.join("\n")) })
+  }
+  String(text || "").replace(/\r\n?/g, "\n").split("\n").forEach(function(l) {
+    var m = /^##\s+\[?v?([0-9][0-9A-Za-z.+-]*)\]?(.*)$/.exec(l)
+    if (m && parse(m[1])) {
+      close()
+      var d = /\b(\d{4}-\d{2}-\d{2})\b/.exec(m[2])
+      cur = { version: m[1], date: d ? d[1] : "", lines: [] }
+    } else if (cur && !LINK_LINE.test(l)) cur.lines.push(l)
+  })
+  close()
+  return out
 }

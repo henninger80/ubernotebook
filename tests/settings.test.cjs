@@ -243,7 +243,7 @@ check("the skill is linked only when it's on", () => {
   const set = svc.slice(svc.indexOf("function setSettings("), svc.indexOf("function resetSettings("));
   assert.match(set, /changes = Settings\.settleSetup\(settings, changes\)\n\s+var next = Settings\.clone\(user\)/);
   const reset = svc.slice(svc.indexOf("function resetSettings("), svc.indexOf("id: persistTimer"));
-  assert.match(reset, /\["profiles", "profile", "folder", "setupShown"\]/);
+  assert.match(reset, /\["profiles", "profile", "folder", "setupShown", "seenVersion"\]/);
   // Stopping: no link after, and the stop's own flag (not the window's `stopping`).
   assert.match(svc, /storeItem\.skillsStopped = true\n\s+storeItem\.unlinkSkill\(skillDir, stopRunner\(\)\)/);
   assert.match(store, /if \(skillsStopped && on === true\) return/);
