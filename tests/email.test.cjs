@@ -230,6 +230,16 @@ check("multiparts in multiparts: MAX_DEPTH of them, each read where it is", () =
   assert.equal(quick("8 MB, 12 deep", () => E.parse(eml)).text.length, E.MAX_TEXT);
 });
 
+check("boundaries: a line that only starts with one is body text", () => {
+  const boundary = "----=_Part_001";
+  const wrap = (lines) => ["From: a@b.co", "Content-Type: multipart/mixed; boundary=\"" + boundary + "\"", "", "--" + boundary, "Content-Type: text/plain", "", ...lines, "--" + boundary + "--", ""].join("\n");
+  const t = (lines) => E.parse(wrap(lines)).parts.map((p) => E.partText(p, 300)).join("|");
+  assert.ok(t(["Raw line:", "--" + boundary + " not a boundary", "This sentence must stay."]).includes("This sentence must stay."), "words after it");
+  assert.ok(t(["Hello", "--" + boundary + "-- this is still the body", "kept?"]).includes("kept?"), "not a close");
+  const two = ["From: a@b.co", "Content-Type: multipart/mixed; boundary=\"" + boundary + "\"", "", "--" + boundary + "  ", "Content-Type: text/plain", "", "Hello", "--" + boundary, "Content-Type: text/plain", "", "Second", "--" + boundary + "--  ", ""].join("\n");
+  assert.deepEqual(plain(E.parse(two).parts.map((p) => E.partText(p, 300))), ["Hello", "Second"], "real ones still split");
+});
+
 check("boundaries: MAX_DASHES lines starting \"--\" looked at, in all", () => {
   const eml = (n) => "From: a@b.co\nContent-Type: multipart/mixed; boundary=b\n\n--b\nContent-Type: application/sql; name=a.sql\n\nx" + "\n--x".repeat(n) + "\n--b--\n";
   // (Its two boundary lines are two of them.)

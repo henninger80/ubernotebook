@@ -462,6 +462,13 @@ function walk(top) {
     })
   }
 
+  // Whether the rest of a boundary's line is only what a delimiter may have:
+  // "--" to close, then spaces or tabs. Else it's a line of the body.
+  function delimiterEnds(s, from, end) {
+    var nl = s.indexOf("\n", from)
+    return /^(?:--)?[ \t]*\r?$/.test(s.slice(from, nl >= 0 && nl < end ? nl : end))
+  }
+
   // Where the next "--boundary" in a multipart's body starts, from `from`
   // on, or -1. One starts a line, so it's found by its line's "\n--" and
   // then compared: no boundary, however long or odd, makes that slow. (With
@@ -471,7 +478,7 @@ function walk(top) {
     var q = s.indexOf("\n--", Math.max(from - 1, 0))
     while (q >= 0 && q + 1 + b.length <= part.end) {
       if (--dashes < 0) { read = MAX_PARTS; return -1 }
-      if (s.startsWith(b, q + 1)) return q + 1
+      if (s.startsWith(b, q + 1) && delimiterEnds(s, q + 1 + b.length, part.end)) return q + 1
       q = s.indexOf("\n--", q + 1)
     }
     return -1

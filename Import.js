@@ -870,10 +870,11 @@ function isTableRule(line) {
 function collectRefs(lines) {
   var refs = {}
   var out = []
-  var inFence = false
+  var fence = null
   lines.forEach(function(line) {
-    if (fenceStart(line)) inFence = !inFence
-    var m = !inFence ? /^ {0,3}\[([^\]]+)\]:\s*<?([^\s>]+)>?(?:\s+("[^"]*"|'[^']*'|\([^)]*\)))?\s*$/.exec(line) : null
+    if (fence) { if (fenceEnd(line, fence)) fence = null }
+    else fence = fenceStart(line)
+    var m = !fence ? /^ {0,3}\[([^\]]+)\]:\s*<?([^\s>]+)>?(?:\s+("[^"]*"|'[^']*'|\([^)]*\)))?\s*$/.exec(line) : null
     if (m && m[1].charAt(0) !== "^") refs[m[1].toLowerCase().replace(/\s+/g, " ").trim()] = m[2]
     else out.push(line)
   })
@@ -1235,6 +1236,19 @@ function frontMatter(line) {
   return TERMINATOR.test(v) ? null : { key: m[1].toLowerCase(), value: v }
 }
 
+// Whether the lines between two --- are YAML: a key: line at least, and
+// every other line a key, a line indented under one, a - list item or blank.
+// (A key can have spaces, "date created: ...", as Obsidian's do.)
+function isYaml(lines) {
+  var keys = 0
+  for (var i = 0; i < lines.length; i++) {
+    var l = lines[i]
+    if (/^[^\s#:-][^:]*:(\s|$)/.test(l)) keys++
+    else if (!/^\s*$/.test(l) && !/^\s+\S/.test(l) && !/^\s*-(\s|$)/.test(l)) return false
+  }
+  return keys > 0
+}
+
 // Columns, in an agent's Markdown (options.columns; as `read` gives them):
 // "::columns" (each one's share, if you like: "::columns 60 40"), a column's
 // blocks, "::next" and the next one's, "::end". Six at most: what's past the
@@ -1318,10 +1332,11 @@ function fromMarkdown(text, ctx, options) {
     var status = ""
     var due = ""
     // Front matter (--- at the top, key: value lines, ---): a title, an icon,
-    // and a project's status and due date.
+    // and a project's status and due date. Between two rules, words that
+    // aren't key: value lines are the note's own.
     if (lines[0] === "---") {
       var end = lines.slice(0, 80).indexOf("---", 1)
-      if (end > 0) {
+      if (end > 0 && isYaml(lines.slice(1, end))) {
         lines.slice(1, end).forEach(function(l) {
           var m = frontMatter(l)
           if (!m) return
@@ -1487,6 +1502,8 @@ function fromText(text) {
 // ---- HTML ---------------------------------------------------------------------------------------
 
 var VOID = { br: 1, img: 1, hr: 1, input: 1, meta: 1, link: 1, col: 1, source: 1, wbr: 1, area: 1, base: 1, embed: 1, param: 1, track: 1 }
+// The tags that end an open <p> where they start.
+var P_CLOSERS = { address: 1, article: 1, aside: 1, blockquote: 1, details: 1, div: 1, dl: 1, fieldset: 1, figcaption: 1, figure: 1, footer: 1, form: 1, h1: 1, h2: 1, h3: 1, h4: 1, h5: 1, h6: 1, header: 1, hgroup: 1, hr: 1, main: 1, menu: 1, nav: 1, ol: 1, p: 1, pre: 1, section: 1, table: 1, ul: 1 }
 var SKIP = { script: 1, style: 1, head: 1, noscript: 1, template: 1, svg: 1, iframe: 1, object: 1, button: 1, select: 1, textarea: 1 }
 var BLOCK = { p: 1, div: 1, section: 1, article: 1, main: 1, header: 1, footer: 1, nav: 1, aside: 1, figure: 1, figcaption: 1, h1: 1, h2: 1, h3: 1, h4: 1, h5: 1, h6: 1,
   ul: 1, ol: 1, li: 1, blockquote: 1, pre: 1, hr: 1, table: 1, details: 1, summary: 1, img: 1, dl: 1, dt: 1, dd: 1, body: 1, html: 1, form: 1, fieldset: 1, center: 1 }
@@ -1561,6 +1578,8 @@ function tree(html) {
     var st = startTag(tags, at)
     if (st) {
       var tag = st.name.toLowerCase()
+      // An open <p> also ends where a block starts, as a browser reads it.
+      if (top.tag === "p" && P_CLOSERS[tag]) { popTo(stack.length - 1); top = stack[stack.length - 1] }
       // An open <p> or <li> ends where the next one starts.
       if ((tag === "p" || tag === "li" || tag === "dt" || tag === "dd") && top.tag === tag) { popTo(stack.length - 1); top = stack[stack.length - 1] }
       var node = { tag: tag, attrs: attrsOf(st.attrs), kids: [] }
