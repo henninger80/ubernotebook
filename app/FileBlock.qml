@@ -1,20 +1,22 @@
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Pdf
 import "../Files.js" as Files
 
 // A file on a page in Pages: what it is, what it's called and how big, and
 // Open (in the app it opens in). A PDF shows its pages here too, one under
 // another (Show pages / Hide), in a frame whose bottom edge drags to make
-// it taller or shorter, with the page you're on. Not added yet, it asks for
-// one. Its colors are Pages' or your own.
+// it taller or shorter, with the page you're on (PdfPages.qml: without
+// QtQuick.Pdf, from qt6-webengine, a PDF is a file like any other). Not added
+// yet, it asks for one. Its colors are Pages' or your own.
 DataCard {
   id: fb
   kind: "file"
 
   readonly property bool has: info.src !== ""
   readonly property bool pdf: has && info.kind === "pdf"
-  readonly property bool showing: pdf && info.open
+  // Its pages can show (QtQuick.Pdf is there).
+  readonly property bool pdfView: pdf && pdfLoader.status === Loader.Ready
+  readonly property bool showing: pdfView && info.open
+  readonly property int pageCount: pdfView ? pdfLoader.item.pageCount : 0
   readonly property string url: has && editor ? editor.assetUrl(info.src) : ""
   // A PDF's pages are shown only from a plain file of at most maxPdf bytes,
   // as it really is (not as the page says): 1 yes, 0 no, -1 asking.
@@ -98,7 +100,7 @@ DataCard {
           width: parent.width
           elide: Text.ElideRight
           textFormat: Text.PlainText
-          text: fb.has ? (fb.info.kind === "other" ? "" : fb.info.kind.toUpperCase() + "  \u00b7  ") + Files.sizeLabel(fb.info.size) + (fb.pdf && pdfDoc.pageCount > 0 ? "  \u00b7  " + pdfDoc.pageCount + (pdfDoc.pageCount === 1 ? " page" : " pages") : "")
+          text: fb.has ? (fb.info.kind === "other" ? "" : fb.info.kind.toUpperCase() + "  \u00b7  ") + Files.sizeLabel(fb.info.size) + (fb.pageCount > 0 ? "  \u00b7  " + fb.pageCount + (fb.pageCount === 1 ? " page" : " pages") : "")
             : "Click to pick one, or drop a file on the page"
           font.family: fb.editor ? fb.editor.uiFamily : ""
           font.pixelSize: 12
@@ -113,7 +115,7 @@ DataCard {
         spacing: 2
         IconButton {
           objectName: "filePages"
-          visible: fb.pdf
+          visible: fb.pdfView
           theme: fb.theme; icon: fb.theme ? fb.theme.icons.pdf : ""; label: fb.info.open ? "Hide pages" : "Show pages"; size: 30; iconSize: 14; tint: fb.words
           onClicked: fb.change({ open: !fb.info.open })
         }
@@ -141,10 +143,6 @@ DataCard {
     }
 
     // A PDF's pages.
-    PdfDocument {
-      id: pdfDoc
-      source: fb.pdf && fb.pdfOk === 1 ? fb.url : ""
-    }
     Rectangle {
       id: frame
       objectName: "pdfFrame"
@@ -156,64 +154,17 @@ DataCard {
       radius: 6
       color: fb.dark ? "#2a2b33" : "#d9d6cf"
       clip: true
-      ListView {
-        id: pages
-        objectName: "pdfPages"
+      Loader {
+        id: pdfLoader
         anchors.fill: parent
-        anchors.margins: 8
-        spacing: 8
-        clip: true
-        model: fb.showing ? pdfDoc.pageCount : 0
-        boundsBehavior: Flickable.StopAtBounds
-        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
-        delegate: Item {
-          required property int index
-          readonly property size pt: pdfDoc.pagePointSize(index)
-          width: pages.width
-          height: pt.width > 0 ? pages.width * pt.height / pt.width : pages.width * 1.3
-          Rectangle { anchors.fill: parent; color: "white" }
-          PdfPageImage {
-            anchors.fill: parent
-            document: pdfDoc
-            currentFrame: index
-            asynchronous: true
-            fillMode: Image.PreserveAspectFit
-            sourceSize.width: Math.round(pages.width * 1.5)
-          }
-        }
+        active: fb.pdf
+        source: "PdfPages.qml"
       }
-      Rectangle {
-        visible: pdfDoc.pageCount > 0
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.margins: 12
-        width: pageLabel.implicitWidth + 16
-        height: 24
-        radius: 12
-        color: Qt.rgba(0, 0, 0, 0.55)
-        Text {
-          id: pageLabel
-          anchors.centerIn: parent
-          textFormat: Text.PlainText
-          readonly property int at: { var i = pages.indexAt(10, pages.contentY + pages.height / 3); return i < 0 ? 1 : i + 1 }
-          text: at + " / " + pdfDoc.pageCount
-          font.family: fb.editor ? fb.editor.uiFamily : ""
-          font.pixelSize: 11
-          color: "white"
-        }
-      }
-      Text {
-        visible: pdfDoc.status === PdfDocument.Error || fb.pdfOk === 0
-        anchors.centerIn: parent
-        width: Math.min(implicitWidth, parent.width - 40)
-        wrapMode: Text.Wrap
-        horizontalAlignment: Text.AlignHCenter
-        textFormat: Text.PlainText
-        text: fb.pdfOk === 0 ? "Too big to show here (over 200 MB, or not a plain file): Open opens it in its app" : "The PDF couldn't be read"
-        font.family: fb.editor ? fb.editor.uiFamily : ""
-        font.pixelSize: 13
-        color: fb.faint
-      }
+      Binding { target: pdfLoader.item; property: "source"; value: fb.pdf && fb.pdfOk === 1 ? fb.url : ""; when: pdfLoader.status === Loader.Ready }
+      Binding { target: pdfLoader.item; property: "showing"; value: fb.showing; when: pdfLoader.status === Loader.Ready }
+      Binding { target: pdfLoader.item; property: "refused"; value: fb.pdfOk === 0; when: pdfLoader.status === Loader.Ready }
+      Binding { target: pdfLoader.item; property: "family"; value: fb.editor ? fb.editor.uiFamily : ""; when: pdfLoader.status === Loader.Ready }
+      Binding { target: pdfLoader.item; property: "faint"; value: fb.faint; when: pdfLoader.status === Loader.Ready }
       // Its bottom edge: taller or shorter.
       Item {
         objectName: "pdfEdge"
