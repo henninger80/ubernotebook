@@ -105,6 +105,16 @@ check("the @ menu", () => {
   assert.deepEqual(plain(Dates.suggestions("banana", now)), []);
 });
 
+check("29 February without a year is the next one there is", () => {
+  const leap = (y, m, d) => { const r = Dates.parse("feb 29", new Date(y, m - 1, d, 12)); return r ? Dates.iso(r.at, r.time) : null; };
+  assert.equal(leap(2028, 3, 5), "2032-02-29", "gone by this leap year: the next leap year, not 1 March");
+  assert.equal(leap(2027, 1, 10), "2028-02-29", "no 29 Feb this year");
+  assert.equal(leap(2028, 1, 10), "2028-02-29", "still to come this year");
+  assert.equal(leap(2096, 3, 5), "2104-02-29", "over a skipped leap year");
+  assert.equal(read("sep 3"), "2027-09-03", "an ordinary date still rolls to next year");
+  assert.equal(read("feb 30"), null, "a day no month has");
+});
+
 check("the clock times are shown with: 12-hour, or 24-hour", () => {
   Dates.setTwelveHour(true);
   try {

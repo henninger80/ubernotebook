@@ -214,4 +214,21 @@ check("an .ics file's events: a booking's, an invitation, another calendar's", (
   assert.deepEqual(plain(C.fromIcs("not a calendar")), []);
 });
 
+check("an event's alert doesn't replace its notes", () => {
+  const cal = { events: [ev({ title: "Dentist", detail: "Bring the forms", alert: 15 })] };
+  const back = plain(C.fromIcs(C.toIcs(cal)));
+  assert.deepEqual([back[0].title, back[0].detail], ["Dentist", "Bring the forms"], "our own export, read back");
+  const google = ["BEGIN:VCALENDAR", "BEGIN:VEVENT", "DTSTART:20261011T072500", "SUMMARY:Lunch", "DESCRIPTION:Table for two",
+    "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:This is an event reminder", "SUMMARY:Reminder", "DTSTART:20200101T000000", "TRIGGER:-PT30M", "END:VALARM",
+    "END:VEVENT", "END:VCALENDAR", ""].join("\r\n");
+  const g = plain(C.fromIcs(google))[0];
+  assert.deepEqual([g.title, g.detail, g.start], ["Lunch", "Table for two", "2026-10-11T07:25"], "Google's");
+});
+
+check("a backslash before an n in notes isn't a new line", () => {
+  const cal = { events: [ev({ title: "Backup", detail: "C:\\new\\temp" })] };
+  assert.ok(C.toIcs(cal).includes("DESCRIPTION:C:\\\\new\\\\temp\r\n"), "written with each backslash doubled");
+  assert.equal(plain(C.fromIcs(C.toIcs(cal)))[0].detail, "C:\\new\\temp");
+});
+
 console.log(`calendar: ${passed} checks passed`);

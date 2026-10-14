@@ -476,7 +476,8 @@ function fromIcs(text) {
   var lines = String(text || "").replace(/\r\n?/g, "\n").replace(/\n[ \t]/g, "").split("\n")
   var out = []
   var ev = null
-  function unescape(v) { return v.replace(/\\[nN]/g, "\n").replace(/\\([,;\\])/g, "$1") }
+  var alarm = false
+  function unescape(v) { return v.replace(/\\([nN,;\\])/g, function(_, c) { return c === "n" || c === "N" ? "\n" : c }) }
   // "20261011", "20261011T072500", "20261011T072500Z": { day: "2026-10-11", time: "07:25" or "" }.
   function when(v) {
     var m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?(Z)?)?$/.exec(String(v || "").trim())
@@ -492,7 +493,7 @@ function fromIcs(text) {
     var head = l.slice(0, c).split(";")
     var name = head[0].toUpperCase()
     var value = l.slice(c + 1)
-    if (name === "BEGIN" && value.trim().toUpperCase() === "VEVENT") { ev = { title: "", start: null, end: null, place: "", detail: "", rule: "", skip: [] }; continue }
+    if (name === "BEGIN" && value.trim().toUpperCase() === "VEVENT") { ev = { title: "", start: null, end: null, place: "", detail: "", rule: "", skip: [] }; alarm = false; continue }
     if (!ev) continue
     if (name === "END" && value.trim().toUpperCase() === "VEVENT") {
       if (ev.start) {
@@ -522,6 +523,10 @@ function fromIcs(text) {
       ev = null
       continue
     }
+    // (An alert inside the event has a description of its own: not the event's notes.)
+    if (name === "BEGIN" && value.trim().toUpperCase() === "VALARM") { alarm = true; continue }
+    if (name === "END" && value.trim().toUpperCase() === "VALARM") { alarm = false; continue }
+    if (alarm) continue
     if (name === "SUMMARY") ev.title = unescape(value).trim()
     else if (name === "LOCATION") ev.place = unescape(value).trim()
     else if (name === "DESCRIPTION") ev.detail = unescape(value).trim()
