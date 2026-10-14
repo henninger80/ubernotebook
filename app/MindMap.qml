@@ -459,6 +459,9 @@ Item {
 
     // Where you write, over the idea you're on.
     TextEdit {
+      // (Editable only while its window shows: an editable field reads the
+      // clipboard each time it changes, which a closed window has no need of.)
+      readOnly: !(Window.window && Window.window.visible)
       id: input
       readonly property var at: { var l = map.lay; return map.editing ? map.entryFor(map.current) : null }
       readonly property int depth: at ? at.depth : 1

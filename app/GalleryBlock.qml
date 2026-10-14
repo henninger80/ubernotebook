@@ -192,6 +192,9 @@ DataCard {
             color: gb.look.color ? gb.accent : gb.faint
           }
           TextInput {
+            // (Editable only while its window shows: an editable field reads the
+            // clipboard each time it changes, which a closed window has no need of.)
+            readOnly: !(Window.window && Window.window.visible)
             id: captionEdit
             objectName: "galleryCaptionEdit"
             visible: gb.editing === tile.index

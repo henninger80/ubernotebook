@@ -251,6 +251,9 @@ Item {
       boundsBehavior: Flickable.StopAtBounds
 
       TextEdit {
+        // (Editable only while its window shows: an editable field reads the
+        // clipboard each time it changes, which a closed window has no need of.)
+        readOnly: !(Window.window && Window.window.visible)
         id: edit
         width: flick.width
         textFormat: TextEdit.PlainText

@@ -287,7 +287,7 @@ Item {
     width: block.textW
     textFormat: TextEdit.RichText
     wrapMode: TextEdit.Wrap
-    readOnly: block.editor.readOnly
+    readOnly: block.editor.readOnly || !(Window.window && Window.window.visible)
     selectByMouse: true
     persistentSelection: true
     font.family: block.st.mono ? block.editor.monoFamily : block.editor.family
@@ -415,6 +415,9 @@ Item {
   }
 
   TextInput {
+    // (Editable only while its window shows: an editable field reads the
+    // clipboard each time it changes, which a closed window has no need of.)
+    readOnly: !(Window.window && Window.window.visible)
     id: labelInput
     visible: block.type === "time"
     enabled: visible && !block.editor.readOnly

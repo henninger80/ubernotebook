@@ -427,6 +427,9 @@ Pop {
       border.width: 1
       border.color: detailEdit.activeFocus ? pop.theme.accent : pop.theme.line
       TextEdit {
+        // (Editable only while its window shows: an editable field reads the
+        // clipboard each time it changes, which a closed window has no need of.)
+        readOnly: !(Window.window && Window.window.visible)
         id: detailEdit
         objectName: "eventDetail"
         x: 8

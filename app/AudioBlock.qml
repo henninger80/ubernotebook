@@ -494,7 +494,7 @@ Item {
           width: parent.width
           textFormat: TextEdit.PlainText
           wrapMode: TextEdit.Wrap
-          readOnly: au.readOnly
+          readOnly: au.readOnly || !(Window.window && Window.window.visible)
           selectByMouse: true
           font.family: au.editor ? au.editor.family : ""
           font.pixelSize: 15

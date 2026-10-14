@@ -42,6 +42,9 @@ Rectangle {
   }
 
   TextInput {
+    // (Editable only while its window shows: an editable field reads the
+    // clipboard each time it changes, which a closed window has no need of.)
+    readOnly: !(Window.window && Window.window.visible)
     id: input
     anchors.left: glyph.visible ? glyph.right : parent.left
     anchors.leftMargin: glyph.visible ? 8 : 11

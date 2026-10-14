@@ -292,6 +292,9 @@ DataCard {
                   color: col.modelData.color ? bd.textOf(col.modelData.color) : col.colInk
                 }
                 TextInput {
+                  // (Editable only while its window shows: an editable field reads the
+                  // clipboard each time it changes, which a closed window has no need of.)
+                  readOnly: !(Window.window && Window.window.visible)
                   id: nameInput
                   objectName: "boardColumnName"
                   visible: col.naming
@@ -422,6 +425,9 @@ DataCard {
                     color: bd.faint
                   }
                   TextEdit {
+                    // (Editable only while its window shows: an editable field reads the
+                    // clipboard each time it changes, which a closed window has no need of.)
+                    readOnly: !(Window.window && Window.window.visible)
                     id: cardEdit
                     objectName: "boardCardEdit"
                     visible: cardItem.editingMe

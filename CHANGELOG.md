@@ -4,6 +4,14 @@ Every notable change to Uber Notebook is listed here, newest first. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version
 numbers follow [Semantic Versioning](https://semver.org/).
 
+## [1.1.4] - 2026-10-14
+
+Text fields that leave the clipboard alone while Uber Notebook's window is closed.
+
+### Security
+
+- Every text field in Uber Notebook is editable only while its window shows. Uber Notebook stays loaded in the Omarchy shell after its window closes, and Qt has an editable field read the clipboard each time it changes, so a huge or endless clipboard could hold up the shell with no paste at all; a closed window's fields are read-only, and Qt doesn't read it for them (found by the Omarchy plugin marketplace's review).
+
 ## [1.1.3] - 2026-10-14
 
 Release notes in the app, a shorter README, and fixes from the first issue and pull requests.
@@ -114,6 +122,7 @@ First public release.
 - Text from elsewhere (a synced page, a paste, an email, an agent's answer) stays text: nothing in it is fetched or run.
 - The panel's agent changes your notes only through Uber Notebook's commands, and asks you before anything else.
 
+[1.1.4]: https://github.com/marcho78/ubernotebook/releases/tag/v1.1.4
 [1.1.3]: https://github.com/marcho78/ubernotebook/releases/tag/v1.1.3
 [1.1.2]: https://github.com/marcho78/ubernotebook/releases/tag/v1.1.2
 [1.1.1]: https://github.com/marcho78/ubernotebook/releases/tag/v1.1.1

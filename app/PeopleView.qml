@@ -397,6 +397,9 @@ Item {
       border.width: 1
       border.color: ff.error ? pv.theme.urgent : fin.activeFocus ? Qt.alpha(pv.theme.accent, 0.9) : pv.theme.line
       TextInput {
+        // (Editable only while its window shows: an editable field reads the
+        // clipboard each time it changes, which a closed window has no need of.)
+        readOnly: !(Window.window && Window.window.visible)
         id: fin
         x: 11
         anchors.verticalCenter: parent.verticalCenter
@@ -1695,6 +1698,9 @@ Item {
                 border.width: 1
                 border.color: notesEdit.activeFocus ? Qt.alpha(pv.theme.accent, 0.9) : pv.theme.line
                 TextEdit {
+                  // (Editable only while its window shows: an editable field reads the
+                  // clipboard each time it changes, which a closed window has no need of.)
+                  readOnly: !(Window.window && Window.window.visible)
                   id: notesEdit
                   objectName: "formNotes"
                   x: 11

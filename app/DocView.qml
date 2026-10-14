@@ -3306,7 +3306,7 @@ FocusScope {
           selectionColor: Qt.alpha(view.theme.accent, 0.3)
           selectedTextColor: view.theme.text
           selectByMouse: true
-          readOnly: view.locked
+          readOnly: view.locked || !(Window.window && Window.window.visible)
           onTextChanged: {
             if (view.settingTitle || !view.page) return
             // The sidebar and the path above follow as you type.
@@ -3469,6 +3469,9 @@ FocusScope {
           onSavedChanged: if (!aboutInput.activeFocus) aboutInput.text = saved
           onVisibleChanged: if (visible) aboutInput.text = saved
           TextInput {
+            // (Editable only while its window shows: an editable field reads the
+            // clipboard each time it changes, which a closed window has no need of.)
+            readOnly: !(Window.window && Window.window.visible)
             id: aboutInput
             objectName: "templateAboutInput"
             width: parent.width

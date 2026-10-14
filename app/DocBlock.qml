@@ -522,7 +522,7 @@ Item {
     width: block.textW
     textFormat: TextEdit.RichText
     wrapMode: TextEdit.Wrap
-    readOnly: block.editor.readOnly
+    readOnly: block.editor.readOnly || !(Window.window && Window.window.visible)
     selectByMouse: true
     persistentSelection: true
     font.family: block.st.mono ? block.editor.monoFamily : block.editor.family

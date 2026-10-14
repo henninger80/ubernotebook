@@ -3949,11 +3949,17 @@ FocusScope {
   // withClipboard) here, to be read the way Qt reads HTML; its plain text in
   // clipText (Qt pastes only the text into it: nothing it names is loaded).
   TextEdit {
+    // (Editable only while its window shows: an editable field reads the
+    // clipboard each time it changes, which a closed window has no need of.)
+    readOnly: !(Window.window && Window.window.visible)
     id: clipArea
     visible: false
     textFormat: TextEdit.RichText
   }
   TextEdit {
+    // (Editable only while its window shows: an editable field reads the
+    // clipboard each time it changes, which a closed window has no need of.)
+    readOnly: !(Window.window && Window.window.visible)
     id: clipText
     visible: false
     textFormat: TextEdit.PlainText

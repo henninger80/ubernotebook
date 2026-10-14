@@ -91,7 +91,7 @@ Item {
       x: sheet.textLeft
       width: flick.width - sheet.textLeft - sheet.textRight - dateLabel.implicitWidth - sheet.pitch
       y: sheet.pitch * 2.8 - baselineOffset
-      readOnly: sheet.readOnly || sheet.drawing
+      readOnly: sheet.readOnly || sheet.drawing || !(Window.window && Window.window.visible)
       font.family: sheet.family
       font.pixelSize: sheet.titleStyle.size
       font.bold: sheet.titleStyle.bold

@@ -561,7 +561,7 @@ Item {
               height: Math.max(contentHeight, parent.height - y - grid.pad * 0.65)
               textFormat: TextEdit.RichText
               wrapMode: TextEdit.Wrap
-              readOnly: grid.readOnly
+              readOnly: grid.readOnly || !(Window.window && Window.window.visible)
               selectByMouse: true
               font.family: grid.editor.family
               font.pixelSize: grid.fontPx
