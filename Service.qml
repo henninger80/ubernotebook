@@ -434,6 +434,7 @@ Item {
   Component.onDestruction: {
     // (Only the entry as it was written: one changed or put there since is left.)
     if (launcherEntry && launcherText) Quickshell.execDetached(stopRunner().concat(["remove-owned", desktopFile, launcherText]))
+    answersItem.removeAll()
     // (Taken out whether it's on or not: one made a moment ago, as it was
     // turned off, may not have been yet.)
     if (skillLinks) {
@@ -735,8 +736,13 @@ Item {
       return JSON.stringify({ ok: false, error: why })
     }
     apiItem.caller = forAgent ? agentScope : null
-    try { return run() } finally { apiItem.caller = null }
+    var text
+    try { text = run() } finally { apiItem.caller = null }
+    // (A long answer comes as a file: the panel's agent's in its own folder,
+    // anyone else's in $XDG_RUNTIME_DIR.)
+    return answersItem.deliver(text, forAgent ? (agentScope && agentScope.dir ? agentScope.dir : "") : storeItem.runtimeDir)
   }
+  Answers { id: answersItem; store: storeItem }
 
   // The commands, under two names: uber-notebook (yours, a script's, a
   // terminal's agent's: as always) and uber-notebook-agent (the panel's

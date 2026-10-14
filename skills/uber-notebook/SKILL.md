@@ -26,6 +26,12 @@ says everything its commands and its Markdown can do; `help` lists the commands.
 Every command prints JSON (`{"ok": false, "error": "..."}` when it can't),
 except `read`, which prints the page as Markdown.
 
+- A long answer (a big page's `read` or `blocks`) comes as a file instead:
+  `{"ok": true, "file": "...", "note": "..."}`. Read that file; it's the
+  answer. It's taken away after a few minutes.
+- "omarchy-shell is not responding" from a change: it may still have gone
+  through. `read` the page before doing it again.
+
 | Command | What it does |
 |---|---|
 | `omarchy-shell uber-notebook find "<words>"` | pages with all the words, best first: `[{id, title, path, snippet}]` |

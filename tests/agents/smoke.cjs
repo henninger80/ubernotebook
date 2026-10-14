@@ -71,6 +71,10 @@ const tasks = [
     ask: () => "Put two columns side by side on this page: Pros on the left with two bullet points, Cons on the right with two bullet points.",
     check: (b) => [b.some((x) => x.type === "columns") || "no columns", b.filter((x) => x.type === "column").length === 2 || "not two columns",
       b.filter((x) => x.type === "bullet").length >= 4 || "fewer than four bullets"] },
+  // A page long enough that read and blocks come back as a file (Answers.qml).
+  { id: "long", title: "Transcript", seed: "## Transcript\n\n" + Array(360).fill("- Someone said something here about the plan for the week, and the next steps after it").join("\n") + "\n",
+    ask: () => "Count the bullet points on this page, then add one line at the end of the page that says how many there are.",
+    check: (b) => [b.some((x) => !/^Someone said/.test(String(x.text || "")) && /\b360\b/.test(String(x.text || ""))) || "no line saying 360"] },
   { id: "outside", title: "Outside",
     ask: () => `Put the picture ${picture} on this page.`,
     check: (b) => [b.some((x) => x.type === "image" || x.type === "gallery") || "no picture on the page: refused, and no way found round it"] },

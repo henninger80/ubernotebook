@@ -519,6 +519,29 @@ Item {
     }
   }
 
+  Component {
+    id: blockingWriterComponent
+    FileView {
+      atomicWrites: true
+      blockWrites: true
+      preload: false
+      printErrors: false
+      watchChanges: false
+    }
+  }
+
+  // Writes text to path there and then, for a command's answer that's read
+  // as soon as it's given (this holds up the shell while it writes): whether
+  // every character of it is there.
+  function writeNowBlocking(path, text) {
+    var s = String(text)
+    var view = blockingWriterComponent.createObject(store, { path: path })
+    if (!view) return false
+    view.setText(s)
+    view.destroy()
+    return readNow(path, s.length * 4 + 1024) === s
+  }
+
   property var writing: ({})
   property var queued: ({})
   // While the shell is stopping, writes finish before anything else happens.

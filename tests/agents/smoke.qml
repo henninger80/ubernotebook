@@ -49,7 +49,8 @@ ShellRoot {
 
   // The agent working, as Service.beginAgentScope makes it; null between runs.
   property var scope: null
-  // (As Service.scoped: a file from outside its folders asked about.)
+  // (As Service.scoped: a file from outside its folders asked about; a long
+  // answer as a file.)
   function scoped(command, args, run) {
     var why = Scope.forCaller(true, smoke.scope, command, args)
     if (why) {
@@ -60,8 +61,11 @@ ShellRoot {
       return JSON.stringify({ ok: false, error: why })
     }
     api.caller = smoke.scope
-    try { return run() } finally { api.caller = null }
+    var text
+    try { text = run() } finally { api.caller = null }
+    return answers.deliver(text, smoke.scope && smoke.scope.dir ? smoke.scope.dir : "")
   }
+  UN.Answers { id: answers; store: store }
 
   // What the run in progress did: { agent, done, code, failure, steps, answer, asks }.
   property var status: ({ done: true })
