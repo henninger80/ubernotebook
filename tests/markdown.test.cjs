@@ -227,6 +227,21 @@ check("a code block with a fence in it", () => {
   });
 });
 
+check("a code line of many backticks: one fence longer, at once", () => {
+  const Import = load("Import.js");
+  const Html = load("Html.js");
+  const run = "`".repeat(200000);
+  const t0 = Date.now();
+  // (Made here: Blocks.make keeps less, an import keeps this much.)
+  const md = docPage([{ uid: "c", type: "code", indent: 0, html: "x<br />" + run }, b("p", { html: "after" })]);
+  assert.ok(Date.now() - t0 < 2000, "took " + (Date.now() - t0) + " ms");
+  assert.ok(md.startsWith("`".repeat(200001) + "\n"), "a fence of 200,001");
+  assert.equal(md.indexOf("`".repeat(200002)), -1, "and no longer");
+  const back = plain(Import.fromMarkdown("```\nplain\n```")).blocks;
+  assert.equal(Html.plainText(back[0].html), "plain");
+  assert.ok(Markdown.fromBlocks([b("code", { html: "plain" })]).startsWith("```\nplain\n```"), "three, when it has none");
+});
+
 check("a heading with a line break stays one heading", () => {
   const Import = load("Import.js");
   const Html = load("Html.js");

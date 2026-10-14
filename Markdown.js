@@ -41,11 +41,12 @@ function escapeLineStarts(text) {
     .replace(/^([ \t]*\d{1,9})([.)])(?=[ \t]|$)/gm, "$1\\$2")
 }
 
-// The backticks that fence a code block: more than any line of it starts with.
+// The backticks that fence a code block: more than any line of it starts with
+// (at least three). One look at each line, however many backticks it has.
 function codeFence(lines) {
-  var fence = "```"
-  while (lines.some(function(l) { return l.replace(/^[ \t]*/, "").indexOf(fence) === 0 })) fence += "`"
-  return fence
+  var longest = 0
+  lines.forEach(function(l) { var m = /^[ \t]*(`+)/.exec(l); if (m && m[1].length > longest) longest = m[1].length })
+  return new Array(Math.max(3, longest + 1) + 1).join("`")
 }
 
 function flags(run) {
