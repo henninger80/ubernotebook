@@ -141,9 +141,15 @@ FocusScope {
       }
     }
     // A page changed on disk while it was open but unchanged here (a page
-    // moved into it from elsewhere): shown as it is now.
+    // moved into it from elsewhere): shown as it is now. Only its title,
+    // icon, cover or the like changed (a command's): just those, not every
+    // block drawn again, and you stay where you were on it.
     function onPageChanged(id) {
-      if (view.page && view.page.id === id && !view.pageDirty) view.workspace.readPage(id, function(p) { if (p && view.page && view.page.id === id) view.show(p) })
+      if (view.page && view.page.id === id && !view.pageDirty) view.workspace.readPage(id, function(p) {
+        if (!p || !view.page || view.page.id !== id) return
+        if (view.sameBlocks(view.page, p)) view.showHead(p)
+        else view.show(p)
+      })
     }
   }
 
@@ -1065,6 +1071,19 @@ FocusScope {
       startWith = null
       applyTemplate(t)
     }
+  }
+
+  // The open page again, its blocks as they are here: its title, icon,
+  // cover and the like.
+  function showHead(p) {
+    page = p
+    settingTitle = true
+    titleEdit.text = p.title
+    settingTitle = false
+    revision++
+  }
+  function sameBlocks(a, b) {
+    return JSON.stringify(a.content) === JSON.stringify(b.content) && JSON.stringify(a.blocks) === JSON.stringify(b.blocks)
   }
 
   function updateBlank() {
