@@ -74,6 +74,9 @@ check("the version running's notes, from CHANGELOG.md", () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(root, "manifest.json"), "utf8"));
   const real = U.fromChangelog(fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8"), manifest.version);
   assert.ok(real && real.notes.length > 200, "CHANGELOG.md has notes for " + manifest.version);
+  const service = fs.readFileSync(path.join(root, "Service.qml"), "utf8");
+  const updatesQml = fs.readFileSync(path.join(root, "Updates.qml"), "utf8");
+  assert.ok(service.includes('about.version : "' + manifest.version + '"') && updatesQml.includes('property string current: "' + manifest.version + '"'), "and so do Service.qml's and Updates.qml's");
 });
 
 check("every version's notes, from CHANGELOG.md", () => {
@@ -87,7 +90,7 @@ check("every version's notes, from CHANGELOG.md", () => {
   const real = plain(U.changelog(fs.readFileSync(path.join(root, "CHANGELOG.md"), "utf8")));
   const manifest = JSON.parse(fs.readFileSync(path.join(root, "manifest.json"), "utf8"));
   assert.ok(real.length >= 5 && real.every((r) => r.notes.length > 20 && !/^\[[^\]]+\]:/m.test(r.notes)), "every version has notes, no link lines");
-  assert.ok(real.some((r) => U.compare(r.version, manifest.version) === 0), "the manifest's version is there");
+  assert.equal(real[0].version, manifest.version, "the newest is the manifest's version");
   for (let i = 1; i < real.length; i++) assert.equal(U.compare(real[i - 1].version, real[i].version), 1, "newest first");
 });
 
