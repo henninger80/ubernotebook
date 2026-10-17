@@ -7,6 +7,7 @@ import "../Calendar.js" as Calendar
 import "../Dates.js" as Dates
 import "../Colors.js" as Colors
 import "../Sidebar.js" as Sidebar
+import "../Collection.js" as Collection
 
 // The sidebar of Pages. At the top, staying put: the switch back to
 // notebooks, the profile, search and a new page, then the calendar, the
@@ -235,7 +236,7 @@ Rectangle {
   }
   readonly property int libraryCount: {
     var r = view.workspace ? view.workspace.revision : 0
-    return view.workspace ? Workspace.collected(view.workspace.index).length : 0
+    return view.workspace ? Collection.count(view.workspace.index, function(id) { return Workspace.inTrash(view.workspace.index, id) || Workspace.inTemplates(view.workspace.index, id) }) : 0  // [fork] counted, not gathered
   }
   readonly property int peopleCount: {
     var r = view.workspace ? view.workspace.contactsRevision : 0

@@ -24,7 +24,7 @@ Pop {
 
   readonly property var results: {
     var r = workspace ? workspace.revision : 0
-    if (!workspace) return []
+    if (!workspace || !visible) return []  // [fork] not while it's closed
     var ix = workspace.index
     var out = []
     var skip = exclude ? Workspace.withDescendants(ix, exclude) : []

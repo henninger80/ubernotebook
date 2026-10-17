@@ -51,7 +51,7 @@ Pop {
   // Recent pages when nothing's typed.
   readonly property var recent: {
     var r = workspace ? workspace.revision : 0
-    if (!workspace) return []
+    if (!workspace || !visible) return []  // [fork] not while it's closed
     var ix = workspace.index
     return Object.keys(ix.pages).filter(function(id) { return !Workspace.inTrash(ix, id) && !Workspace.inTemplates(ix, id) })
       .sort(function(a, b) { return ix.pages[a].modified < ix.pages[b].modified ? 1 : -1 })

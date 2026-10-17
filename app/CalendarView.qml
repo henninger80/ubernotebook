@@ -58,7 +58,8 @@ Item {
     : mode === "compact" ? [pickedDay < gridFirst ? pickedDay : gridFirst, addDays(pickedDay, 31) > addDays(gridFirst, 42) ? addDays(pickedDay, 31) : addDays(gridFirst, 42)]
     : [anchorDay, addDays(anchorDay, 60)]
   readonly property var occ: { var r = workspace ? workspace.calendarRevision : 0; return workspace ? Calendar.occurrences(workspace.calendar, range[0], range[1]) : [] }
-  readonly property var notes: { var r = workspace ? workspace.revision : 0; return workspace ? Workspace.datedNotes(workspace.index, range[0], range[1]) : [] }
+  // [fork] Not while it's hidden.
+  readonly property var notes: { var r = workspace ? workspace.revision : 0; return workspace && visible ? Workspace.datedNotes(workspace.index, range[0], range[1]) : [] }
 
   function notesOn(d) { var lo = d; var hi = addDays(d, 1); return notes.filter(function(n) { return n.at >= lo && n.at < hi }) }
 

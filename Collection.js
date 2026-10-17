@@ -161,6 +161,23 @@ function clean(list) {
 // first: each thing with its page { page, pageTitle, pageIcon }; someone
 // named (or a link written) more than once on a page, once (a contact card
 // for them, if there's one). `skip(id)` says which pages to leave out.
+// [fork] How many gather(index, skip) has, without making them.
+function count(index, skip) {
+  var n = 0
+  for (var id in index.pages) {
+    var e = index.pages[id]
+    if (!e.collected || !e.collected.length || (skip && skip(id))) continue
+    var seen = {}
+    e.collected.forEach(function(r) {
+      var key = r.kind === "person" ? "p:" + r.person : r.kind === "link" && r.url ? "l:" + r.url : ""
+      if (key && seen[key]) return
+      if (key) seen[key] = true
+      n++
+    })
+  }
+  return n
+}
+
 function gather(index, skip) {
   var out = []
   for (var id in index.pages) {

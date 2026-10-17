@@ -198,7 +198,15 @@ Item {
   }
 
   // index.json, a moment after the last change to the tree.
-  function saveIndex() { indexTimer.restart() }
+  // [fork] `lazy`: only when pages were changed (their times): written once
+  // writing has paused for a few seconds, not after every save (the whole
+  // tree, a megabyte with many pages, held up typing). Anything else is
+  // written soon, and a write waiting for the pause, with it.
+  function saveIndex(lazy) {
+    if (lazy) { if (!indexTimer.running || indexTimer.interval === indexTimer.lazyInterval) { indexTimer.interval = indexTimer.lazyInterval; indexTimer.restart() } return }
+    indexTimer.interval = 300
+    indexTimer.restart()
+  }
 
   // Its own files (the tree, the calendar, People, conversations) that
   // couldn't be read as it loaded (a link, too big, unreadable: not "not
@@ -253,6 +261,7 @@ Item {
 
   Timer {
     id: indexTimer
+    readonly property int lazyInterval: 5000  // [fork]
     interval: 300
     onTriggered: ws.flushIndex()
   }
@@ -379,15 +388,36 @@ Item {
   function scanTexts() {
     var ids = Object.keys(index.pages).filter(function(id) { return ws.texts[id] === undefined })
     var gen = generation
+    // [fork] Read 200 at a time as before, but made into pages a few at a
+    // time (about 12 ms of them), the window drawn and typed in between: 200
+    // at once (some of them big) held up typing for a while after the start.
+    // As readPages does it, for what it reads.
+    var got = []
     function next() {
-      if (gen !== ws.generation || ids.length === 0) return
-      readPages(ids.splice(0, 200), function(pages) {
-        pages.forEach(function(p) { if (ws.texts[p.id] === undefined) ws.texts[p.id] = p.text || Workspace.pageText(p) })
-        Qt.callLater(next)
-      })
+      if (gen !== ws.generation) return
+      var t = Date.now()
+      while (got.length && Date.now() - t < 12) {
+        var one = got.shift()
+        var id = one.path.slice(one.path.lastIndexOf("/") + 1, -5)
+        if (ws.texts[id] !== undefined) continue
+        var page = Workspace.cleanPage(files.parseJson(one.text), id)
+        if (!page) continue
+        ws.readJson[id] = JSON.stringify(page)
+        ws.texts[id] = page.text || Workspace.pageText(page)
+      }
+      if (got.length) { scanTimer.later(next); return }
+      var lot = ids.splice(0, 200).filter(function(id) { return ws.texts[id] === undefined && !ws.written[id] })
+      if (lot.length === 0) { if (ids.length) scanTimer.later(next); return }
+      files.readFiles(lot.map(function(id) { return pagePath(id) }), function(read) {
+        if (gen !== ws.generation) return
+        for (var path in read) got.push({ path: path, text: read[path] })
+        scanTimer.later(next)
+      }, 32 * 1024 * 1024)
     }
     next()
   }
+  // [fork] What scanTexts does next, a moment later.
+  Timer { id: scanTimer; interval: 10; property var go: null; function later(f) { go = f; restart() } onTriggered: if (go) { var f = go; go = null; f() } }
 
   // Writes a page, and what the tree knows of it: its title, icon, and the
   // pages on it (in the order their blocks are). done(ok) once it's written.
@@ -429,7 +459,7 @@ Item {
     var checks = Workspace.pageChecks(page)
     if (JSON.stringify(checks) !== JSON.stringify(e.checks)) { e.checks = checks; changed = true }
     if (changed) touched()
-    else saveIndex()
+    else saveIndex(true)  // [fork] lazy: only its time changed
     saved(page.id)
   }
 

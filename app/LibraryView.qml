@@ -24,7 +24,8 @@ Item {
   // How many are shown (more, a click on "Show more").
   property int limit: 150
 
-  readonly property var all: { var r = workspace ? workspace.revision : 0; return workspace ? Workspace.collected(workspace.index) : [] }
+  // [fork] Not while it's hidden.
+  readonly property var all: { var r = workspace ? workspace.revision : 0; return workspace && visible ? Workspace.collected(workspace.index) : [] }
   readonly property var counts: Collection.counts(all)
   readonly property var shown: Collection.filter(all, kind, query)
   readonly property int pageCount: { var by = {}; all.forEach(function(r) { by[r.page] = true }); return Object.keys(by).length }
