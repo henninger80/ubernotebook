@@ -41,6 +41,7 @@ node tests/audio.test.cjs
 node tests/meeting.test.cjs
 node tests/usertemplates.test.cjs
 node tests/calendar.test.cjs
+node tests/sync.test.cjs  # [fork]
 node tests/moreblocks.test.cjs
 node tests/collection.test.cjs
 node tests/contacts.test.cjs

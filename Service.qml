@@ -329,9 +329,9 @@ Item {
 
   property alias backups: backupsItem
 
-  // [fork] The Office 365 calendar sync (O365.qml, docs/o365-sync.md).
-  O365 { id: o365Item; files: storeItem; pluginDir: root.pluginDir; ready: workspaceItem.loaded }
-  property alias o365: o365Item
+  // [fork] The calendar synced with Office 365 and Google (Sync.qml, docs/sync.md).
+  Sync { id: syncItem; files: storeItem; workspace: workspaceItem; profile: profilesItem.current; home: root.home; ready: workspaceItem.loaded }
+  property alias sync: syncItem
 
   // Commands for AI agents and scripts (the IPC below hands them on).
   Api {

@@ -52,8 +52,8 @@ Popup {
     { id: "profiles", label: "Profiles", icon: icons.people || "", note: "Notes kept apart, each profile in a folder of its own." },
     { id: "backups", label: "Backups", icon: icons.archive || "", note: "Your profiles in one file each, to keep safe or move, and put back." },
     { id: "notifications", label: "Notifications", icon: icons.bell || "", note: "What reminders' and events' notifications show." },
-    // [fork] Office 365 (O365Settings.qml).
-    { id: "o365", label: "Office 365", icon: icons.calendar || "", note: "Your calendar and Office 365's, kept the same both ways." },
+    // [fork] Accounts & sync (SyncSettings.qml).
+    { id: "sync", label: "Accounts & sync", icon: icons.calendar || "", note: "Your calendar kept the same as Office 365's and Google's, both ways." },
     { id: "whatsnew", label: "What's new", icon: icons.history || "", note: "What each version brought, newest first." },
     { id: "about", label: "About", icon: icons.info || "", note: "The version you have, updates, and who makes Uber Notebook." }
   ]
@@ -1637,8 +1637,8 @@ Popup {
           }
         }
 
-        // [fork] ======== Office 365 (O365Settings.qml) ========
-        O365Settings { visible: panel.section === "o365"; width: parent.width; theme: panel.theme; sync: panel.service ? panel.service.o365 || null : null }
+        // [fork] ======== Accounts & sync (SyncSettings.qml) ========
+        SyncSettings { visible: panel.section === "sync"; width: parent.width; theme: panel.theme; sync: panel.service ? panel.service.sync || null : null }
 
         // ======== About ========
 
