@@ -27,6 +27,13 @@ Item {
     return list.filter(function(t) { return t.name === tv.name })[0] || { name: tv.name, label: "#" + tv.name, pages: 0, blocks: 0 }
   }
   readonly property int blockCount: { var n = 0; groups.forEach(function(g) { n += g.blocks.length }); return n }
+  // [fork] Ticked to-dos hidden (for every tag, while the app runs): the
+  // groups shown, and how many to-dos are ticked.
+  property bool hideDone: false
+  readonly property int doneCount: { var n = 0; groups.forEach(function(g) { g.blocks.forEach(function(b) { if (b.type === "check" && b.checked) n++ }) }); return n }
+  readonly property var shown: !hideDone ? groups : groups.map(function(g) {
+    return { id: g.id, title: g.title, icon: g.icon, blocks: g.blocks.filter(function(b) { return !(b.type === "check" && b.checked) }) }
+  }).filter(function(g) { return g.blocks.length > 0 })
 
   signal colorRequested(var anchor)
   signal renameRequested(var anchor)
@@ -117,6 +124,7 @@ Item {
           textFormat: Text.PlainText
           readonly property var colorFrom: { var k = tv.view ? tv.view.tagColorsKey : ""; return tv.workspace ? Workspace.tagColorOf(tv.workspace.index.tagColors || {}, tv.name).from : "" }
           text: (tv.loading && tv.groups.length === 0 ? "" : tv.blockCount + (tv.blockCount === 1 ? " block" : " blocks") + " on " + tv.groups.length + (tv.groups.length === 1 ? " page" : " pages"))
+            + (tv.hideDone && tv.doneCount > 0 ? "  \u00b7  " + tv.doneCount + " done hidden" : "")  // [fork]
             + (colorFrom && colorFrom !== tv.name ? "  \u00b7  its color from #" + colorFrom : "")
           font.family: tv.theme.uiFont
           font.pixelSize: 13
@@ -126,6 +134,15 @@ Item {
           anchors.right: parent.right
           anchors.verticalCenter: pill.verticalCenter
           spacing: 4
+          // [fork] Ticked to-dos hidden or shown.
+          IconButton {
+            objectName: "tagHideDone"
+            visible: tv.doneCount > 0 || tv.hideDone
+            theme: tv.theme; icon: tv.hideDone ? tv.theme.icons.eyeOff : tv.theme.icons.eye
+            checked: tv.hideDone
+            tip: tv.hideDone ? "Show the done to-dos" : "Hide the done to-dos"
+            onClicked: tv.hideDone = !tv.hideDone
+          }
           IconButton {
             id: colorButton
             objectName: "tagColor"
@@ -148,18 +165,18 @@ Item {
       }
 
       Text {
-        visible: !tv.loading && tv.groups.length === 0
+        visible: !tv.loading && tv.shown.length === 0  // [fork] shown
         width: parent.width
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: "No block has " + tv.info.label + " any more."
+        text: tv.groups.length > 0 ? "Everything with " + tv.info.label + " is done." : "No block has " + tv.info.label + " any more."  // [fork]
         font.family: tv.theme.uiFont
         font.pixelSize: 14
         color: tv.theme.muted
       }
 
       Repeater {
-        model: tv.groups
+        model: tv.shown  // [fork] tv.groups, ticked to-dos left out if hidden
         delegate: Column {
           id: group
           required property var modelData
