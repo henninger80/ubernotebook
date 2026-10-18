@@ -1,7 +1,8 @@
 # From Obsidian (fork)
 
 What this fork brings over from Obsidian: a note's properties when it comes
-in, daily notes, a search like Omnisearch's, and a start page.
+in, daily notes, tasks (as TaskNotes and Tasks had them), a search like
+Omnisearch's, and a start page.
 
 ## Properties when a note comes in
 
@@ -56,6 +57,38 @@ omarchy-shell uber-notebook set dailyByYear true
 
 The logic is in `Daily.js`.
 
+## Tasks
+
+**Tasks** in the sidebar (next to Calendar) lists every open to-do on your
+pages, outside the trash, the archive and the templates. They are grouped as
+*Overdue*, *Today*, *Next 7 days*, *Later* and *No date* (folded to start
+with). The tags they have most filter them. Ticking one there ticks it on its
+page, and *Undo* in the toast takes it back. A click opens its page at that
+to-do.
+
+What a to-do line says makes it a task:
+
+| In the line | Means |
+|---|---|
+| the first `@` date or `⏰` reminder | its date (`[@Fri 16 Oct](uber-notebook://date/2026-10-16)`) |
+| `#prio-hoch`, `#prio-high`, `#high`, `#wichtig`, `#dringend`, `#urgent` | important (first on its day, its box red) |
+| `#prio-niedrig`, `#prio-low`, `#low` | not so important |
+| `#in-arbeit`, `#doing`, `#in-progress` | in progress |
+
+Dated tasks are also on the calendar (☐), one click away from their page.
+`omarchy-shell uber-notebook tasks ""` (or `tasks "#todo"`) lists them as
+JSON. The start page can be *Tasks* too.
+
+**How:** a page's index entry keeps its open to-dos as it's saved (`tasks`:
+block, words, date, priority, in progress, tags; empty fields left out).
+Pages saved before this came in get theirs as the pages are read after
+start, once. The view reads its pages' to-dos from memory only while it's
+open. Measured on the real notes (387 open tasks, 1019 kept counting the
+archived Journal's copies): the view's list takes 3 ms, the sidebar's count
+1.7 ms and the calendar's 1.3 ms whenever anything changes. index.json grows
+by about 190 KB (16 %), written once writing pauses. This is in `Tasks.js`
+and `app/TaskView.qml`.
+
 ## Search
 
 Ctrl+P and `find` look in the pages' text that Uber Notebook keeps in memory
@@ -78,7 +111,7 @@ folded text and the words. This is in `Search.js`.
 ## Start page
 
 Settings → General → **Pages opens on**: *Where you were* (as before),
-*Today's daily note*, *Calendar* or *#todo*. This applies the first time
+*Today's daily note*, *Calendar*, *Tasks* or *#todo*. This applies the first time
 Pages opens after the shell starts; after that it opens where you were.
 From a terminal, `set startPage` also takes `tag:<name>` or a page's title
 or id (one that isn't there: where you were).
@@ -87,22 +120,26 @@ or id (one that isn't there: where you were).
 
 | File | What |
 |---|---|
-| `Daily.js`, `Properties.js`, `Search.js` | new: the logic above |
-| `Workspace.qml` | imports Search.js; `search()` in memory once every text is read; the warm-up after `scanTexts` |
+| `Daily.js`, `Properties.js`, `Search.js`, `Tasks.js`, `app/TaskView.qml` | new: the logic and views above |
+| `Workspace.js` | imports Tasks.js; `tasks` on an entry (`entry`, `indexJson`) |
+| `Sidebar.js`, `app/DocSidebar.qml` | the Tasks tile (its tip: `taskCount`) |
+| `Workspace.qml` | imports Search.js and Tasks.js; `search()` in memory once every text is read; the warm-up after `scanTexts`; a page's tasks in `savePage` and in `scanTexts` |
 | `Import.js` | imports Properties.js; the front matter's line in `fromMarkdown` |
 | `Defaults.js` | `dailyParent`, `dailyTemplate`, `dailyByYear`, `startPage` |
 | `app/SettingsPanel.qml` | General → Pages opens on |
-| `app/DocView.qml` | imports Daily.js; `openDaily()`; Ctrl+Shift+T in `handleKey`; `startShown`, `openStart()` in `activate()` |
+| `app/DocView.qml` | imports Daily.js; `openDaily()`; Ctrl+Shift+T in `handleKey`; `startShown`, `openStart()` in `activate()`; `tasksShown`, `openTasks()`, the TaskView, "tasks" in the history, the top bar's title |
 | `app/Editor.qml` | Ctrl+Shift+T passed on from a locked page |
-| `app/CalendarView.qml` | imports Daily.js; daily notes among `notes` (`dailies()`, `dailyDay()`); labels via `Daily.noteLabel`; the `calDaily` button |
-| `Api.qml`, `Service.qml`, `Scope.js` | `find` through Search.js; the `prepend` and `daily` commands; `move` into a page keeps its position (placePage) |
+| `app/CalendarView.qml` | imports Daily.js and Tasks.js; daily notes and dated tasks among `notes` (`dailies()`, `dailyDay()`); labels via `Daily.noteLabel`; the `calDaily` button |
+| `Api.qml`, `Service.qml`, `Scope.js` | `find` through Search.js; the `tasks` command; the `prepend` and `daily` commands; `move` into a page keeps its position (placePage) |
 | `Help.js` | Ctrl+Shift+T, `prepend`, `daily`, the settings |
 | `tests/import.test.cjs` | a front matter's tags are kept now |
+| `tests/sidebar.test.cjs` | the Tasks tile in the sidebar's list |
 | `tests/qml/tst_pages.qml` | test_6, test_6b: in memory first, grep while a text isn't read yet |
 | `tests/run` | daily.test.cjs, properties.test.cjs |
 
 Tests: `tests/daily.test.cjs`, `tests/properties.test.cjs`,
-`tests/search.test.cjs`, `tests/qml/tst_daily.qml`, `tests/qml/tst_search.qml`.
+`tests/search.test.cjs`, `tests/tasks.test.cjs`, `tests/qml/tst_daily.qml`,
+`tests/qml/tst_search.qml`, `tests/qml/tst_tasks.qml`.
 
 **Performance.** Nothing while you type. The calendar looks through the daily
 notes' page when it changes, and only while it's open (a few hundred titles,

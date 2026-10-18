@@ -81,6 +81,8 @@ FocusScope {
   property bool libraryShown: false
   // People (contacts), in place of a page.
   property bool peopleShown: false
+  // [fork] Tasks (TaskView.qml), in place of a page.
+  property bool tasksShown: false
   // Templates (yours and Uber Notebook's), in place of a page.
   property bool templatesShown: false
   // An event just made from "More" with nothing in it yet (it goes if it's left empty).
@@ -103,6 +105,7 @@ FocusScope {
   readonly property alias historyPanel: historyPanel
   readonly property alias tagView: tagView
   readonly property alias calendarView: calendarView
+  readonly property alias taskView: taskView  // [fork]
   readonly property alias libraryView: libraryView
   readonly property alias peopleView: peopleView
   readonly property alias templatesView: templatesView
@@ -121,7 +124,7 @@ FocusScope {
 
   // Pages shown: the page you were on last, else the first one.
   function activate() {
-    if (tagShown || libraryShown || peopleShown || templatesShown) return
+    if (tagShown || libraryShown || peopleShown || templatesShown || tasksShown) return  // [fork] tasksShown
     if (page) { focusPage(false); return }
     if (!workspace || !workspace.ready) { pendingActivate = true; return }
     workspace.ensureStarted()
@@ -166,6 +169,7 @@ FocusScope {
     if (String(id).indexOf("calendar") === 0) { openCalendar(String(id).slice(9), fromHistory); return }
     if (String(id).indexOf("library") === 0) { openLibrary(String(id).slice(8), fromHistory); return }
     if (String(id).indexOf("people") === 0) { openPeople(String(id).slice(7), fromHistory); return }
+    if (id === "tasks") { openTasks(fromHistory); return }  // [fork]
     if (id === "templates") { openTemplates(fromHistory); return }
     commit()
     workspace.readPage(id, function(p) {
@@ -706,6 +710,7 @@ FocusScope {
     if (!s || s === "last") return false
     if (s === "daily") { openDaily(""); return true }
     if (s === "calendar") { openCalendar("", false); return true }
+    if (s === "tasks") { openTasks(false); return true }
     if (s.indexOf("tag:") === 0 && s.length > 4) { openTag(s.slice(4).replace(/^#/, "").toLowerCase(), false); return true }
     var ix = workspace.index
     var id = ix.pages[s] && !Workspace.inTrash(ix, s) ? s : Workspace.pageNamed(ix, s)
@@ -851,6 +856,36 @@ FocusScope {
       historyAt = history.length - 1
     }
     if (!id) peopleView.focusSearch()
+  }
+
+  // [fork] Tasks, in place of a page (TaskView.qml). Any other view, or a
+  // page, opened: not shown any more (the Connections below).
+  function openTasks(fromHistory) {
+    if (!workspace) return
+    commit()
+    page = null
+    editor.load([])
+    pageDirty = false
+    tagShown = ""
+    calendarShown = false
+    libraryShown = false
+    peopleShown = false
+    templatesShown = false
+    tasksShown = true
+    if (!fromHistory) {
+      history = history.slice(0, historyAt + 1).concat(["tasks"]).slice(-100)
+      historyAt = history.length - 1
+    }
+    taskView.forceActiveFocus()
+  }
+  Connections {
+    target: view
+    function onPageChanged() { if (view.page) view.tasksShown = false }
+    function onTagShownChanged() { if (view.tagShown) view.tasksShown = false }
+    function onCalendarShownChanged() { if (view.calendarShown) view.tasksShown = false }
+    function onLibraryShownChanged() { if (view.libraryShown) view.tasksShown = false }
+    function onPeopleShownChanged() { if (view.peopleShown) view.tasksShown = false }
+    function onTemplatesShownChanged() { if (view.templatesShown) view.tasksShown = false }
   }
 
   function copyText(text) {
@@ -3006,11 +3041,11 @@ FocusScope {
         Item { width: 6; height: 1 }
         // The calendar shown, the Library, or People.
         Text {
-          visible: view.calendarShown || view.libraryShown || view.peopleShown || view.templatesShown
+          visible: view.calendarShown || view.libraryShown || view.peopleShown || view.templatesShown || view.tasksShown  // [fork] tasksShown
           anchors.verticalCenter: parent.verticalCenter
           leftPadding: 6
           textFormat: Text.PlainText
-          text: view.templatesShown ? "Templates" : view.peopleShown ? "People" : view.libraryShown ? "Library" : "Calendar"
+          text: view.tasksShown ? "Tasks" : view.templatesShown ? "Templates" : view.peopleShown ? "People" : view.libraryShown ? "Library" : "Calendar"
           font.family: view.theme.uiFont
           font.pixelSize: 13
           color: view.theme.text
@@ -3129,10 +3164,10 @@ FocusScope {
           tip: view.dictating ? "Done dictating  Ctrl+Shift+D" : view.recorder && view.recorder.checked && !view.recorder.canTranscribe ? "Dictation needs voxtype (Omarchy's dictation)" : "Dictate: say it, and it's written where you are  Ctrl+Shift+D"
           onClicked: view.dictate()
         }
-        IconButton { visible: view.tagShown === "" && !view.calendarShown && !view.libraryShown && !view.peopleShown && !view.templatesShown; theme: view.theme; icon: view.theme.icons.search; size: 30; iconSize: 16; tip: "Find on this page  Ctrl+F"; checked: findBar.shown; onClicked: findBar.toggle() }
+        IconButton { visible: view.tagShown === "" && !view.calendarShown && !view.libraryShown && !view.peopleShown && !view.templatesShown && !view.tasksShown; theme: view.theme; icon: view.theme.icons.search; size: 30; iconSize: 16; tip: "Find on this page  Ctrl+F"; checked: findBar.shown; onClicked: findBar.toggle() }
         IconButton {
           id: moreButton
-          visible: !view.calendarShown && !view.libraryShown && !view.peopleShown && !view.templatesShown
+          visible: !view.calendarShown && !view.libraryShown && !view.peopleShown && !view.templatesShown && !view.tasksShown  // [fork] tasksShown
           theme: view.theme; icon: view.theme.icons.more; size: 30; iconSize: 16; tip: "Font, width, export, trash"
           active: view.page !== null
           onClicked: pageMenu.open()
@@ -3171,6 +3206,20 @@ FocusScope {
       onColorRequested: function(anchor) { view.openTagColors(anchor) }
       onRenameRequested: function(anchor) { view.openTagRename(anchor) }
       onRemoveRequested: view.removeTag()
+    }
+
+    // [fork] Tasks, in place of a page.
+    TaskView {
+      id: taskView
+      objectName: "taskView"
+      z: 2
+      anchors.top: topBar.bottom
+      anchors.bottom: parent.bottom
+      width: parent.width
+      visible: view.tasksShown
+      theme: view.theme
+      workspace: view.workspace
+      view: view
     }
 
     // People, in place of a page.
@@ -3842,7 +3891,7 @@ FocusScope {
 
     // No page open (none yet, or every one in the trash).
     Column {
-      visible: view.page === null && view.tagShown === "" && !view.calendarShown && !view.libraryShown && !view.peopleShown && !view.templatesShown && view.workspace !== null && view.workspace.ready
+      visible: view.page === null && view.tagShown === "" && !view.calendarShown && !view.libraryShown && !view.peopleShown && !view.templatesShown && !view.tasksShown && view.workspace !== null && view.workspace.ready  // [fork] tasksShown
       anchors.centerIn: parent
       spacing: 12
       Text {

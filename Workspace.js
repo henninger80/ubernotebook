@@ -35,6 +35,8 @@
 .import "Board.js" as Board
 .import "Collection.js" as Collection
 .import "Email.js" as Email
+// [fork] Tasks.js: a page's open to-dos, kept on its entry.
+.import "Tasks.js" as Tasks
 
 var VERSION = 1
 var MAX_DEPTH = 12
@@ -580,6 +582,8 @@ function entry(raw) {
     // A project (its status and due date), and the to-dos on the page.
     project: cleanProject(e.project),
     checks: e.checks && typeof e.checks === "object" ? cleanChecks(e.checks) : null,
+    // [fork] Its open to-dos, as tasks (Tasks.js; null: not worked out yet).
+    tasks: Array.isArray(e.tasks) ? Tasks.clean(e.tasks) : null,
     // Put away in the archive (with the pages in it).
     archived: e.archived === true,
     // A template (with the pages in it), and the template new pages inside
@@ -1053,6 +1057,7 @@ function indexJson(index) {
     if (e.collected) out.collected = e.collected
     if (e.project) out.project = e.project
     if (e.checks) out.checks = e.checks
+    if (e.tasks) out.tasks = e.tasks  // [fork] Tasks.js
     if (e.archived) out.archived = true
     if (e.template) out.template = true
     if (e.description) out.description = e.description

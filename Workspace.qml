@@ -1,6 +1,7 @@
 import QtQuick
 import "Workspace.js" as Workspace
 import "Search.js" as Search  // [fork]
+import "Tasks.js" as Tasks  // [fork]
 import "Import.js" as Import
 import "Blocks.js" as Blocks
 import "Html.js" as Html
@@ -394,6 +395,7 @@ Item {
     // at once (some of them big) held up typing for a while after the start.
     // As readPages does it, for what it reads.
     var got = []
+    var tasksFound = false  // [fork]
     function next() {
       if (gen !== ws.generation) return
       var t = Date.now()
@@ -405,10 +407,19 @@ Item {
         if (!page) continue
         ws.readJson[id] = JSON.stringify(page)
         ws.texts[id] = page.text || Workspace.pageText(page)
+        // [fork] Its tasks, if the tree doesn't have them yet (Tasks.js).
+        var en = ws.index.pages[id]
+        if (en && en.tasks === null) { en.tasks = Tasks.ofBlocks(Workspace.flatten(page)); tasksFound = true }
       }
       if (got.length) { scanTimer.later(next); return }
       var lot = ids.splice(0, 200).filter(function(id) { return ws.texts[id] === undefined && !ws.written[id] })
-      if (lot.length === 0) { if (ids.length) scanTimer.later(next); else warm(); return }
+      if (lot.length === 0) {
+        if (ids.length) { scanTimer.later(next); return }
+        // [fork] Tasks found as the pages were read: shown, and kept.
+        if (tasksFound) { ws.revision++; ws.saveIndex(true) }
+        warm()
+        return
+      }
       files.readFiles(lot.map(function(id) { return pagePath(id) }), function(read) {
         if (gen !== ws.generation) return
         for (var path in read) got.push({ path: path, text: read[path] })
@@ -464,8 +475,13 @@ Item {
     if (JSON.stringify(project) !== JSON.stringify(e.project)) { e.project = project; changed = true }
     var checks = Workspace.pageChecks(page)
     if (JSON.stringify(checks) !== JSON.stringify(e.checks)) { e.checks = checks; changed = true }
+    // [fork] Its open to-dos (Tasks.js): the Tasks view and the calendar
+    // told, the tree written soon or once writing pauses as it is.
+    var tasks = Tasks.ofBlocks(Workspace.flatten(page))
+    var tasksChanged = JSON.stringify(tasks) !== JSON.stringify(e.tasks)
+    if (tasksChanged) e.tasks = tasks
     if (changed) touched()
-    else saveIndex(true)  // [fork] lazy: only its time changed
+    else { if (tasksChanged) revision++; saveIndex(true) }  // [fork] lazy: only its time (or its tasks) changed
     saved(page.id)
   }
 

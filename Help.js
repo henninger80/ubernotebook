@@ -2380,6 +2380,11 @@ var SECTIONS = [
       "Last view saved as calendarView"
      ],
      [
+      "Tasks tile in the sidebar",
+      "Shows every open to-do on your pages: overdue, today, the next 7 days, later and no date (folded to start). The tags they have most filter them; ticking one does it on its page (Undo takes it back); a click opens its page there",
+      "A to-do's date is the first @ date or reminder in its line. #prio-hoch, #dringend or #wichtig make it important, #prio-niedrig unimportant, #in-arbeit in progress. Dated ones are on the calendar too."
+     ],
+     [
       "Month / Week / Agenda / Compact, or M, W, A, C",
       "Switches the view. Compact shows a small month with dots, and the days from the one you pick (+ on a day adds an event)",
       "In a narrow window the views fold into one menu."
@@ -3594,6 +3599,11 @@ var SECTIONS = [
       "omarchy-shell uber-notebook daily <day>",
       "Gives a day's daily note (2026-10-16, or \"\" for today), made from your daily template if there's none yet.",
       "Where daily notes go: set dailyParent, dailyTemplate and dailyByYear."
+     ],
+     [
+      "omarchy-shell uber-notebook tasks <tag>",
+      "Lists every open to-do with its page, words, date, bucket (overdue, today, week, later, none), priority and whether it's in progress. A tag (#todo) lists only those with it; \"\" lists every one.",
+      ""
      ],
      [
       "omarchy-shell uber-notebook makeTemplate <id>",

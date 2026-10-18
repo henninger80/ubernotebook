@@ -23,9 +23,10 @@ function apply(from, steps) {
 
 check("what can be left out, and where it is", () => {
   const items = plain(S.ITEMS);
-  assert.deepEqual(items.map((i) => i.id), ["search", "calendar", "library", "people", "today", "favorites", "projects", "tags", "import", "templates", "archive", "trash"]);
+  // [fork] Tasks.
+  assert.deepEqual(items.map((i) => i.id), ["search", "calendar", "tasks", "library", "people", "today", "favorites", "projects", "tags", "import", "templates", "archive", "trash"]);
   assert.ok(!items.some((i) => i.id === "pages" || i.id === "settings"), "Pages and Settings are always there");
-  assert.deepEqual(plain(S.itemsAt("top")).map((i) => i.id), ["search", "calendar", "library", "people"]);
+  assert.deepEqual(plain(S.itemsAt("top")).map((i) => i.id), ["search", "calendar", "tasks", "library", "people"]);
   assert.deepEqual(plain(S.itemsAt("foot")).map((i) => i.id), ["import", "templates", "archive", "trash"]);
   assert.equal(S.label("favorites"), "Favorites");
   assert.equal(S.label("nope"), "");

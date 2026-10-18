@@ -137,6 +137,7 @@ function shortTitle(title) {
 // CalendarView said it before there were days' pages.
 function noteLabel(n, view) {
   if (n.kind === "daily") return "\u{1f4d3} " + n.title
+  if (n.kind === "task") return "\u2610 " + n.title
   if (view === "week") return "\u23f0 " + n.title
   var mark = n.kind === "due" ? "\u2691 " : "\u23f0 "
   if (view === "agenda") return mark + n.title + (n.text && n.kind !== "due" ? ": " + n.text : "")

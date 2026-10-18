@@ -24,7 +24,8 @@
 // Commands that only read (or show Uber Notebook).
 var READS = ["help", "list", "find", "read", "blocks", "tags", "library", "contacts", "contact", "tagged", "projects", "templates",
   "events", "trashed", "history", "version", "preferences", "notebooks", "notebook", "readNotebook", "profiles", "backups",
-  "appVersion", "checkUpdate", "releaseNotes", "skill", "status", "toggle", "show", "hide", "search", "shelf", "pages", "calendar", "open", "settings"]
+  "appVersion", "checkUpdate", "releaseNotes", "skill", "status", "toggle", "show", "hide", "search", "shelf", "pages", "calendar", "open", "settings",
+  "tasks"]  // [fork]
 
 // Commands that change your notes.
 var CHANGES = ["add", "addTo", "append", "replace", "insertAfter", "check", "color", "removeBlock", "board", "picture", "setLink",

@@ -8,6 +8,7 @@ import "../Dates.js" as Dates
 import "../Colors.js" as Colors
 import "../Sidebar.js" as Sidebar
 import "../Collection.js" as Collection
+import "../Tasks.js" as Tasks  // [fork]
 
 // The sidebar of Pages. At the top, staying put: the switch back to
 // notebooks, the profile, search and a new page, then the calendar, the
@@ -246,6 +247,12 @@ Rectangle {
   // Today: what's left of it on the calendar, soonest first.
   property real nowMs: Date.now()
   Timer { interval: 60000; repeat: true; running: true; onTriggered: bar.nowMs = Date.now() }
+  // [fork] How many tasks are open, and how many overdue (Tasks.js), for the Tasks tile's tip.
+  readonly property var taskCount: {
+    var r = view.workspace ? view.workspace.revision : 0
+    if (!view.workspace || !bar.shows("tasks")) return { open: 0, late: 0 }
+    return Tasks.count(view.workspace.index, new Date(bar.nowMs))
+  }
   readonly property var todayLeft: {
     var r = view.workspace ? view.workspace.calendarRevision : 0
     var n = new Date(nowMs)
@@ -817,7 +824,7 @@ Rectangle {
     // The calendar, the library and people.
     Row {
       id: navRow
-      readonly property int shown: (bar.shows("calendar") ? 1 : 0) + (bar.shows("library") ? 1 : 0) + (bar.shows("people") ? 1 : 0)
+      readonly property int shown: (bar.shows("calendar") ? 1 : 0) + (bar.shows("tasks") ? 1 : 0) + (bar.shows("library") ? 1 : 0) + (bar.shows("people") ? 1 : 0)  // [fork] tasks
       readonly property real tileW: shown ? (width - spacing * (shown - 1)) / shown : 0
       visible: shown > 0
       width: parent.width
@@ -832,6 +839,18 @@ Rectangle {
         tip: Dates.SHORT_DAYS[new Date(bar.nowMs).getDay()] + " " + new Date(bar.nowMs).getDate() + (bar.todayLeft.length === 1 ? ", 1 event left today" : bar.todayLeft.length > 1 ? ", " + bar.todayLeft.length + " events left today" : "")
         checked: bar.view.calendarShown
         onClicked: bar.view.openCalendar("")
+      }
+      // [fork] Tasks (TaskView.qml).
+      NavTile {
+        objectName: "tasksTile"
+        visible: bar.shows("tasks")
+        width: navRow.tileW
+        itemId: "tasks"
+        icon: bar.theme.icons.checks
+        text: "Tasks"
+        tip: bar.taskCount.open === 1 ? "1 open to-do" : bar.taskCount.open + " open to-dos" + (bar.taskCount.late ? ", " + bar.taskCount.late + " overdue" : "")
+        checked: bar.view.tasksShown
+        onClicked: bar.view.openTasks(false)
       }
       NavTile {
         objectName: "libraryTile"

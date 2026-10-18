@@ -19,6 +19,7 @@ import "Profiles.js" as Profiles
 import "Defaults.js" as Defaults
 import "Daily.js" as Daily  // [fork]
 import "Search.js" as Search  // [fork]
+import "Tasks.js" as Tasks  // [fork]
 
 // Uber Notebook's commands for AI agents and scripts: `omarchy-shell uber-notebook
 // <command>` (Service.qml hands them on). They work on the same pages as the
@@ -409,6 +410,7 @@ QtObject {
         { use: "replace <page id> <block id> <file.md>", does: "the Markdown in place of that block and the blocks inside it" },
         { use: "insertAfter <page id> <block id> <file.md>", does: "the Markdown after that block (and the blocks inside it), as deep as it is" },
         // [fork] prepend and daily (Daily.js).
+        { use: "tasks <tag>", does: "every open to-do (\"\" every one, or those with a tag): its page, block, words, date, bucket (overdue, today, week, later, none), priority (1, 0, -1) and whether it's in progress" },
         { use: "prepend <page id> <file.md>", does: "the Markdown at the start of a page, before its first block" },
         { use: "daily <day>", does: "a day's daily note (2026-10-16, \"\" today): its id, made from your daily template if there's none (set dailyParent, dailyTemplate, dailyByYear)" },
         { use: "trash <id>", does: "the page (and the pages in it) to the trash, where it can be put back" },
@@ -883,6 +885,19 @@ QtObject {
     return answer(Workspace.blockList(page, Markdown.inline, function(pid) {
       var e = api.workspace.index.pages[pid]
       return e ? e.title || "Untitled" : ""
+    }))
+  }
+
+  // [fork] Every open to-do as a task (Tasks.js).
+  function tasks(tag) {
+    var not = unready()
+    if (not) return fail(not)
+    var t = String(tag || "").trim()
+    var name = t ? Tags.clean(t) : ""
+    if (t && !name) return fail("that isn't a tag (#todo, or \"\" for every task)")
+    var ix = workspace.index
+    return answer(Tasks.all(ix, new Date(), name).map(function(x) {
+      return { page: x.page, title: x.title, path: where(x.page), block: x.b, text: x.t, date: x.d, bucket: x.bucket, priority: x.p, inProgress: x.s === "doing", tags: x.g }
     }))
   }
 

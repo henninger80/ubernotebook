@@ -9,6 +9,7 @@
 var ITEMS = [
   { id: "search", label: "Search", place: "top" },
   { id: "calendar", label: "Calendar", place: "top" },
+  { id: "tasks", label: "Tasks", place: "top" },  // [fork] TaskView.qml
   { id: "library", label: "Library", place: "top" },
   { id: "people", label: "People", place: "top" },
   { id: "today", label: "Today", place: "sections" },

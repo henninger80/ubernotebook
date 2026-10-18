@@ -789,7 +789,7 @@ Popup {
             note: "The first time after the shell starts. Or any page: set startPage \"<its title>\" from a terminal."
             Choice {
               objectName: "startPage"
-              options: [{ label: "Where you were", value: "" }, { label: "Today's daily note", value: "daily" }, { label: "Calendar", value: "calendar" }, { label: "#todo", value: "tag:todo" }]
+              options: [{ label: "Where you were", value: "" }, { label: "Today's daily note", value: "daily" }, { label: "Calendar", value: "calendar" }, { label: "Tasks", value: "tasks" }, { label: "#todo", value: "tag:todo" }]
               value: panel.s.startPage || ""
               onPicked: function(v) { panel.set("startPage", v) }
             }

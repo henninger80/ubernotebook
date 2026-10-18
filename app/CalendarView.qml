@@ -6,6 +6,7 @@ import "../Dates.js" as Dates
 import "../Docs.js" as Docs
 import "../Colors.js" as Colors
 import "../Daily.js" as Daily  // [fork]
+import "../Tasks.js" as Tasks  // [fork]
 
 // The calendar, in place of a page (the sidebar's Calendar): your events,
 // and the dates in your notes (reminders, projects' due dates), by month,
@@ -61,10 +62,11 @@ Item {
   readonly property var occ: { var r = workspace ? workspace.calendarRevision : 0; return workspace ? Calendar.occurrences(workspace.calendar, range[0], range[1]) : [] }
   // [fork] Not while it's hidden.
   readonly property var notes: { var r = workspace ? workspace.revision : 0; return workspace && visible ? Workspace.datedNotes(workspace.index, range[0], range[1]).concat(dailies()).sort(function(a, b) { return a.at - b.at || (a.kind === "daily" ? -1 : b.kind === "daily" ? 1 : 0) }) : [] }
-  // [fork] Each day's daily note too (Daily.js), first on its day.
+  // [fork] Each day's daily note too (Daily.js), first on its day, and the
+  // to-dos with a date (Tasks.js).
   function dailies() {
     var s = view && view.settings ? view.settings : {}
-    return Daily.inRange(workspace.index, s.dailyParent || "Daily notes", range[0], range[1], new Date())
+    return Daily.inRange(workspace.index, s.dailyParent || "Daily notes", range[0], range[1], new Date()).concat(Tasks.inRange(workspace.index, range[0], range[1]))
   }
   // [fork] The day the daily-note button opens: the one picked, else today when it's shown, else the first shown.
   function dailyDay() {

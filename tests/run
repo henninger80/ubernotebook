@@ -46,6 +46,7 @@ node tests/perf.test.cjs  # [fork]
 node tests/daily.test.cjs  # [fork]
 node tests/properties.test.cjs  # [fork]
 node tests/search.test.cjs  # [fork]
+node tests/tasks.test.cjs  # [fork]
 node tests/moreblocks.test.cjs
 node tests/collection.test.cjs
 node tests/contacts.test.cjs

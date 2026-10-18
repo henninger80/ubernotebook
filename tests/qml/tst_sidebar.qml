@@ -130,9 +130,9 @@ Item {
       tryCompare(service.settings, "sidebarHidden", ["calendar"], 1000)
       tryVerify(function() { return named("calendarTile") === null }, 1000, "gone")
       verify(root.lastToast.indexOf("Calendar is hidden") === 0, root.lastToast)
-      // The other two share the row.
-      var lib = named("libraryTile"), people = named("peopleTile")
-      verify(Math.abs(lib.width - people.width) < 1 && lib.width > sidebar().width / 3, "two, side by side")
+      // The other three share the row ([fork] Tasks is one of them).
+      var lib = named("libraryTile"), people = named("peopleTile"), tasks = named("tasksTile")
+      verify(Math.abs(lib.width - people.width) < 1 && Math.abs(lib.width - tasks.width) < 1 && lib.width > sidebar().width / 4, "three, side by side")
       // Undo: back.
       root.lastUndo()
       tryVerify(function() { return named("calendarTile") !== null }, 1000)
