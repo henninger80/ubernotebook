@@ -1,5 +1,6 @@
 import QtQuick
 import "Workspace.js" as Workspace
+import "Search.js" as Search  // [fork]
 import "Import.js" as Import
 import "Blocks.js" as Blocks
 import "Html.js" as Html
@@ -407,12 +408,17 @@ Item {
       }
       if (got.length) { scanTimer.later(next); return }
       var lot = ids.splice(0, 200).filter(function(id) { return ws.texts[id] === undefined && !ws.written[id] })
-      if (lot.length === 0) { if (ids.length) scanTimer.later(next); return }
+      if (lot.length === 0) { if (ids.length) scanTimer.later(next); else warm(); return }
       files.readFiles(lot.map(function(id) { return pagePath(id) }), function(read) {
         if (gen !== ws.generation) return
         for (var path in read) got.push({ path: path, text: read[path] })
         scanTimer.later(next)
       }, 32 * 1024 * 1024)
+    }
+    // [fork] Then what searching needs (Search.js), a little at a time.
+    function warm() {
+      if (gen !== ws.generation) return
+      if (!Search.warm(ws.index, ws.texts, 12)) scanTimer.later(warm)
     }
     next()
   }
@@ -1513,6 +1519,15 @@ Item {
   function search(query, done) {
     var words = Workspace.terms(query)
     if (words.length === 0 || !folder || (files && files.switching === true)) { done([]); return }
+    // [fork] Once every page's text is read: in it, in memory, accents aside
+    // and a word a letter off (Search.js), at once.
+    if (Search.complete(index, texts)) {
+      done(Search.find(index, texts, query, 50).map(function(r) {
+        var e = ws.index.pages[r.id]
+        return { id: r.id, title: e.title, icon: e.icon, snippet: Search.snippet(ws.texts[r.id], e.title, r.at, r.length), score: r.score, modified: e.modified }
+      }))
+      return
+    }
     var longest = words.slice().sort(function(a, b) { return b.length - a.length })[0]
     // (Another profile opened meanwhile: nothing found in the one before is
     // given; its pages read again from this one's (readPages) never.)

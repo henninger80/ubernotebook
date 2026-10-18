@@ -74,6 +74,10 @@ var DEFAULTS = {
   dailyParent: "Daily notes",
   dailyTemplate: "",
   dailyByYear: true,
+  // [fork] What Pages opens on the first time after the shell starts: ""
+  // (the page you were on), "daily" (today's daily note), "calendar",
+  // "tag:<name>" (a tag's page), or a page's title or id.
+  startPage: "",
   // The clock times are shown with: "12" (1:30 pm) or "24" (13:30).
   clock: "12",
   // A reminder's or an event alert's own words in its notification (off:
@@ -184,6 +188,7 @@ var SCHEMA = {
     dailyParent: "string",  // [fork]
     dailyTemplate: "string",  // [fork]
     dailyByYear: "bool",  // [fork]
+    startPage: "string",  // [fork]
     peopleLayout: "string",
     peopleGroup: "string",
     colorSidebar: "string",

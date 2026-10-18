@@ -126,6 +126,8 @@ FocusScope {
     if (!workspace || !workspace.ready) { pendingActivate = true; return }
     workspace.ensureStarted()
     var ix = workspace.index
+    // [fork] The start page, the first time (startPage).
+    if (!startShown) { startShown = true; if (openStart()) return }
     var last = settings.lastPage || ""
     if (last && ix.pages[last] && !Workspace.inTrash(ix, last)) { open(last); return }
     var first = ix.top.filter(function(id) { var e = ix.pages[id]; return e && !e.trashed && !e.template && !e.archived && !e.synced })[0]
@@ -694,6 +696,21 @@ FocusScope {
     markDirty()
     commit()
     return made
+  }
+
+  // [fork] Whether the start page (startPage) has been shown since the
+  // shell started; and shown: whether there was one to show.
+  property bool startShown: false
+  function openStart() {
+    var s = String(settings.startPage || "").trim()
+    if (!s || s === "last") return false
+    if (s === "daily") { openDaily(""); return true }
+    if (s === "calendar") { openCalendar("", false); return true }
+    if (s.indexOf("tag:") === 0 && s.length > 4) { openTag(s.slice(4).replace(/^#/, "").toLowerCase(), false); return true }
+    var ix = workspace.index
+    var id = ix.pages[s] && !Workspace.inTrash(ix, s) ? s : Workspace.pageNamed(ix, s)
+    if (id && ix.pages[id] && !Workspace.inTrash(ix, id)) { open(id); return true }
+    return false
   }
 
   // [fork] A day's page ("2026-10-16"; "" today), made from your template if

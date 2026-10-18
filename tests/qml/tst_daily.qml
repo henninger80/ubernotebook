@@ -43,6 +43,7 @@ Item {
       var u = { sounds: false }
       for (var k in (user || {})) u[k] = user[k]
       service.user = u
+      view.startShown = false
       files.reset()
       view.libraryShown = false
       view.calendarShown = false
@@ -55,7 +56,7 @@ Item {
       ws.load()
       tryCompare(ws, "ready", true, 2000)
       view.activate()
-      tryVerify(function() { return view.page !== null }, 2000)
+      tryVerify(function() { return view.page !== null || view.calendarShown || view.tagShown !== "" }, 2000)
     }
     function json(text) { return JSON.parse(text) }
     function fileOf(id) { return files.parseJson(files.disk[Workspace.pageFile(files.rootPath, id)] || "") }
@@ -157,6 +158,29 @@ Item {
       compare(p.content.length, before + 1)
       verify(Html.plainText(p.blocks[p.content[0]].html).indexOf("#Kopfsprung") === 0, p.blocks[p.content[0]].html)
       verify(p.blocks[p.content[0]].html.indexOf("uber-notebook://tag/kopfsprung") >= 0, "a tag")
+    }
+
+    // The start page (startPage): the first time only.
+    function test_6_the_start_page() {
+      fresh({ startPage: "daily" })
+      tryVerify(function() { return view.page && view.page.title === "Daily note, " + long(today()) }, 2000, view.page ? view.page.title : "")
+      var daily = view.page.id
+      var other = ws.createPage({ parent: "", title: "Plans" })
+      view.open(other.id)
+      tryCompare(view.page, "id", other.id)
+      view.activate()
+      compare(view.page.id, other.id, "after that, where you were")
+      fresh({ startPage: "Plans" })
+      compare(view.page.title, "Getting started", "a page that isn't there: where you were")
+      var plans = ws.createPage({ parent: "", title: "Plans" })
+      view.page = null
+      view.startShown = false
+      view.activate()
+      tryCompare(view.page, "id", plans.id)
+      fresh({ startPage: "calendar" })
+      verify(view.calendarShown)
+      fresh({ startPage: "tag:todo" })
+      compare(view.tagShown, "todo")
     }
 
     // move <id> <parent> <position>: the place holds inside a page too.

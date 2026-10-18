@@ -18,6 +18,7 @@ import "Scope.js" as Scope
 import "Profiles.js" as Profiles
 import "Defaults.js" as Defaults
 import "Daily.js" as Daily  // [fork]
+import "Search.js" as Search  // [fork]
 
 // Uber Notebook's commands for AI agents and scripts: `omarchy-shell uber-notebook
 // <command>` (Service.qml hands them on). They work on the same pages as the
@@ -504,21 +505,14 @@ QtObject {
     var query = String(words || "")
     if (Workspace.terms(query).length === 0) return fail("find needs words to look for")
     var ix = workspace.index
-    var found = []
-    for (var id in ix.pages) {
-      if (Workspace.inTrash(ix, id) || Workspace.inTemplates(ix, id)) continue
-      var e = ix.pages[id]
-      var text = workspace.texts[id] || e.title || ""
-      var score = Workspace.score(e.title || "Untitled", text, query)
-      if (score <= 0) continue
-      var d = Workspace.describe(ix, id)
-      var s = Workspace.snippet(text.slice(String(e.title || "").length), query)
+    // [fork] Accents aside and a word a letter off (Search.js).
+    return answer(Search.find(ix, workspace.texts, query, 50).map(function(r) {
+      var d = Workspace.describe(ix, r.id)
+      var e = ix.pages[r.id]
+      var s = Search.snippet(workspace.texts[r.id] || e.title || "", e.title || "", r.at, r.length)
       d.snippet = s.before + s.match + s.after
-      d.score = score
-      found.push(d)
-    }
-    found.sort(function(a, b) { return b.score - a.score || (a.modified < b.modified ? 1 : -1) })
-    return answer(found.slice(0, 50).map(function(d) { delete d.score; return d }))
+      return d
+    }))
   }
 
   // ---- projects and the archive ---------------------------------------------------------------

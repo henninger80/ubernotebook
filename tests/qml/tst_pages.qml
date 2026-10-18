@@ -159,6 +159,17 @@ Item {
     function test_6_search() {
       fresh()
       var found = null
+      // [fork] Once every page's text is read: found in it at once, no grep
+      // (Search.js). Before that, with grep, as below.
+      tryVerify(function() { return Object.keys(ws.index.pages).every(function(id) { return ws.texts[id] !== undefined }) }, 2000)
+      var mark0 = files.ran.length
+      ws.search("toggles fold", function(list) { found = list })
+      compare(found.length, 1)
+      compare(found[0].title, "Getting started")
+      compare(found[0].snippet.match.toLowerCase(), "toggles")
+      compare(files.ran.slice(mark0).filter(function(a) { return a[0] === "/usr/bin/grep" }).length, 0)
+      delete ws.texts[Object.keys(ws.index.pages)[0]]
+      found = null
       var mark = files.ran.length
       ws.search("toggles fold", function(list) { found = list })
       tryVerify(function() { return found !== null }, 2000)
@@ -179,6 +190,9 @@ Item {
     function test_6b_search_as_another_profile_opens() {
       fresh()
       var found = null
+      // [fork] A page's text not read yet: with grep (Search.js otherwise).
+      tryVerify(function() { return Object.keys(ws.index.pages).every(function(id) { return ws.texts[id] !== undefined }) }, 2000)
+      delete ws.texts[Object.keys(ws.index.pages)[0]]
       try {
         root.switchOnGrep = true
         ws.search("toggles fold", function(list) { found = list })

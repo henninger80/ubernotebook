@@ -124,7 +124,7 @@ var SECTIONS = [
      [
       "Ctrl+P",
       "Search your pages: recent pages, or every page with the words you type",
-      "Pages only."
+      "Pages only. Accents and umlauts don't matter (muller or Mueller finds Müller), and a word a letter or two off is found too, lower down."
      ],
      [
       "Ctrl+\\",
@@ -3293,6 +3293,11 @@ var SECTIONS = [
       "A page in there is a day's when its title has the date, like 2026-10-16 or Fri 16 Oct 2026."
      ],
      [
+      "Settings → General → Pages opens on (or: set startPage \"\"|daily|calendar|tag:<name>|<a page's title>)",
+      "startPage (default \"\", where you were): what Pages opens on the first time after the shell starts: today's daily note, the calendar, a tag's page or a page of yours.",
+      ""
+     ],
+     [
       "Ctrl+= / Ctrl+- / Ctrl+0 in Notebooks (or: set zoom <60-200>)",
       "zoom (default 100): how large an open paper notebook is drawn, in percent. Ctrl+= and Ctrl+- change it in steps of 10, and Ctrl+0 puts it back to 100.",
       "Only an open paper notebook is drawn bigger or smaller. The keys work on the shelf and in an open notebook, not in Pages."
@@ -3432,7 +3437,7 @@ var SECTIONS = [
      ],
      [
       "omarchy-shell uber-notebook find <words>",
-      "Finds pages with all of the words in their title or text, best match first, with a snippet. Pages in the trash and templates are skipped. At most 50 results.",
+      "Finds pages with all of the words in their title or text, best match first, with a snippet. Pages in the trash and templates are skipped. At most 50 results. Accents and umlauts don't matter, and a word a letter or two off is found too.",
       "Empty words are refused (\"find needs words to look for\")."
      ],
      [

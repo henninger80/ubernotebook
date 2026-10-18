@@ -1,7 +1,7 @@
 # From Obsidian (fork)
 
-Two things this fork brings over from Obsidian: a note's properties when it
-comes in, and daily notes.
+What this fork brings over from Obsidian: a note's properties when it comes
+in, daily notes, a search like Omnisearch's, and a start page.
 
 ## Properties when a note comes in
 
@@ -56,23 +56,53 @@ omarchy-shell uber-notebook set dailyByYear true
 
 The logic is in `Daily.js`.
 
+## Search
+
+Ctrl+P and `find` look in the pages' text that Uber Notebook keeps in memory
+anyway, not with grep in their files, once every page's text has been read
+(the first few seconds after start; grep is used until then):
+
+- Accents and umlauts don't matter: *muller* and *Mueller* find *Müller*,
+  *strasse* finds *Straße*, *cafe* finds *Café*.
+- A word no page has is looked for a letter off (two for words of eight
+  letters or more): *Protkoll* finds *Protokoll*, *Vorstnad* finds
+  *Vorstand*. These results score half and come lower down.
+
+Each page's text is folded once (lowercase, accents off) and kept until the
+page changes, and its words are counted for the near matches. Once the pages
+are read, that happens in about 12 ms slices in the background. Measured on
+the real notes (1554 pages, 2.5 million characters): 0.34 s in all, at most
+18 ms at a time; then a search takes 6–34 ms. RAM: about 10–15 MB for the
+folded text and the words. This is in `Search.js`.
+
+## Start page
+
+Settings → General → **Pages opens on**: *Where you were* (as before),
+*Today's daily note*, *Calendar* or *#todo*. This applies the first time
+Pages opens after the shell starts; after that it opens where you were.
+From a terminal, `set startPage` also takes `tag:<name>` or a page's title
+or id (one that isn't there: where you were).
+
 ## The [fork] places
 
 | File | What |
 |---|---|
-| `Daily.js`, `Properties.js` | new: the logic above |
+| `Daily.js`, `Properties.js`, `Search.js` | new: the logic above |
+| `Workspace.qml` | imports Search.js; `search()` in memory once every text is read; the warm-up after `scanTexts` |
 | `Import.js` | imports Properties.js; the front matter's line in `fromMarkdown` |
-| `Defaults.js` | `dailyParent`, `dailyTemplate`, `dailyByYear` |
-| `app/DocView.qml` | imports Daily.js; `openDaily()`; Ctrl+Shift+T in `handleKey` |
+| `Defaults.js` | `dailyParent`, `dailyTemplate`, `dailyByYear`, `startPage` |
+| `app/SettingsPanel.qml` | General → Pages opens on |
+| `app/DocView.qml` | imports Daily.js; `openDaily()`; Ctrl+Shift+T in `handleKey`; `startShown`, `openStart()` in `activate()` |
 | `app/Editor.qml` | Ctrl+Shift+T passed on from a locked page |
 | `app/CalendarView.qml` | imports Daily.js; daily notes among `notes` (`dailies()`, `dailyDay()`); labels via `Daily.noteLabel`; the `calDaily` button |
-| `Api.qml`, `Service.qml`, `Scope.js` | the `prepend` and `daily` commands; `move` into a page keeps its position (placePage) |
+| `Api.qml`, `Service.qml`, `Scope.js` | `find` through Search.js; the `prepend` and `daily` commands; `move` into a page keeps its position (placePage) |
 | `Help.js` | Ctrl+Shift+T, `prepend`, `daily`, the settings |
 | `tests/import.test.cjs` | a front matter's tags are kept now |
+| `tests/qml/tst_pages.qml` | test_6, test_6b: in memory first, grep while a text isn't read yet |
 | `tests/run` | daily.test.cjs, properties.test.cjs |
 
 Tests: `tests/daily.test.cjs`, `tests/properties.test.cjs`,
-`tests/qml/tst_daily.qml`.
+`tests/search.test.cjs`, `tests/qml/tst_daily.qml`, `tests/qml/tst_search.qml`.
 
 **Performance.** Nothing while you type. The calendar looks through the daily
 notes' page when it changes, and only while it's open (a few hundred titles,
