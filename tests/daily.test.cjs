@@ -63,6 +63,11 @@ check("a day's page: in the page and its years', the one changed last", () => {
   const ix = tree();
   assert.equal(Daily.parentPage(ix, "tagesnotizen"), "dn");
   assert.equal(Daily.find(ix, "Tagesnotizen", "2026-10-16", now), "d16b");
+  // (One in another year's page, changed later: the one in its own year's still.)
+  ix.pages.y25.children.push("d16c");
+  ix.pages.d16c = page("Tagesnotiz, Fri 16 Oct 2026", { parent: "y25", modified: "2026-10-18T09:00:00Z" });
+  assert.equal(Daily.find(ix, "Tagesnotizen", "2026-10-16", now), "d16b", "the one in its year's");
+  ix.pages.y25.children.pop();
   assert.equal(Daily.find(ix, "Tagesnotizen", "2025-07-10", now), "loose");
   assert.equal(Daily.find(ix, "Tagesnotizen", "2025-09-12", now), "old");
   assert.equal(Daily.find(ix, "Tagesnotizen", "2026-10-17", now), "", "not one in the trash");

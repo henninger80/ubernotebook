@@ -158,5 +158,29 @@ Item {
       verify(Html.plainText(p.blocks[p.content[0]].html).indexOf("#Kopfsprung") === 0, p.blocks[p.content[0]].html)
       verify(p.blocks[p.content[0]].html.indexOf("uber-notebook://tag/kopfsprung") >= 0, "a tag")
     }
+
+    // move <id> <parent> <position>: the place holds inside a page too.
+    function test_5_moved_into_a_page_at_its_place() {
+      fresh({})
+      var y = ws.createPage({ parent: "", title: "2026" })
+      var a = ws.createPage({ parent: y.id, title: "Thu 15 Oct 2026" })
+      var b = ws.createPage({ parent: y.id, title: "Wed 14 Oct 2026" })
+      ws.editPage(y.id, function(p) { Workspace.appendPageBlock(p, a.id); return Workspace.appendPageBlock(p, b.id) })
+      var c = ws.createPage({ parent: "", title: "Fri 16 Oct 2026" })
+      wait(100)
+      var r = json(api.move(c.id, y.id, "0"))
+      verify(r.ok, JSON.stringify(r))
+      tryVerify(function() { return fileOf(y.id).content.indexOf(c.id) >= 0 }, 2000)
+      wait(100)
+      var order = fileOf(y.id).content.filter(function(x) { return x === a.id || x === b.id || x === c.id })
+      compare(order, [c.id, a.id, b.id], "first on the page")
+      compare(ws.index.pages[y.id].children.slice(0, 3), [c.id, a.id, b.id], "and in the tree")
+      compare(ws.index.pages[c.id].parent, y.id)
+      verify(fileOf(c.id).parent === y.id)
+      // At the end, with "".
+      verify(json(api.move(a.id, y.id, "")).ok)
+      wait(200)
+      compare(ws.index.pages[y.id].children.filter(function(x) { return x === a.id || x === b.id || x === c.id }), [c.id, b.id, a.id])
+    }
   }
 }

@@ -1039,6 +1039,15 @@ QtObject {
     var at = pos === "" ? -1 : Number(pos)
     if (!isFinite(at) || at < -1) return fail("position is a number (0 is first), or \"\" for the end")
     writeOpen()
+    // [fork] Inside a page: its block beside the pages it goes between
+    // (placePage), so its place holds (the order of a page's pages is its
+    // blocks'); movePage put it last there.
+    if (into) {
+      var kids = (workspace.index.pages[into].children || []).filter(function(c) { return c !== id && workspace.index.pages[c] && !workspace.index.pages[c].trashed })
+      var k = at < 0 || at >= kids.length ? -1 : Math.round(at)
+      workspace.placePage(id, { parent: into, at: k, before: k >= 0 ? kids[k] : "", after: k < 0 && kids.length ? kids[kids.length - 1] : "" })
+      return answer({ ok: true, id: id, path: where(id) })
+    }
     if (!workspace.movePage(id, into, Math.round(at), "")) return fail("couldn't move it there")
     return answer({ ok: true, id: id, path: where(id) })
   }

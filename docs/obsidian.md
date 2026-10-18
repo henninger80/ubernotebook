@@ -46,7 +46,7 @@ If there's no note for that day yet, one is made:
 - **Found again:** a page in there is a day's if its title has the date in
   it: `2026-10-16`, `Fri 16 Oct 2026`, `Fri 16 Oct` (the year that matches
   the weekday, nearest now) or `16.10.2026`. If there are two for one day,
-  the one changed last wins.
+  the one in its year's page wins, then the one changed last.
 
 ```
 omarchy-shell uber-notebook set dailyParent "Tagesnotizen"
@@ -66,7 +66,7 @@ The logic is in `Daily.js`.
 | `app/DocView.qml` | imports Daily.js; `openDaily()`; Ctrl+Shift+T in `handleKey` |
 | `app/Editor.qml` | Ctrl+Shift+T passed on from a locked page |
 | `app/CalendarView.qml` | imports Daily.js; daily notes among `notes` (`dailies()`, `dailyDay()`); labels via `Daily.noteLabel`; the `calDaily` button |
-| `Api.qml`, `Service.qml`, `Scope.js` | the `prepend` and `daily` commands |
+| `Api.qml`, `Service.qml`, `Scope.js` | the `prepend` and `daily` commands; `move` into a page keeps its position (placePage) |
 | `Help.js` | Ctrl+Shift+T, `prepend`, `daily`, the settings |
 | `tests/import.test.cjs` | a front matter's tags are kept now |
 | `tests/run` | daily.test.cjs, properties.test.cjs |

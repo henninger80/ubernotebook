@@ -92,7 +92,7 @@ function days(index, parent, now) {
       var e = index.pages[c]
       if (!e || e.trashed || e.archived || e.template) continue
       var d = dateOfTitle(e.title, now)
-      if (d) out.push({ id: c, day: d })
+      if (d) out.push({ id: c, day: d, inYear: (index.pages[id].title || "").trim() === d.slice(0, 4) })
       else if (depth < DEPTH) walk(c, depth + 1)
     }
   }
@@ -101,15 +101,15 @@ function days(index, parent, now) {
 }
 
 // A day's page ("2026-10-16") in the page called `name`: its id, or "".
-// (Two for a day: the one changed last.)
+// (Two for a day: the one in its year's page, then the one changed last.)
 function find(index, name, day, now) {
   var parent = parentPage(index, name)
-  var best = ""
+  var best = null
   days(index, parent, now).forEach(function(x) {
     if (x.day !== day) return
-    if (!best || (index.pages[x.id].modified || "") > (index.pages[best].modified || "")) best = x.id
+    if (!best || (x.inYear && !best.inYear) || (x.inYear === best.inYear && (index.pages[x.id].modified || "") > (index.pages[best.id].modified || ""))) best = x
   })
-  return best
+  return best ? best.id : ""
 }
 
 // The days' pages from `from` up to `to` (Dates), for the calendar, as
