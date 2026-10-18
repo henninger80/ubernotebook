@@ -866,6 +866,9 @@ Item {
         function archive(id: string): string { return root.scoped(commands.agent, "archive", [id], function() { return apiItem.archive(id, true) }) }
         function unarchive(id: string): string { return root.scoped(commands.agent, "unarchive", [id], function() { return apiItem.archive(id, false) }) }
         function replace(page: string, block: string, file: string): string { return root.scoped(commands.agent, "replace", [page, block, file], function() { return apiItem.replace(page, block, file) }) }
+        // [fork] prepend and daily (Daily.js).
+        function prepend(page: string, file: string): string { return root.scoped(commands.agent, "prepend", [page, file], function() { return apiItem.prepend(page, file) }) }
+        function daily(day: string): string { return root.scoped(commands.agent, "daily", [day], function() { return apiItem.daily(day) }) }
         function insertAfter(page: string, block: string, file: string): string { return root.scoped(commands.agent, "insertAfter", [page, block, file], function() { return apiItem.insertAfter(page, block, file) }) }
         function trash(id: string): string { return root.scoped(commands.agent, "trash", [id], function() { return apiItem.trash(id) }) }
         function rename(id: string, title: string): string { return root.scoped(commands.agent, "rename", [id, title], function() { return apiItem.rename(id, title) }) }

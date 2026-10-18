@@ -68,6 +68,12 @@ var DEFAULTS = {
   // The calendar's view, as it was last: month, week, agenda or compact (a
   // small month and the days from the one picked).
   calendarView: "month",
+  // [fork] Daily notes (Daily.js): the page at the top of Pages they're in,
+  // the template they start from ("": one of yours with {{date}} and "daily"
+  // in its title), and a page for each year inside it.
+  dailyParent: "Daily notes",
+  dailyTemplate: "",
+  dailyByYear: true,
   // The clock times are shown with: "12" (1:30 pm) or "24" (13:30).
   clock: "12",
   // A reminder's or an event alert's own words in its notification (off:
@@ -175,6 +181,9 @@ var SCHEMA = {
     mirrorFolder: "folder",
     tagSort: "string",
     calendarView: "string",
+    dailyParent: "string",  // [fork]
+    dailyTemplate: "string",  // [fork]
+    dailyByYear: "bool",  // [fork]
     peopleLayout: "string",
     peopleGroup: "string",
     colorSidebar: "string",

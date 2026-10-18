@@ -31,13 +31,15 @@ var CHANGES = ["add", "addTo", "append", "replace", "insertAfter", "check", "col
   "bookmark", "attach", "addGallery", "gallery", "rename", "icon", "cover", "lock", "favorite", "trash", "restore", "project", "archive",
   "unarchive", "restoreVersion", "move", "duplicate", "fromTemplate", "makeTemplate", "describeTemplate", "addTemplate", "addContact",
   "editContact", "removeContact", "importContacts", "tagColor", "renameTag", "removeTag", "addEvent", "editEvent", "removeEvent",
-  "importCalendar", "addToNotebook"]
+  "importCalendar", "addToNotebook",
+  "prepend", "daily"]  // [fork]
 
 // Which of a command's arguments are files (by place; "list:n": a list of
 // them, one a line or | between).
 var FILES = {
   add: [1], addTo: [2], append: [1], replace: [2], insertAfter: [2], attach: [1], addGallery: ["list:1"], gallery: ["list:3"],
-  addTemplate: [1], addToNotebook: [1], importContacts: [0], importCalendar: [0]
+  addTemplate: [1], addToNotebook: [1], importContacts: [0], importCalendar: [0],
+  prepend: [1]  // [fork]
 }
 
 // A file in the agent's own folder (by its full path, nothing that leaves it).

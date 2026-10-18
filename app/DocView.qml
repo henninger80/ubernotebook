@@ -21,6 +21,7 @@ import "../Contacts.js" as Contacts
 import "../Email.js" as Email
 import "../Library.js" as Library
 import "../Overlays.js" as Overlays
+import "../Daily.js" as Daily  // [fork]
 
 // Pages: the other way to write in Uber Notebook, the way Notion does it. The
 // sidebar has every page as a tree; the page you're on has its cover, icon
@@ -693,6 +694,16 @@ FocusScope {
     markDirty()
     commit()
     return made
+  }
+
+  // [fork] A day's page ("2026-10-16"; "" today), made from your template if
+  // there's none yet (Daily.js), opened.
+  function openDaily(day) {
+    if (!workspace) return
+    commit()
+    var id = Daily.open(workspace, settings, day || "", function(d, pattern) { return Qt.formatDate(Templates.parse(d), pattern) })
+    if (id) open(id)
+    else toast("The daily note couldn't be made")
   }
 
   // ---- the calendar -------------------------------------------------------------------------
@@ -5008,6 +5019,7 @@ FocusScope {
     if (ctrl && shift && !alt && e.key === Qt.Key_D) { dictate(); return true }
     if (ctrl && shift && !alt && e.key === Qt.Key_R) { newAudioNote(); return true }
     if (ctrl && shift && !alt && e.key === Qt.Key_C) { openCalendar("", false); return true }
+    if (ctrl && shift && !alt && e.key === Qt.Key_T) { openDaily(""); return true }  // [fork]
     // Undo and redo on the page shown, with the keyboard on the page itself.
     if (ctrl && !alt && (e.key === Qt.Key_Z || e.key === Qt.Key_Y) && pageShown() && !locked) {
       if (e.key === Qt.Key_Y || shift) editor.redo(); else editor.undo()

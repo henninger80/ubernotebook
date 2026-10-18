@@ -28,6 +28,8 @@
 .import "Bookmark.js" as Bookmark
 .import "Equations.js" as Equations
 .import "Notes.js" as Notes
+// [fork] Properties.js: front matter as a line.
+.import "Properties.js" as Properties
 .import "Library.js" as Library
 .import "Papers.js" as Papers
 .import "Sketch.js" as Sketch
@@ -1345,7 +1347,10 @@ function fromMarkdown(text, ctx, options) {
           else if (m.key === "due") due = m.value
           else if (!title) title = m.value
         })
+        // [fork] Its tags and other properties, as a line at the top (Properties.js).
+        var props = Properties.line(lines.slice(1, end))
         lines = lines.slice(end + 1)
+        if (props) lines = [props, ""].concat(lines)
       }
     }
     out.title = title.trim()

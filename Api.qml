@@ -17,6 +17,7 @@ import "Library.js" as Library
 import "Scope.js" as Scope
 import "Profiles.js" as Profiles
 import "Defaults.js" as Defaults
+import "Daily.js" as Daily  // [fork]
 
 // Uber Notebook's commands for AI agents and scripts: `omarchy-shell uber-notebook
 // <command>` (Service.qml hands them on). They work on the same pages as the
@@ -406,6 +407,9 @@ QtObject {
         { use: "blocks <id>", does: "the page's blocks, in order: id, type, depth (how far inside other blocks), text (Markdown)" },
         { use: "replace <page id> <block id> <file.md>", does: "the Markdown in place of that block and the blocks inside it" },
         { use: "insertAfter <page id> <block id> <file.md>", does: "the Markdown after that block (and the blocks inside it), as deep as it is" },
+        // [fork] prepend and daily (Daily.js).
+        { use: "prepend <page id> <file.md>", does: "the Markdown at the start of a page, before its first block" },
+        { use: "daily <day>", does: "a day's daily note (2026-10-16, \"\" today): its id, made from your daily template if there's none (set dailyParent, dailyTemplate, dailyByYear)" },
         { use: "trash <id>", does: "the page (and the pages in it) to the trash, where it can be put back" },
         { use: "tags", does: "every tag: tag, pages, blocks (how many have it)" },
         { use: "library <kind> <words>", does: "what's been put on the pages (the Library), newest first: kind (link, file, video, picture, audio, meeting, sketch, person, email; \"\" for all), title, detail, url (a link's), file (its path on disk), page, pageTitle, block, added; words (\"\" for all) narrow it to those with all of them in their title, link or page" },
@@ -886,6 +890,43 @@ QtObject {
       var e = api.workspace.index.pages[pid]
       return e ? e.title || "Untitled" : ""
     }))
+  }
+
+  // [fork] The Markdown at the start of a page.
+  function prepend(id, path) {
+    var not = unready()
+    if (not) return fail(not)
+    if (!live(id)) return fail("there's no page with that id (list or find gives them)")
+    var md = readMarkdown(path)
+    if (md.error) return fail(md.error)
+    var list = blocksOf(md.text, false, true).blocks
+    if (list.length === 0) return fail("there's nothing in that file to put in")
+    writeOpen()
+    var page = workspace.readPageNow(id)
+    if (!page) return fail(notRead(id))
+    if (page.format && page.format.locked) return fail("that page is locked: unlock it in Uber Notebook first")
+    var long = tooLong(Workspace.flatten(page).length + list.length)
+    if (long) return fail(long)
+    keep(id)
+    var n = Workspace.putBlocks(page, 0, 0, list, 0)
+    page.modified = new Date().toISOString()
+    workspace.savePage(page)
+    workspace.pageChanged(id)
+    return answer({ ok: true, id: id, added: n })
+  }
+
+  // [fork] A day's daily note (Daily.js): its id, made if there's none.
+  function daily(day) {
+    var not = unready()
+    if (not) return fail(not)
+    var d = String(day || "").trim()
+    if (d === "today") d = ""
+    if (d && !Dates.fromIso(d)) return fail("a day is like 2026-10-16 (or \"\" for today)")
+    writeOpen()
+    var had = Daily.find(workspace.index, (settings && settings.dailyParent) || "Daily notes", d || Dates.iso(new Date()), new Date())
+    var id = Daily.open(workspace, settings || {}, d, function(x, pattern) { return Qt.formatDate(Templates.parse(x), pattern) })
+    if (!id) return fail("couldn't make the daily note")
+    return answer({ ok: true, id: id, title: workspace.index.pages[id].title || "Untitled", path: where(id), made: !had })
   }
 
   function replace(id, block, path) { return changeBlock(id, block, path, "replace") }

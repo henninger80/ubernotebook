@@ -141,7 +141,8 @@ check("code keeps every tab and space", () => {
 check("titles: front matter, a first heading", () => {
   assert.equal(md("---\ntitle: \"From front matter\"\ntags: [a]\n---\n\ntext").title, "From front matter");
   assert.equal(md("---\nTitle: Obsidian\ntags:\n  - a\n- b\n---\n\ntext").title, "Obsidian");
-  assert.deepEqual(shape(md("---\ntags:\n- a\n- b\n---\n\ntext").blocks), ["p:0:text"], "a list under a key is front matter");
+  // [fork] Its tags kept, as a line at the top (Properties.js).
+  assert.deepEqual(shape(md("---\ntags:\n- a\n- b\n---\n\ntext").blocks), ["p:0:#a #b", "p:0:text"], "a list under a key is front matter");
   const spaced = md("---\ntitle: Kept\ndate created: 2024-01-02\n---\n\ntext");
   assert.equal(spaced.title, "Kept", "a key with a space in it");
   assert.deepEqual(shape(spaced.blocks), ["p:0:text"], "a key with a space in it is front matter");

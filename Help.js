@@ -157,6 +157,11 @@ var SECTIONS = [
       "Pages only. With blocks picked, Ctrl+Shift+C copies the blocks instead."
      ],
      [
+      "Ctrl+Shift+T",
+      "Open today's daily note, made from your daily template if there's none yet",
+      "Pages only. The calendar's daily note button opens the day's."
+     ],
+     [
       "Ctrl+Z / Ctrl+Shift+Z or Ctrl+Y",
       "Undo / redo on the page",
       "Does nothing on a locked page."
@@ -3283,6 +3288,11 @@ var SECTIONS = [
       ""
      ],
      [
+      "Daily notes (set dailyParent <page>, set dailyTemplate <template>, set dailyByYear true|false)",
+      "dailyParent (default Daily notes): the page at the top of Pages that daily notes go in. dailyTemplate (default none): the template they start from; with none, one of yours with {{date}} and daily in its title. dailyByYear (default true): a page for each year inside it.",
+      "A page in there is a day's when its title has the date, like 2026-10-16 or Fri 16 Oct 2026."
+     ],
+     [
       "Ctrl+= / Ctrl+- / Ctrl+0 in Notebooks (or: set zoom <60-200>)",
       "zoom (default 100): how large an open paper notebook is drawn, in percent. Ctrl+= and Ctrl+- change it in steps of 10, and Ctrl+0 puts it back to 100.",
       "Only an open paper notebook is drawn bigger or smaller. The keys work on the shelf and in an open notebook, not in Pages."
@@ -3461,6 +3471,11 @@ var SECTIONS = [
       "The panel agent can use it with a file from its own folder, or with your approval."
      ],
      [
+      "omarchy-shell uber-notebook prepend <page id> <file.md>",
+      "Puts the Markdown at the start of the page, before its first block.",
+      "The panel agent can use it with a file from its own folder, or with your approval."
+     ],
+     [
       "omarchy-shell uber-notebook trash <id>",
       "Moves the page, and the pages inside it, to the trash, where it can be restored.",
       "For the panel agent, you're asked in the panel first unless you chose Always."
@@ -3569,6 +3584,11 @@ var SECTIONS = [
       "omarchy-shell uber-notebook fromTemplate <template> <title> <parent>",
       "Creates a new page from a template (by name or id). A title of \"\" uses the template's title. A parent of \"\" puts the page in the Inbox and top puts it at the top of Pages; you can also give a page id.",
       ""
+     ],
+     [
+      "omarchy-shell uber-notebook daily <day>",
+      "Gives a day's daily note (2026-10-16, or \"\" for today), made from your daily template if there's none yet.",
+      "Where daily notes go: set dailyParent, dailyTemplate and dailyByYear."
      ],
      [
       "omarchy-shell uber-notebook makeTemplate <id>",

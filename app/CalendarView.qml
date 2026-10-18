@@ -5,6 +5,7 @@ import "../Workspace.js" as Workspace
 import "../Dates.js" as Dates
 import "../Docs.js" as Docs
 import "../Colors.js" as Colors
+import "../Daily.js" as Daily  // [fork]
 
 // The calendar, in place of a page (the sidebar's Calendar): your events,
 // and the dates in your notes (reminders, projects' due dates), by month,
@@ -59,7 +60,17 @@ Item {
     : [anchorDay, addDays(anchorDay, 60)]
   readonly property var occ: { var r = workspace ? workspace.calendarRevision : 0; return workspace ? Calendar.occurrences(workspace.calendar, range[0], range[1]) : [] }
   // [fork] Not while it's hidden.
-  readonly property var notes: { var r = workspace ? workspace.revision : 0; return workspace && visible ? Workspace.datedNotes(workspace.index, range[0], range[1]) : [] }
+  readonly property var notes: { var r = workspace ? workspace.revision : 0; return workspace && visible ? Workspace.datedNotes(workspace.index, range[0], range[1]).concat(dailies()).sort(function(a, b) { return a.at - b.at || (a.kind === "daily" ? -1 : b.kind === "daily" ? 1 : 0) }) : [] }
+  // [fork] Each day's daily note too (Daily.js), first on its day.
+  function dailies() {
+    var s = view && view.settings ? view.settings : {}
+    return Daily.inRange(workspace.index, s.dailyParent || "Daily notes", range[0], range[1], new Date())
+  }
+  // [fork] The day the daily-note button opens: the one picked, else today when it's shown, else the first shown.
+  function dailyDay() {
+    if (mode === "compact") return Dates.iso(pickedDay)
+    return Dates.iso(todayDay >= range[0] && todayDay < range[1] ? todayDay : anchorDay)
+  }
 
   function notesOn(d) { var lo = d; var hi = addDays(d, 1); return notes.filter(function(n) { return n.at >= lo && n.at < hi }) }
 
@@ -292,6 +303,8 @@ Item {
       Chip { objectName: "calToday"; theme: cv.theme; text: "Today"; onClicked: cv.show(cv.today(), "") }
       IconButton { objectName: "calBack"; theme: cv.theme; icon: cv.theme.icons.left; size: 30; iconSize: 17; tip: "Back  \u2190"; onClicked: cv.go(-1) }
       IconButton { objectName: "calOn"; theme: cv.theme; icon: cv.theme.icons.right; size: 30; iconSize: 17; tip: "On  \u2192"; onClicked: cv.go(1) }
+      // [fork] The daily note (Daily.js).
+      IconButton { objectName: "calDaily"; theme: cv.theme; icon: cv.theme.icons.journal; size: 30; iconSize: 17; tip: "Daily note  Ctrl+Shift+T"; onClicked: cv.view.openDaily(cv.dailyDay()) }
       Text {
         objectName: "calTitle"
         anchors.verticalCenter: parent.verticalCenter
@@ -420,7 +433,7 @@ Item {
       elide: Text.ElideRight
       textFormat: Text.PlainText
       text: (cv.theme.twelveHour, entry.occ) ? (entry.allDay ? "" : Calendar.timeLabel(entry.occ.start) + " ") + (entry.occ.title || "Untitled")
-        : entry.note ? (entry.note.kind === "due" ? "\u2691 " : "\u23f0 ") + entry.note.title + (entry.note.text && entry.note.kind !== "due" ? ": " + entry.note.text : " due") : ""
+        : entry.note ? Daily.noteLabel(entry.note, "month") : ""  // [fork] its label in Daily.js
       font.family: cv.theme.uiFont
       font.pixelSize: entry.fontPx
       font.italic: entry.note !== null
@@ -801,7 +814,7 @@ Item {
                   width: parent.width - 10
                   elide: Text.ElideRight
                   textFormat: Text.PlainText
-                  text: "\u23f0 " + modelData.title
+                  text: Daily.noteLabel(modelData, "week")  // [fork]
                   font.family: cv.theme.uiFont
                   font.pixelSize: 11
                   font.italic: true
@@ -1214,7 +1227,7 @@ Item {
             width: parent.width - x - 12
             elide: Text.ElideRight
             textFormat: Text.PlainText
-            text: (nrow.modelData.kind === "due" ? "\u2691 " : "\u23f0 ") + nrow.modelData.title + (nrow.modelData.text && nrow.modelData.kind !== "due" ? ": " + nrow.modelData.text : "")
+            text: Daily.noteLabel(nrow.modelData, "agenda")  // [fork]
             font.family: cv.theme.uiFont
             font.pixelSize: 13
             font.italic: true

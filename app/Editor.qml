@@ -2746,7 +2746,7 @@ FocusScope {
       // the calendar, back and forward.)
       var windowKey = (ctrl && !alt && !shift && [Qt.Key_N, Qt.Key_P, Qt.Key_J, Qt.Key_Backslash, Qt.Key_Comma].indexOf(key) >= 0)
         || (ctrl && !alt && (key === Qt.Key_Slash || key === Qt.Key_Question))
-        || (ctrl && shift && !alt && key === Qt.Key_C) || (!ctrl && !alt && !shift && key === Qt.Key_F1) || (alt && !ctrl && (key === Qt.Key_Left || key === Qt.Key_Right))
+        || (ctrl && shift && !alt && (key === Qt.Key_C || key === Qt.Key_T /* [fork] daily note */)) || (!ctrl && !alt && !shift && key === Qt.Key_F1) || (alt && !ctrl && (key === Qt.Key_Left || key === Qt.Key_Right))
       if (folding) { e.accepted = true; toggleFold(item.uid); return }
       if (windowKey) return
       if (!moving && !copying) { e.accepted = true; return }
