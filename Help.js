@@ -3298,8 +3298,8 @@ var SECTIONS = [
       "A page in there is a day's when its title has the date, like 2026-10-16 or Fri 16 Oct 2026."
      ],
      [
-      "Settings → General → Pages opens on (or: set startPage \"\"|daily|calendar|tag:<name>|<a page's title>)",
-      "startPage (default \"\", where you were): what Pages opens on the first time after the shell starts: today's daily note, the calendar, a tag's page or a page of yours.",
+      "Settings → General → Pages opens on (or: set startPage \"\"|daily|calendar|tasks|tag:<name>|<a page's title>)",
+      "startPage (default \"\", where you were): what Pages opens on the first time after the shell starts: today's daily note, the calendar, the tasks, a tag's page or a page of yours.",
       ""
      ],
      [

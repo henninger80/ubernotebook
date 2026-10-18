@@ -76,7 +76,7 @@ What a to-do line says makes it a task:
 | `#in-arbeit`, `#doing`, `#in-progress` | in progress |
 
 Dated tasks are also on the calendar (☐), one click away from their page.
-`omarchy-shell uber-notebook tasks ""` (or `tasks "#todo"`) lists them as
+`omarchy-shell uber-notebook tasks ""` (or `tasks "#prio-hoch"`) lists them as
 JSON. The start page can be *Tasks* too.
 
 **How:** a page's index entry keeps its open to-dos as it's saved (`tasks`:
