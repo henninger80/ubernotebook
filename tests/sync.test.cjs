@@ -153,6 +153,42 @@ check("the safety guard: most of it gone at once, nothing done", () => {
   assert.deepEqual(plain(p.actions), []);
 });
 
+check("[fork] unlinked on both sides and the same: linked, not made again", () => {
+  const remote = remoteOf([graph("r1", "Kickoff", "2026-10-20T09:00", "2026-10-20T10:00"), graph("r2", "Kickoff", "2026-10-20T09:00", "2026-10-20T10:00")]);
+  const local = [ev("n1", "Kickoff", "2026-10-20T09:00", "2026-10-20T10:00")];
+  const p = Sync.plan(base({ remote, local }));
+  assert.deepEqual(ops(p), ["localCreate r2"]);
+  assert.deepEqual(plain(p.links).map((l) => l.nb + ">" + l.rid), ["n1>r1"]);
+});
+
+check("[fork] a calendar with links that would make many events at once: nothing done", () => {
+  const n0 = ev("n0", "Old", "2026-10-20T09:00", "2026-10-20T10:00");
+  const local = [n0], remote = {};
+  for (let i = 0; i < 50; i++) local.push(ev("x" + i, "New " + i, "2026-10-21T09:00", "2026-10-21T10:00"));
+  const lone = base({ local, links: [linked("n0", "r0", Sync.norm(n0))], remote: remoteOf([graph("r0", "Old", "2026-10-20T09:00", "2026-10-20T10:00")]) });
+  const p = Sync.plan(lone);
+  assert.ok(p.refused);
+  assert.deepEqual(plain(p.actions), []);
+  assert.ok(!Sync.plan(Object.assign({}, lone, { links: [] })).refused);
+});
+
+check("[fork] Google and Office 365 straight: pairs, new, changed and gone", () => {
+  const O = remoteOf([graph("o1", "Kickoff", "2026-10-20T09:00", "2026-10-20T10:00"), graph("o2", "Only here", "2026-10-21T09:00", "2026-10-21T10:00")]);
+  const G = plain({ g1: { rid: "g1", n: Sync.norm(ev("x", "Kickoff", "2026-10-20T09:00", "2026-10-20T10:00")), repeat: null, modified: 1 },
+                    g2: { rid: "g2", n: Sync.norm(ev("x", "Only there", "2026-10-22T09:00", "2026-10-22T10:00")), repeat: null, modified: 1 } });
+  let p = Sync.planBridge({ o365: O, google: G, links: [], now });
+  assert.deepEqual(plain(p.actions).map((a) => a.op + " " + a.rid).sort(), ["createG o2", "createO g2"]);
+  assert.deepEqual(plain(p.links).map((l) => l.o + ">" + l.g), ["o1>g1"]);
+  // Linked, then gone on Google: gone on Office 365 (in the window).
+  const link = p.links[0];
+  p = Sync.planBridge({ o365: O, google: {}, links: [link], now });
+  assert.deepEqual(plain(p.actions).filter((a) => a.op.indexOf("delete") === 0).map((a) => a.op + " " + a.rid), ["deleteO o1"]);
+  // Changed on Google only: Office 365 gets it.
+  G.g1.n.title = "Kickoff 2";
+  p = Sync.planBridge({ o365: O, google: G, links: [link], now });
+  assert.ok(plain(p.actions).some((a) => a.op === "updateO" && a.rid === "o1"));
+});
+
 check("an event goes to the calendar it's given, else the default; given elsewhere, out of this one", () => {
   const local = [ev("a", "A", "2026-10-20T09:00", "2026-10-20T10:00"), ev("b", "B", "2026-10-20T11:00", "2026-10-20T12:00"), ev("c", "C", "2026-10-20T13:00", "2026-10-20T14:00")];
   let p = Sync.plan(base({ local, assigned: { b: "google:primary", c: "local" } }));

@@ -22,6 +22,7 @@
 var PAST_DAYS = 30
 var FUTURE_DAYS = 365
 var LOCAL = "local"
+var MAX_NEW = 40 // [fork] most events one sync may make on one side, for a calendar with links
 var REPEATS = ["daily", "weekdays", "weekly", "monthly", "yearly"]
 
 function pad(n) { return (n < 10 ? "0" : "") + n }
@@ -297,24 +298,139 @@ function plan(o) {
   if (links.length && gone > Math.max(5, Math.floor(links.length / 2)))
     return { actions: [], links: links, deletions: gone, refused: true }
 
-  // New there: here.
+  // [fork] Unlinked on both sides and the same event: linked, not made
+  // again (a lost link would otherwise double every event, both ways).
+  var elsewhere = o.linkedElsewhere || {}
+  var unlinkedLocal = {}
+  ;(o.local || []).forEach(function(e) {
+    if (linkedNb[e.id] || elsewhere[e.id] || e.repeat) return
+    if ((assigned[e.id] || o.fallback || LOCAL) !== o.cal) return
+    var f = fp(norm(e), null)
+    ;(unlinkedLocal[f] = unlinkedLocal[f] || []).push(e)
+  })
+  var paired = {}, fresh = []
   Object.keys(remote).forEach(function(rid) {
     if (linkedRid[rid]) return
+    var rem = remote[rid]
+    var f = fp(rem.n, rem.repeat)
+    var pool = rem.repeat ? null : unlinkedLocal[f]
+    if (pool && pool.length) {
+      var e = pool.shift()
+      paired[e.id] = true
+      kept.push({ nb: e.id, cal: o.cal, rid: rid, fp: f, title: rem.n.title, start: rem.n.start, recurring: false })
+    } else fresh.push(rid)
+  })
+
+  // New there: here.
+  fresh.forEach(function(rid) {
     var rem = remote[rid]
     actions.push({ op: "localCreate", rid: rid, n: rem.n, repeat: rem.repeat, title: rem.n.title })
   })
 
   // New here, for this calendar: there. (Repeating ones stay here: their
   // repeat isn't sent yet.)
-  var elsewhere = o.linkedElsewhere || {}
   ;(o.local || []).forEach(function(e) {
-    if (linkedNb[e.id] || elsewhere[e.id]) return
+    if (linkedNb[e.id] || elsewhere[e.id] || paired[e.id]) return
     if ((assigned[e.id] || o.fallback || LOCAL) !== o.cal) return
     if (e.repeat) return
     if (String(e.end).slice(0, 10) < w[0] || String(e.start).slice(0, 10) > w[1]) return
     actions.push({ op: "remoteCreate", nb: e.id, n: norm(e), title: trim(e.title) })
   })
 
+  // [fork] A calendar that already has links and suddenly wants to make
+  // many events is not trusted (lost links look like this): not synced.
+  var made = { in: 0, out: 0 }
+  actions.forEach(function(a) { if (a.op === "localCreate") made.in++; else if (a.op === "remoteCreate") made.out++ })
+  var most = o.maxNew || MAX_NEW
+  if (links.length && (made.in > most || made.out > most))
+    return { actions: [], links: links, deletions: gone, refused: true, reason: "would make " + made.in + " here and " + made.out + " there at once (safety guard)" }
+
+  return { actions: actions, links: kept, deletions: gone, refused: false }
+}
+
+// ---- [fork] Google and Office 365 straight, nothing of it here --------------------------------
+//
+// planBridge({ o365: { rid: remote }, google: { rid: remote }, links: [{ o, g, fp,
+//   title, start }], last, now, maxNew }) -> { actions, links, deletions, refused, reason }
+//
+// actions: { op: "createG"|"createO", n } | { op: "updateG"|"updateO", rid, n }
+//   | { op: "deleteG"|"deleteO", rid }. createG/createO are linked by the caller
+//   ({ o, g }). Single events only: repeating ones stay where they are.
+function planBridge(o) {
+  var now = o.now || new Date()
+  var w = span(now)
+  var mid = o.last ? (o.last + now.getTime()) / 2 : now.getTime()
+  function singles(map) {
+    var out = {}
+    Object.keys(map || {}).forEach(function(k) { if (!map[k].repeat) out[k] = map[k] })
+    return out
+  }
+  var O = singles(o.o365), G = singles(o.google)
+  var links = o.links || []
+  var actions = [], kept = [], gone = 0, usedO = {}, usedG = {}
+  function inWindow(start) { var d = String(start).slice(0, 10); return d >= w[0] && d <= w[1] }
+
+  links.forEach(function(l) {
+    var ro = O[l.o], rg = G[l.g]
+    usedO[l.o] = true
+    usedG[l.g] = true
+    if (!ro && !rg) { gone++; return }
+    if (!ro || !rg) {
+      // (Gone on one side, or only out of the days asked for.)
+      if (!inWindow(l.start)) { kept.push(l); return }
+      actions.push(ro ? { op: "deleteO", rid: l.o, title: l.title } : { op: "deleteG", rid: l.g, title: l.title })
+      gone++
+      return
+    }
+    var fo = fp(ro.n, null), fg = fp(rg.n, null)
+    var link = { o: l.o, g: l.g, fp: fo, title: ro.n.title, start: ro.n.start }
+    if (fo !== fg) {
+      var useO
+      if (!l.fp) useO = true
+      else {
+        var oc = fo !== l.fp, gc = fg !== l.fp
+        useO = oc && gc ? ro.modified >= rg.modified : oc
+      }
+      if (useO) actions.push({ op: "updateG", rid: l.g, n: ro.n, title: ro.n.title })
+      else {
+        actions.push({ op: "updateO", rid: l.o, n: rg.n, title: rg.n.title })
+        link.fp = fg
+        link.title = rg.n.title
+        link.start = rg.n.start
+      }
+    }
+    kept.push(link)
+  })
+  if (links.length && gone > Math.max(5, Math.floor(links.length / 2)))
+    return { actions: [], links: links, deletions: gone, refused: true, reason: gone + " of " + links.length + " events gone at once (safety guard)" }
+
+  // New on one side: the same event on the other is linked, else made there.
+  var freeG = {}
+  Object.keys(G).forEach(function(rid) {
+    if (usedG[rid]) return
+    var f = fp(G[rid].n, null)
+    ;(freeG[f] = freeG[f] || []).push(rid)
+  })
+  var made = { g: 0, o: 0 }
+  Object.keys(O).forEach(function(rid) {
+    if (usedO[rid]) return
+    var f = fp(O[rid].n, null), pool = freeG[f]
+    if (pool && pool.length) {
+      kept.push({ o: rid, g: pool.shift(), fp: f, title: O[rid].n.title, start: O[rid].n.start })
+      return
+    }
+    actions.push({ op: "createG", rid: rid, n: O[rid].n, title: O[rid].n.title })
+    made.g++
+  })
+  Object.keys(freeG).forEach(function(f) {
+    freeG[f].forEach(function(rid) {
+      actions.push({ op: "createO", rid: rid, n: G[rid].n, title: G[rid].n.title })
+      made.o++
+    })
+  })
+  var most = o.maxNew || MAX_NEW
+  if (links.length && (made.g > most || made.o > most))
+    return { actions: [], links: links, deletions: gone, refused: true, reason: "would make " + made.g + " in Google and " + made.o + " in Office 365 at once (safety guard)" }
   return { actions: actions, links: kept, deletions: gone, refused: false }
 }
 

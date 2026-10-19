@@ -236,6 +236,11 @@ Column {
       Toggle { theme: page.theme; checked: !!(page.sync && page.sync.syncOn); onToggled: function(on) { page.sync.setConfig({ enabled: on }) } }
     }
     Line {
+      label: "Google ⇄ Office 365, unseen"
+      note: "Keeps Google's main calendar and Office 365's the same behind the scenes (new, changed and deleted single events, both ways). Google's calendar isn't shown here; only Office 365's is. Repeating events stay where they are."
+      Toggle { theme: page.theme; checked: !!(page.sync && page.sync.bridgeOn); onToggled: function(on) { page.sync.setBridge(on) } }
+    }
+    Line {
       label: "Every"
       Row {
         spacing: 6

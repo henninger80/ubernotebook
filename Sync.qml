@@ -92,6 +92,11 @@ Item {
   }
   function writeJson(name, value) { if (files && dir) files.writeFile(path(name), JSON.stringify(value, null, 1), null, true) }
   function saveConfig() { revision++; writeJson("config.json", config) }
+  // [fork] Google and Office 365 straight: the pairs of events ({ o, g, fp, title, start }).
+  property var bridgeLinks: []
+  property var bridgeLast: 0
+  readonly property bool bridgeOn: !!(config.bridge && config.bridge.on === true)
+  function saveBridge() { writeJson("bridge.json", { version: 1, links: bridgeLinks, last: bridgeLast }) }
   function saveLinks() { writeJson("links.json", { version: 1, links: links, last: lastSync }) }
   function saveAssigned() { revision++; writeJson("assign.json", assigned) }
   function saveTokens(account) { writeJson("tokens-" + account + ".json", tokens[account] || {}) }
@@ -134,6 +139,9 @@ Item {
     links = l && Array.isArray(l.links) ? l.links : []
     lastSync = l && l.last ? l.last : {}
     assigned = readJson(path("assign.json"), {}) || {}
+    var b = readJson(path("bridge.json"), null)
+    bridgeLinks = b && Array.isArray(b.links) ? b.links : []
+    bridgeLast = b && b.last ? b.last : 0
     tokens = t
     last = readJson(path("last.json"), null)
     loaded = true
@@ -514,6 +522,7 @@ Item {
       var each = cals.map(function(c) { return function(go) { sync.syncCalendar(c, go) } })
       sync.series(each, next)
     })
+    if (bridgeOn && accounts.length === 2) steps.push(function(next) { sync.syncBridge(next) })
     series(steps, function() { sync.finish(true, "") })
   }
 
@@ -538,7 +547,7 @@ Item {
       sync.links.forEach(function(l) { if (l.cal !== c.key) elsewhere[l.nb] = true })
       var p = Sync.plan({ cal: c.key, remote: remote, links: mine, local: sync.workspace.calendar.events, linkedElsewhere: elsewhere,
         assigned: sync.assigned, fallback: sync.config.defaultCal || Sync.LOCAL, last: sync.lastSync[c.key] || 0, now: new Date() })
-      if (p.refused) { sync.problems = sync.problems.concat([c.name + ": stopped, " + p.deletions + " of " + mine.length + " events gone at once (safety guard)"]); done(); return }
+      if (p.refused) { sync.problems = sync.problems.concat([c.name + ": stopped, " + (p.reason || (p.deletions + " of " + mine.length + " events gone at once (safety guard)"))]); done(); return }
       var kept = p.links
       // Ours first, as one change.
       var cal = sync.workspace.calendar
@@ -585,7 +594,44 @@ Item {
     })
   }
 
-  function fetchRemote(c, meta, done) {
+  // [fork] Google and Office 365 straight, behind the scenes: what one has
+  // the other gets. Neither shows here (Google's calendar is off).
+  // On: Google's main calendar leaves our calendar (it's off), and the two are kept the same behind the scenes.
+  function setBridge(on) {
+    var gkey = ""
+    calendars.forEach(function(c) { if (c.provider === "google" && c.primary) gkey = c.key })
+    if (on && gkey && config.calendars[gkey].on) setCalendarOn(gkey, false)
+    setConfig({ bridge: { on: on } })
+    if (on) syncSoon()
+  }
+  function syncBridge(done) {
+    var cals = sync.calendars
+    var co = null, cg = null
+    cals.forEach(function(c) {
+      if (c.provider === "o365" && c.primary) co = c
+      if (c.provider === "google" && c.primary) cg = c
+    })
+    if (!co || !cg) { sync.problems = sync.problems.concat(["Google/Office 365: no main calendar"]); done(); return }
+    phase = "Google ⇄ Office 365"
+    fetchRemote(co, config.calendars[co.key], function(ro, p1) {
+      if (!ro) { sync.problems = sync.problems.concat(["Office 365: " + p1]); done(); return }
+      fetchRemote(cg, config.calendars[cg.key], function(rg, p2) {
+        if (!rg) { sync.problems = sync.problems.concat(["Google: " + p2]); done(); return }
+        var p = Sync.planBridge({ o365: ro, google: rg, links: sync.bridgeLinks, last: sync.bridgeLast, now: new Date() })
+        if (p.refused) { sync.problems = sync.problems.concat(["Google ⇄ Office 365: stopped, " + p.reason]); done(); return }
+        sync.bridgeLinks = p.links
+        sync.saveBridge()
+        var steps = p.actions.map(function(a) { return function(next) { sync.bridgeOp(co, cg, a, next) } })
+        sync.series(steps, function() {
+          sync.bridgeLast = Date.now()
+          sync.saveBridge()
+          done()
+        })
+      }, true)
+    }, true)
+  }
+
+  function fetchRemote(c, meta, done, plain) {
     var now = new Date()
     var w = Sync.span(now)
     if (c.provider === "o365") {
@@ -593,7 +639,7 @@ Item {
       all("o365", base + "/events?$top=100&$select=id,subject,start,end,isAllDay,location,recurrence,type,lastModifiedDateTime,isCancelled", function(items, problem) {
         if (!items) { done(null, problem); return }
         var got = Sync.graphEvents(items, now)
-        if (!got.complex.length) { done(got.events, ""); return }
+        if (plain || !got.complex.length) { done(got.events, ""); return }
         all("o365", base + "/calendarView?" + Sync.query({ startDateTime: w[0] + "T00:00:00", endDateTime: w[1] + "T00:00:00", "$top": 100,
             "$select": "id,subject,start,end,isAllDay,location,type,lastModifiedDateTime,isCancelled,seriesMasterId" }), function(times, p2) {
           if (!times) { done(null, p2); return }
@@ -607,7 +653,7 @@ Item {
         if (!items) { done(null, problem); return }
         var got = Sync.googleEvents(items, now)
         var into = got.events
-        var each = got.complex.map(function(id) { return function(next) {
+        var each = (plain ? [] : got.complex).map(function(id) { return function(next) {
           sync.all("google", gbase + "/" + encodeURIComponent(id) + "/instances?" + Sync.query({ timeMin: q.timeMin, timeMax: q.timeMax, maxResults: 2500, timeZone: sync.tz }), function(times) {
             if (times) Sync.googleTimes(times, into)
             next()
@@ -616,6 +662,35 @@ Item {
         sync.series(each, function() { done(into, "") })
       })
     }
+  }
+
+  function bridgeOp(co, cg, a, next) {
+    var ob = graph + "/me/calendars/" + encodeURIComponent(config.calendars[co.key].id) + "/events"
+    var gb = gcal + "/calendars/" + encodeURIComponent(config.calendars[cg.key].id) + "/events"
+    function failed(problem) { sync.problems = sync.problems.concat(["Google ⇄ Office 365: “" + (a.title || "") + "”: " + problem]) }
+    function gone(ok, json, problem) {
+      if (ok || /^(404|410)/.test(problem)) sync.stats.out++
+      else failed(problem)
+      next()
+    }
+    function made(link) {
+      return function(ok, json, problem) {
+        if (ok && json.id) {
+          sync.bridgeLinks = sync.bridgeLinks.concat([link(json.id)])
+          sync.saveBridge()
+          sync.stats.out++
+        } else failed(problem)
+        next()
+      }
+    }
+    var f = Sync.fp(a.n, null)
+    if (a.op === "createG") api("google", "POST", gb, Sync.googleBody(a.n, tz), made(function(id) { return { o: a.rid, g: id, fp: f, title: a.n.title, start: a.n.start } }))
+    else if (a.op === "createO") api("o365", "POST", ob, Sync.graphBody(a.n, tz), made(function(id) { return { o: id, g: a.rid, fp: f, title: a.n.title, start: a.n.start } }))
+    else if (a.op === "updateG") api("google", "PATCH", gb + "/" + encodeURIComponent(a.rid), Sync.googlePatch(a.n, false, tz), function(ok, json, problem) { if (ok) sync.stats.out++; else failed(problem); next() })
+    else if (a.op === "updateO") api("o365", "PATCH", graph + "/me/events/" + encodeURIComponent(a.rid), Sync.graphPatch(a.n, false, tz), function(ok, json, problem) { if (ok) sync.stats.out++; else failed(problem); next() })
+    else if (a.op === "deleteG") api("google", "DELETE", gb + "/" + encodeURIComponent(a.rid), null, gone)
+    else if (a.op === "deleteO") api("o365", "DELETE", graph + "/me/events/" + encodeURIComponent(a.rid), null, gone)
+    else next()
   }
 
   function remoteOp(c, meta, a, next) {

@@ -33,6 +33,17 @@ Notebook itself: no script, no service of its own.
 * It syncs at the interval (5 to 60 minutes), two minutes after the shell
   starts, and 20 seconds after you change the calendar.
 
+## Google ⇄ Office 365, unseen (bridge)
+
+Settings → Accounts & sync → "Google ⇄ Office 365, unseen". On, Google's main
+calendar leaves this app (it's turned off here) and, behind the scenes, Google's
+main calendar and Office 365's are kept the same: a single event new, changed
+or deleted on one is so on the other at the next sync; events that are equal
+already are linked, not made twice. Repeating events stay where they are. Only
+Office 365's calendar is shown. `Sync.planBridge` plans it; the pairs are in
+`bridge.json`. A sync that would make more than 40 events on one side (once
+paired) or lose more than half of the pairs is stopped (safety guard).
+
 ## Google: a client of your own
 
 Google lends no public client for its Calendar API, so you need your own

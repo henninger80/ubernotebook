@@ -1,0 +1,171 @@
+#!/usr/bin/env python3
+# dedupe-calendar (fork): clears the copies a lost-link sync left behind, in
+# Office 365's main calendar and in Uber Notebook's own.
+#
+#   dedupe-calendar                  dry run: what would go, nothing changed
+#   dedupe-calendar --apply          really do it (back-ups first)
+#   dedupe-calendar --since 2026-10-19T00:00:00Z   only Outlook copies made after this
+#
+# Outlook: of each group of equal single events (title, start, end, all-day,
+# place) the oldest stays, and only copies made after --since go. Ours: of
+# each such group the one linked to the Outlook event that stays stays; the
+# rest go. Events from Google and repeating ones are never touched.
+# Apply finishes with links.json pruned; restart the shell afterwards
+# (omarchy restart shell) so it reloads the links.
+import argparse, collections, json, os, shutil, subprocess, sys, time
+import urllib.parse, urllib.request
+
+STATE = os.path.expanduser("~/.local/state/uber-notebook-sync")
+NOTES = os.path.expanduser("~/Nextcloud2/Notes/Pages/calendar.json")
+CLIENT = "14d82eec-204b-4c2f-b7e8-296a70dab67e"
+GRAPH = "https://graph.microsoft.com/v1.0"
+LOGIN = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+
+
+def load(p):
+    with open(p) as f:
+        return json.load(f)
+
+
+def graph_token():
+    # (Refreshed for this run only; the plugin's own token file is not touched.)
+    t = load(STATE + "/tokens-o365.json")
+    d = urllib.parse.urlencode({"grant_type": "refresh_token", "client_id": CLIENT, "refresh_token": t["refresh_token"],
+                                "scope": "Calendars.ReadWrite offline_access"}).encode()
+    return json.load(urllib.request.urlopen(LOGIN, d))["access_token"]
+
+
+def call(tok, method, url):
+    r = urllib.request.Request(url, method=method, headers={"Authorization": "Bearer " + tok})
+    with urllib.request.urlopen(r) as x:
+        body = x.read()
+        return json.loads(body) if body else {}
+
+
+def outlook_events(tok, cal):
+    sel = "id,subject,start,end,isAllDay,location,type,createdDateTime,isCancelled"
+    u = "%s/me/calendars/%s/events?$top=100&$select=%s" % (GRAPH, urllib.parse.quote(cal), sel)
+    items = []
+    while u:
+        j = call(tok, "GET", u)
+        items += j["value"]
+        u = j.get("@odata.nextLink")
+    return items
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--apply", action="store_true")
+    ap.add_argument("--since", default="2026-10-19T00:00:00Z")
+    ap.add_argument("--out", default="")
+    a = ap.parse_args()
+
+    cfg = load(STATE + "/config.json")
+    cal = next(k for k, v in cfg["calendars"].items() if v["provider"] == "o365" and v.get("primary"))[len("o365:"):]
+    links = load(STATE + "/links.json")
+    L = links["links"]
+    by_rid = {l["rid"]: l for l in L}
+    by_nb = {l["nb"]: l for l in L}
+    tok = graph_token()
+    items = [e for e in outlook_events(tok, cal) if e.get("type") == "singleInstance" and not e.get("isCancelled")]
+    key_o = lambda e: (e["subject"].strip(), e["start"]["dateTime"], e["end"]["dateTime"], e["isAllDay"], (e.get("location") or {}).get("displayName", "").strip())
+
+    groups = collections.defaultdict(list)
+    for e in items:
+        groups[key_o(e)].append(e)
+    o_delete, o_keep = [], {}
+    for k, g in groups.items():
+        if len(g) < 2:
+            continue
+        g.sort(key=lambda e: (e["id"] not in by_rid, e["createdDateTime"]))  # linked first, then oldest
+        keeper = g[0]
+        o_keep[k] = keeper["id"]
+        for e in g[1:]:
+            if e["createdDateTime"] >= a.since:
+                o_delete.append(e)
+    del_rids = {e["id"] for e in o_delete}
+
+    ev = load(NOTES)["events"]
+    ev = list(ev.values()) if isinstance(ev, dict) else ev
+    keep_rids = {e["id"] for e in items} - del_rids
+    lg = collections.defaultdict(list)
+    for e in ev:
+        if e.get("repeat"):
+            continue
+        l = by_nb.get(e["id"])
+        if l and l["cal"].startswith("google"):
+            continue
+        lg[(e["title"].strip(), e["start"], e["end"], e["allDay"], (e.get("place") or "").strip())].append(e)
+    l_delete, relink = [], []
+    o_touched = {(k[0], k[1]) for k in o_keep}  # (title, start) of groups that had Outlook copies
+    for k, g in lg.items():
+        if len(g) < 2:
+            continue
+        if len(g) < 3 and not any(k[0] == t and k[1].startswith(s[:16]) for t, s in o_touched):
+            continue
+        surv = [e for e in g if by_nb.get(e["id"]) and by_nb[e["id"]]["rid"] in keep_rids]
+        keeper = surv[0] if surv else g[0]
+        if not surv:
+            want = [rid for rid in keep_rids if False]
+            # (Linked to a copy that is going: the keeper takes over the link of the Outlook event that stays.)
+            for ok_key, rid in o_keep.items():
+                if ok_key[0] == k[0] and ok_key[1][:16] == k[1][:16] and rid in keep_rids and rid not in {by_nb[e["id"]]["rid"] for e in g if e["id"] in by_nb}:
+                    relink.append((keeper["id"], rid))
+                    break
+        l_delete += [e for e in g if e is not keeper]
+
+    print("Outlook: %d events, %d groups with copies, %d copies to delete (made since %s)" % (len(items), len(o_keep), len(o_delete), a.since))
+    print("Ours: %d events, %d copies to delete, %d to relink" % (len(ev), len(l_delete), len(relink)))
+    older = sum(1 for g in groups.values() if len(g) > 1 and sum(1 for e in g if e["createdDateTime"] < a.since) > 1)
+    print("Left alone: %d Outlook groups with older double entries" % older)
+    for e in sorted(o_delete, key=lambda e: e["subject"])[:15]:
+        print("  del Outlook  %-40s %s  (made %s)" % (e["subject"][:40], e["start"]["dateTime"][:16], e["createdDateTime"][:16]))
+    for e in l_delete[:10]:
+        print("  del ours     %-40s %s" % (e["title"][:40], e["start"]))
+    plan = {"outlook": [{"id": e["id"], "subject": e["subject"], "start": e["start"]["dateTime"]} for e in o_delete],
+            "ours": [{"id": e["id"], "title": e["title"], "start": e["start"]} for e in l_delete], "relink": relink}
+    out = a.out or os.path.join(os.getcwd(), "dedupe-plan.json")
+    with open(out, "w") as f:
+        json.dump(plan, f, indent=1, ensure_ascii=False)
+    print("Plan written to", out)
+    if not a.apply:
+        print("Dry run: nothing changed. --apply does it.")
+        return
+
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    bk = os.path.expanduser("~/.local/share/plugin-backups/dedupe-" + stamp)
+    os.makedirs(bk)
+    shutil.copy(NOTES, bk + "/calendar.json")
+    shutil.copy(STATE + "/links.json", bk + "/links.json")
+    json.dump(items, open(bk + "/outlook-events.json", "w"))
+    print("Back-up in", bk)
+    # Ours first (unlinked ones have no effect there), then Outlook.
+    gone_nb = {e["id"] for e in l_delete}
+    for e in l_delete:
+        subprocess.run(["omarchy-shell", "uber-notebook", "removeEvent", e["id"]], check=False, capture_output=True)
+    for e in o_delete:
+        try:
+            call(tok, "DELETE", "%s/me/events/%s" % (GRAPH, urllib.parse.quote(e["id"])))
+        except Exception as x:
+            print("  failed:", e["subject"], x)
+    # Links: the deleted gone, the relinked pointed at what stays.
+    rel = dict(relink)
+    new = []
+    for l in L:
+        if l["nb"] in gone_nb or l["rid"] in del_rids:
+            continue
+        new.append(l)
+    for nb, rid in relink:
+        by = [l for l in new if l["rid"] == rid]
+        if not by:
+            src = by_nb.get(nb)
+            new.append({"nb": nb, "cal": "o365:" + cal, "rid": rid, "fp": "", "title": "", "start": "", "recurring": False})
+    links["links"] = new
+    tmp = STATE + "/links.json.new"
+    json.dump(links, open(tmp, "w"), indent=1)
+    os.replace(tmp, STATE + "/links.json")
+    print("Done. Now: omarchy restart shell")
+
+
+if __name__ == "__main__":
+    main()
