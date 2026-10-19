@@ -339,6 +339,7 @@ FocusScope {
     id: docs
     anchors.fill: parent
     anchors.topMargin: demoStrip.height + setupStrip.height
+    anchors.rightMargin: splitPane.width  // [fork]
     theme: themeObject
     workspace: root.workspace
     service: root.service
@@ -360,6 +361,23 @@ FocusScope {
     onImportRequested: function(folder) {
       if (root.service) root.service.pickImport(folder, function(paths) { if (paths.length) docs.importPaths(paths, "") })
     }
+    onSplitRequested: function(id) { splitPane.openBeside(id) }  // [fork]
+    onSplitClosed: splitPane.close()  // [fork]
+  }
+
+  // [fork] A second pane beside the first (SplitPane.qml, docs/tabs.md).
+  SplitPane {
+    id: splitPane
+    objectName: "splitPane"
+    anchors.right: parent.right
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.topMargin: demoStrip.height + setupStrip.height
+    theme: themeObject
+    workspace: root.workspace
+    service: root.service
+    first: docs
+    visible: shown && root.space === "pages"
   }
 
   // The cover, flying between the shelf and the desk.

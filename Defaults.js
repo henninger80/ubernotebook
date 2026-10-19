@@ -78,6 +78,15 @@ var DEFAULTS = {
   // (the page you were on), "daily" (today's daily note), "calendar",
   // "tag:<name>" (a tag's page), or a page's title or id.
   startPage: "",
+  // [fork] Tabs and the split view (Tabs.js): what each tab shows and the
+  // one you're on, the pane beside the first shown, its tabs, and how wide
+  // the first pane is (in percent).
+  tabs: [],
+  tabAt: 0,
+  split: false,
+  splitTabs: [],
+  splitTabAt: 0,
+  splitWidth: 50,
   // The clock times are shown with: "12" (1:30 pm) or "24" (13:30).
   clock: "12",
   // A reminder's or an event alert's own words in its notification (off:
@@ -189,6 +198,12 @@ var SCHEMA = {
     dailyTemplate: "string",  // [fork]
     dailyByYear: "bool",  // [fork]
     startPage: "string",  // [fork]
+    tabs: "tabs",  // [fork]
+    tabAt: "int",  // [fork]
+    split: "bool",  // [fork]
+    splitTabs: "tabs",  // [fork]
+    splitTabAt: "int",  // [fork]
+    splitWidth: "int",  // [fork]
     peopleLayout: "string",
     peopleGroup: "string",
     colorSidebar: "string",
@@ -235,6 +250,9 @@ var SCHEMA = {
   ranges: {
     width: [640, 5000],
     height: [480, 4000],
-    zoom: [60, 200]
+    zoom: [60, 200],
+    tabAt: [0, 11],  // [fork]
+    splitTabAt: [0, 11],  // [fork]
+    splitWidth: [25, 75]  // [fork]
   }
 }

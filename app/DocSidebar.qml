@@ -8,6 +8,7 @@ import "../Dates.js" as Dates
 import "../Colors.js" as Colors
 import "../Sidebar.js" as Sidebar
 import "../Collection.js" as Collection
+import "../Tabs.js" as Tabs  // [fork]
 import "../Tasks.js" as Tasks  // [fork]
 
 // The sidebar of Pages. At the top, staying put: the switch back to
@@ -677,7 +678,9 @@ Rectangle {
       }
     }
     HoverHandler { id: treeHover }
-    TapHandler { onTapped: bar.view.open(rowItem.modelData.id) }
+    // [fork] With Ctrl in a new tab, with Ctrl+Shift beside; the middle button: a new tab.
+    TapHandler { id: rowTap; onTapped: bar.view.openFromLink(rowItem.modelData.id, Tabs.openHow(rowTap.point.modifiers)) }
+    TapHandler { acceptedButtons: Qt.MiddleButton; onTapped: bar.view.newTab(rowItem.modelData.id) }
     ToolTip.visible: rowItem.isProject && treeHover.hovered && bar.dragId === ""
     ToolTip.delay: 700
     ToolTip.text: !rowItem.isProject ? "" : rowItem.status.label + (rowItem.due ? "  \u00b7  " + (rowItem.modelData.overdue ? rowItem.due.label : "due " + rowItem.due.label) : "")
@@ -1000,7 +1003,8 @@ Rectangle {
               color: bar.theme.text
             }
             HoverHandler { id: favHover; cursorShape: Qt.PointingHandCursor }
-            TapHandler { onTapped: bar.view.open(favRow.modelData) }
+            TapHandler { id: favTap; onTapped: bar.view.openFromLink(favRow.modelData, Tabs.openHow(favTap.point.modifiers)) }  // [fork]
+            TapHandler { acceptedButtons: Qt.MiddleButton; onTapped: bar.view.newTab(favRow.modelData) }  // [fork]
           }
         }
       }

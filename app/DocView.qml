@@ -22,6 +22,7 @@ import "../Email.js" as Email
 import "../Library.js" as Library
 import "../Overlays.js" as Overlays
 import "../Daily.js" as Daily  // [fork]
+import "../Tabs.js" as Tabs  // [fork]
 
 // Pages: the other way to write in Uber Notebook, the way Notion does it. The
 // sidebar has every page as a tree; the page you're on has its cover, icon
@@ -92,7 +93,8 @@ FocusScope {
   readonly property var format: { var r = revision; return page && page.format ? page.format : ({ width: "normal", size: "normal", font: "sans" }) }
   readonly property bool small: format.size === "small"
   // A locked page reads but can't be changed (unlock it in its ⋯ menu).
-  readonly property bool locked: format.locked === true
+  // [fork] So does one open in the other pane too, since before (mirrored).
+  readonly property bool locked: format.locked === true || mirrored
   // An event's editor is open (the calendar under it doesn't take its clicks).
   readonly property bool eventEditorOpen: eventPop.opened
   readonly property bool favorite: { var r = workspace ? workspace.revision : 0; return page && workspace ? workspace.isFavorite(page.id) : false }
@@ -129,8 +131,11 @@ FocusScope {
     if (!workspace || !workspace.ready) { pendingActivate = true; return }
     workspace.ensureStarted()
     var ix = workspace.index
+    // [fork] The tabs kept, the one you were on opened (after the start page).
+    var kept = restoreTabs()
     // [fork] The start page, the first time (startPage).
     if (!startShown) { startShown = true; if (openStart()) return }
+    if (kept && (!Workspace.isUuid(kept) || (ix.pages[kept] && !Workspace.inTrash(ix, kept)))) { open(kept); return }
     var last = settings.lastPage || ""
     if (last && ix.pages[last] && !Workspace.inTrash(ix, last)) { open(last); return }
     var first = ix.top.filter(function(id) { var e = ix.pages[id]; return e && !e.trashed && !e.template && !e.archived && !e.synced })[0]
@@ -187,10 +192,155 @@ FocusScope {
         view.historyAt = view.history.length - 1
       }
       view.expandTo(id)
-      if (view.service) view.service.setSetting("lastPage", id)
+      if (view.service && view.paneName === "") view.service.setSetting("lastPage", id)  // [fork] paneName
       if (then && then.block) Qt.callLater(function() { view.editor.focusBlock(then.block, 0) })
       else view.focusPage(then === "title")
     })
+  }
+
+
+  // ---- [fork] tabs, and a pane beside this one (Tabs.js, PageTabs.qml, SplitPane.qml) ----
+
+  // "" the first pane, "split" the one beside it (SplitPane.qml).
+  property string paneName: ""
+  // The other pane, while there are two.
+  property var peer: null
+  // The page shown in the other pane too, since before it was here: only
+  // read here, so it's never written from two places. It's changed there,
+  // and shown here as it is a moment after (peerSaved).
+  property bool mirrored: false
+  // The tabs (Tabs.js); the one you're on keeps its history in `history`.
+  property var tabs: [{ history: [], at: -1 }]
+  property int tabAt: 0
+  property bool tabsRestored: false
+  readonly property string tabsKey: paneName === "split" ? "splitTabs" : "tabs"
+  readonly property string tabAtKey: paneName === "split" ? "splitTabAt" : "tabAt"
+  // A page to open in the other pane (made if there's none), and this pane
+  // closed (the first: the one beside it).
+  signal splitRequested(string id)
+  signal splitClosed()
+
+  // The tabs kept last time, brought back: the id of the one you were on, or "".
+  function restoreTabs() {
+    if (tabsRestored) return ""
+    tabsRestored = true
+    var r = Tabs.fromKept(settings[tabsKey], settings[tabAtKey])
+    if (!r.tabs.length) return ""
+    tabs = r.tabs
+    tabAt = r.at
+    history = []
+    historyAt = -1
+    return r.tabs[r.at].history[0]
+  }
+  function keepTabs() {
+    if (!tabsRestored || !service || typeof service.setSettings !== "function" || !workspace || !workspace.ready) return
+    var k = Tabs.kept(tabs, tabAt, history, historyAt)
+    if (JSON.stringify(k.tabs) === JSON.stringify(settings[tabsKey] || []) && k.at === settings[tabAtKey]) return
+    var changes = {}
+    changes[tabsKey] = k.tabs
+    changes[tabAtKey] = k.at
+    service.setSettings(changes)
+  }
+  Timer { id: tabsKeep; interval: 1000; onTriggered: view.keepTabs() }
+  onHistoryChanged: tabsKeep.restart()
+  onHistoryAtChanged: tabsKeep.restart()
+  onTabsChanged: tabsKeep.restart()
+  onTabAtChanged: tabsKeep.restart()
+
+  // What the tab you're on shows ("" none yet).
+  function shownId() { return historyAt >= 0 && historyAt < history.length ? history[historyAt] : "" }
+
+  // A new tab after this one, on `id`; none: on what's shown, with Search
+  // open to go elsewhere.
+  function newTab(id) {
+    var what = id || shownId()
+    commit()
+    var o = Tabs.opened(tabs, tabAt, history, historyAt, false)
+    tabs = o.tabs
+    tabAt = o.at
+    history = []
+    historyAt = -1
+    if (what) open(what)
+    if (!id) openFind()
+  }
+  function switchTab(i) {
+    var s = Tabs.switched(tabs, tabAt, history, historyAt, i)
+    if (!s) return
+    commit()
+    tabs = s.tabs
+    tabAt = s.at
+    history = s.history
+    historyAt = s.historyAt
+    if (s.open) open(s.open, true)
+  }
+  function cycleTab(step) { if (tabs.length > 1) switchTab((tabAt + step + tabs.length) % tabs.length) }
+  // The last tab closed: in the pane beside the first, the pane.
+  function closeTab(i) {
+    if (tabs.length <= 1) { if (paneName === "split") splitClosed(); return }
+    var c = Tabs.closed(tabs, tabAt, history, historyAt, i)
+    if (!c) return
+    if (i === tabAt) commit()
+    tabs = c.tabs
+    tabAt = c.at
+    history = c.history
+    historyAt = c.historyAt
+    if (c.open) open(c.open, true)
+  }
+  function moveTab(from, to) {
+    var m = Tabs.moved(Tabs.stash(tabs, tabAt, history, historyAt), tabAt, from, to)
+    tabs = m.tabs
+    tabAt = m.at
+  }
+
+  // A page in the other pane: from the first, the one beside it (opened if
+  // it isn't); from that one, the first.
+  function openBeside(id) {
+    if (!id) id = shownId()
+    if (paneName === "split" && peer) { peer.open(id); peer.forceActiveFocus(); return }
+    splitRequested(id)
+  }
+  function toggleSplit() {
+    if (paneName === "split" || peer) { commit(); if (paneName === "split") splitClosed(); else peer.splitClosed(); return }
+    splitRequested(shownId())
+  }
+  // A page link: with Ctrl in a new tab, with Ctrl+Shift beside (Editor.openIn).
+  function openFromLink(id, how) {
+    if (how === "tab") newTab(id)
+    else if (how === "split") openBeside(id)
+    else open(id)
+  }
+
+  // The page here and in the other pane: read only in the one it came to last.
+  function updateMirror() {
+    var same = !!(peer && peer.page && page && peer.page.id === page.id)
+    if (!same) { mirrored = false; return }
+    if (!mirrored && !peer.mirrored) mirrored = true
+  }
+  Connections {
+    target: view.peer
+    function onPageChanged() { view.updateMirror() }
+  }
+  onPeerChanged: updateMirror()
+
+  // The other pane wrote the page shown here: shown as it is now, where you were on it.
+  function peerSaved(id) {
+    if (!page || page.id !== id || pageDirty || !workspace) return
+    var y = flick.contentY
+    workspace.readPage(id, function(p) {
+      if (!p || !view.page || view.page.id !== id || view.pageDirty) return
+      var e = view.workspace.index.pages[id]
+      if (e) p.parent = e.parent
+      if (view.sameBlocks(view.page, p)) { view.showHead(p); return }
+      view.show(p)
+      Qt.callLater(function() { view.flick.contentY = Math.max(0, Math.min(y, view.flick.contentHeight - view.flick.height)) })
+    })
+  }
+
+  // A command's change to a page open in the pane beside this one (or here
+  // too, but only read here): made there.
+  function commandPane(id) {
+    if (paneName !== "" || !peer || !peer.page || peer.page.id !== id || peer.mirrored) return null
+    return !page || page.id !== id || mirrored ? peer : null
   }
 
   // ---- buttons, files, videos, bookmarks, boards, synced blocks ------------------------------
@@ -880,7 +1030,7 @@ FocusScope {
   }
   Connections {
     target: view
-    function onPageChanged() { if (view.page) view.tasksShown = false }
+    function onPageChanged() { if (view.page) view.tasksShown = false; view.updateMirror() }  // [fork] updateMirror
     function onTagShownChanged() { if (view.tagShown) view.tasksShown = false }
     function onCalendarShownChanged() { if (view.calendarShown) view.tasksShown = false }
     function onLibraryShownChanged() { if (view.libraryShown) view.tasksShown = false }
@@ -1192,6 +1342,7 @@ FocusScope {
   }
 
   function markDirty() {
+    if (mirrored) return  // [fork] (read here: written in the other pane)
     pageDirty = true
     // (Another profile opening: saved at once, where it was; the one before
     // is left before the timer would.)
@@ -1239,6 +1390,11 @@ FocusScope {
     titleEdit.text = ""
     history = []
     historyAt = -1
+    // [fork] (The tabs are the folder before's: this one's brought back.)
+    tabsKeep.stop()
+    tabs = [{ history: [], at: -1 }]
+    tabAt = 0
+    tabsRestored = false
     tagShown = ""
     calendarShown = false
     libraryShown = false
@@ -1257,6 +1413,7 @@ FocusScope {
   // Writes the open page, if it changed. Pages whose blocks came off it go to
   // the trash (and come back if their block does, with Undo).
   function commit() {
+    if (paneName === "" && peer) peer.commit()  // [fork] (the pane beside, too)
     saveTimer.stop()
     if (!pageDirty || !page || !workspace) return
     pageDirty = false
@@ -1279,6 +1436,7 @@ FocusScope {
     // (Not saved, a full disk say: still to be saved, tried again with your
     // next change, another page, or closing; meanwhile it's kept as it is.)
     workspace.savePage(p, function(ok) { if (ok === false && view.page && view.page.id === p.id) view.pageDirty = true })
+    if (peer) peer.peerSaved(p.id)  // [fork]
     revision++
   }
 
@@ -2122,6 +2280,7 @@ FocusScope {
   // the empty line it ends with), as one step you can undo, the cursor
   // staying where it is. true, "locked", or false when it's another page.
   function appendFromCommand(id, blocks) {
+    var other = commandPane(id); if (other) return other.appendFromCommand(id, blocks)  // [fork]
     if (!page || page.id !== id) return false
     if (locked) return "locked"
     var at = editor.model.count
@@ -2139,6 +2298,7 @@ FocusScope {
   // inside it) replaced, or blocks put in after it, as one step you can
   // undo. true, "locked", or false when it's another page.
   function replaceFromCommand(id, change) {
+    var other = commandPane(id); if (other) return other.replaceFromCommand(id, change)  // [fork]
     if (!page || page.id !== id) return false
     if (locked) return "locked"
     if (editor.indexOf(change.block) < 0) return false
@@ -2149,6 +2309,7 @@ FocusScope {
   }
 
   function insertFromCommand(id, change) {
+    var other = commandPane(id); if (other) return other.insertFromCommand(id, change)  // [fork]
     if (!page || page.id !== id) return false
     if (locked) return "locked"
     if (editor.indexOf(change.block) < 0) return false
@@ -2161,6 +2322,7 @@ FocusScope {
   // A page a command made inside the page open here: its block goes in
   // there the same way.
   function pageAddedInto(parentId, childId) {
+    var other = commandPane(parentId); if (other) return other.pageAddedInto(parentId, childId)  // [fork]
     if (!page || page.id !== parentId) return false
     return appendFromCommand(parentId, [{ type: "page", id: childId, indent: 0 }]) === true
   }
@@ -3020,19 +3182,39 @@ FocusScope {
     height: view.height
     Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
 
+    // [fork] The tabs, over the bar (PageTabs.qml).
+    PageTabs {
+      id: pageTabs
+      objectName: "pageTabs"
+      z: 3
+      width: parent.width
+      theme: view.theme
+      view: view
+    }
+
     // The bar above: the sidebar, back and forward, where the page is, its menu.
     Item {
       id: topBar
       z: 3
+      y: pageTabs.height  // [fork]
       width: parent.width
       height: 46
+      // [fork] Two panes: the one you're in, marked.
+      Rectangle {
+        visible: view.peer !== null && view.activeFocus
+        width: parent.width; height: 2
+        color: view.theme.accent
+      }
 
       Row {
         x: 10
         anchors.verticalCenter: parent.verticalCenter
         spacing: 2
+        // [fork] (A narrow pane: where the page is, cut short before the buttons.)
+        width: Math.min(implicitWidth, topBar.width - barButtons.width - 30)
+        clip: true
         IconButton {
-          visible: !view.sidebarShown
+          visible: !view.sidebarShown && view.paneName === ""  // [fork] (the first pane's sidebar)
           theme: view.theme; icon: view.theme.icons.sidebar; size: 30; iconSize: 16; tip: "Show the sidebar  Ctrl+\\"
           onClicked: view.sidebarShown = true
         }
@@ -3100,6 +3282,7 @@ FocusScope {
       }
 
       Row {
+        id: barButtons  // [fork]
         anchors.right: parent.right
         anchors.rightMargin: 12
         anchors.verticalCenter: parent.verticalCenter
@@ -3107,7 +3290,7 @@ FocusScope {
         Text {
           textFormat: Text.PlainText
           anchors.verticalCenter: parent.verticalCenter
-          visible: view.page !== null
+          visible: view.page !== null && topBar.width > 640  // [fork] (not in a narrow pane)
           rightPadding: 10
           text: { var r = view.revision; var c = view.theme.twelveHour; var m = view.page ? new Date(view.page.modified) : null; return m ? "Edited " + Qt.formatDate(m, "d MMM") + ", " + Dates.clockOf(m) : "" }
           font.family: view.theme.uiFont
@@ -3116,9 +3299,10 @@ FocusScope {
         }
         IconButton {
           visible: view.locked
-          theme: view.theme; icon: view.theme.icons.lock; label: "Locked"; size: 30; iconSize: 14; tint: view.theme.muted
-          tip: "Locked: it can't be changed. Click to unlock"
-          onClicked: view.setFormat("locked", false)
+          // [fork] Open in the other pane too: read here, changed there.
+          theme: view.theme; icon: view.theme.icons.lock; label: view.mirrored ? "Read only" : "Locked"; size: 30; iconSize: 14; tint: view.theme.muted
+          tip: view.mirrored ? "Open in the other pane too: change it there. Click to go there" : "Locked: it can't be changed. Click to unlock"
+          onClicked: if (view.mirrored) view.peer.forceActiveFocus(); else view.setFormat("locked", false)
         }
         IconButton {
           visible: view.page !== null
@@ -3163,6 +3347,14 @@ FocusScope {
           checked: view.dictating
           tip: view.dictating ? "Done dictating  Ctrl+Shift+D" : view.recorder && view.recorder.checked && !view.recorder.canTranscribe ? "Dictation needs voxtype (Omarchy's dictation)" : "Dictate: say it, and it's written where you are  Ctrl+Shift+D"
           onClicked: view.dictate()
+        }
+        // [fork] The pane beside: opened on what's shown, or closed.
+        IconButton {
+          objectName: "splitButton"
+          theme: view.theme; icon: view.paneName === "split" ? view.theme.icons.close : "\u{f0bcc}"; size: 30; iconSize: 16
+          checked: view.paneName === "" && view.peer !== null
+          tip: view.paneName === "split" ? "Close this pane  Ctrl+Shift+S" : view.peer !== null ? "Close the pane beside  Ctrl+Shift+S" : "Open this beside, in a second pane  Ctrl+Shift+S"
+          onClicked: view.toggleSplit()
         }
         IconButton { visible: view.tagShown === "" && !view.calendarShown && !view.libraryShown && !view.peopleShown && !view.templatesShown && !view.tasksShown; theme: view.theme; icon: view.theme.icons.search; size: 30; iconSize: 16; tip: "Find on this page  Ctrl+F"; checked: findBar.shown; onClicked: findBar.toggle() }
         IconButton {
@@ -3664,7 +3856,7 @@ FocusScope {
           onChanged: { view.markDirty(); if (view.pageBlank || editor.model.count <= 1) view.updateBlank() }
           onCursorAt: function(y, h) { view.ensureVisible(y, h) }
           onLeaveTop: { titleEdit.forceActiveFocus(); titleEdit.cursorPosition = titleEdit.length }
-          onPageOpened: function(id) { view.open(id) }
+          onPageOpened: function(id) { view.openFromLink(id, editor.openIn) }  // [fork] openIn
           onSubpageRequested: function(uid) { view.subpageIn(uid) }
           onPageLinkRequested: function(uid) {
             view.pickFor = uid
@@ -5042,6 +5234,10 @@ FocusScope {
     width: 230
     contentItem: Column {
       spacing: 2
+      // [fork] In a new tab, or beside.
+      MenuRow { objectName: "rowNewTab"; width: parent.width; theme: view.theme; icon: "\u{f075c}"; text: "Open in a new tab"; hint: "Ctrl+click"; onClicked: { rowMenu.close(); view.newTab(rowMenu.pageId) } }
+      MenuRow { objectName: "rowBeside"; width: parent.width; theme: view.theme; icon: "\u{f0bcc}"; text: view.paneName === "split" ? "Open in the first pane" : "Open beside"; hint: "Ctrl+Shift+click"; onClicked: { rowMenu.close(); view.openBeside(rowMenu.pageId) } }
+      Rectangle { width: parent.width; height: 1; color: view.theme.line }
       MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.newPage; text: "A page inside it"; onClicked: { rowMenu.close(); view.newPage(rowMenu.pageId) } }
       MenuRow {
         objectName: "rowFromTemplate"
@@ -5079,13 +5275,20 @@ FocusScope {
     var alt = (e.modifiers & Qt.AltModifier) !== 0
     if (ctrl && !shift && !alt && e.key === Qt.Key_N) { newPage(""); return true }
     if (ctrl && !shift && !alt && e.key === Qt.Key_P) { openFind(); return true }
-    if (ctrl && !shift && !alt && e.key === Qt.Key_Backslash) { sidebarShown = !sidebarShown; return true }
+    if (ctrl && !shift && !alt && e.key === Qt.Key_Backslash) { if (paneName === "") sidebarShown = !sidebarShown; else if (peer) peer.sidebarShown = !peer.sidebarShown; return true }  // [fork] paneName
     if (ctrl && !shift && !alt && e.key === Qt.Key_F) { findBar.open(); return true }
     if (ctrl && !shift && !alt && e.key === Qt.Key_J) { openAgent("auto"); return true }
     if (ctrl && shift && !alt && e.key === Qt.Key_D) { dictate(); return true }
     if (ctrl && shift && !alt && e.key === Qt.Key_R) { newAudioNote(); return true }
     if (ctrl && shift && !alt && e.key === Qt.Key_C) { openCalendar("", false); return true }
     if (ctrl && shift && !alt && e.key === Qt.Key_T) { openDaily(""); return true }  // [fork]
+    // [fork] Tabs, and the pane beside.
+    if (ctrl && !shift && !alt && e.key === Qt.Key_T) { newTab(""); return true }
+    if (ctrl && !shift && !alt && e.key === Qt.Key_W) { closeTab(tabAt); return true }
+    if (ctrl && !alt && (e.key === Qt.Key_Tab || e.key === Qt.Key_Backtab)) { cycleTab(shift || e.key === Qt.Key_Backtab ? -1 : 1); return true }
+    if (ctrl && !shift && !alt && (e.key === Qt.Key_PageDown || e.key === Qt.Key_PageUp)) { cycleTab(e.key === Qt.Key_PageDown ? 1 : -1); return true }
+    if (ctrl && !shift && !alt && e.key >= Qt.Key_1 && e.key <= Qt.Key_9) { switchTab(e.key === Qt.Key_9 ? tabs.length - 1 : e.key - Qt.Key_1); return true }
+    if (ctrl && shift && !alt && e.key === Qt.Key_S) { toggleSplit(); return true }
     // Undo and redo on the page shown, with the keyboard on the page itself.
     if (ctrl && !alt && (e.key === Qt.Key_Z || e.key === Qt.Key_Y) && pageShown() && !locked) {
       if (e.key === Qt.Key_Y || shift) editor.redo(); else editor.undo()

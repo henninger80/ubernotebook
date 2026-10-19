@@ -570,7 +570,21 @@ Item {
       acceptedModifiers: Qt.ControlModifier
       onTapped: function(eventPoint) {
         var link = textEdit.linkAt(eventPoint.position.x, eventPoint.position.y)
+        // [fork] A page's: in a new tab.
+        block.editor.openIn = "tab"
         if (link) block.editor.openLink(link, textEdit, eventPoint.position.x, eventPoint.position.y)
+        block.editor.openIn = ""
+      }
+    }
+    // [fork] Ctrl+Shift+click: a page's link, in the other pane.
+    TapHandler {
+      acceptedModifiers: Qt.ControlModifier | Qt.ShiftModifier
+      onTapped: function(eventPoint) {
+        var link = textEdit.linkAt(eventPoint.position.x, eventPoint.position.y)
+        if (!Html.pageOf(link)) return
+        block.editor.openIn = "split"
+        block.editor.openLink(link, textEdit, eventPoint.position.x, eventPoint.position.y)
+        block.editor.openIn = ""
       }
     }
     // A link to a page opens with a plain click, as in Notion, a tag shows

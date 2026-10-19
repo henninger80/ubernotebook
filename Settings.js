@@ -4,7 +4,9 @@
 //
 // Shared by Service.qml, the settings panel and tests/settings.test.cjs, so
 // keep it plain JavaScript with no QML or Node APIs.
+// ([fork] Tabs.js: the tabs kept.)
 .import "Permissions.js" as Permissions
+.import "Tabs.js" as Tabs
 
 // Canonical modifier order, and Hyprland's modmask bits for each.
 var MODIFIERS = ["SUPER", "CTRL", "ALT", "SHIFT"]
@@ -102,7 +104,7 @@ function commandValue(value, type) {
 // Profiles as they may be used: at most 30, each with an id, a name (a
 // line), a folder, whether it's the demo, and its own settings kept while
 // another is open (`saved`: the keys of PROFILE_KEYS, each as it may be).
-var PROFILE_KEYS = ["inbox", "lastPage", "lastNotebook", "mirror", "mirrorFolder"]
+var PROFILE_KEYS = ["inbox", "lastPage", "lastNotebook", "mirror", "mirrorFolder", "tabs", "tabAt", "splitTabs", "splitTabAt"]  // [fork] tabs
 function cleanProfiles(value, schema) {
   if (!Array.isArray(value)) return null
   var out = []
@@ -177,6 +179,8 @@ function validValue(key, value, fallback, schema) {
     }
     return { ok: true, value: names }
   }
+  // [fork] Tabs (Tabs.js): what each shows.
+  if (type === "tabs") return Array.isArray(value) ? { ok: true, value: Tabs.clean(value) } : { ok: false }
   if (type === "id") {
     return typeof value === "string" && /^[a-z0-9-]{0,80}$/.test(value) ? { ok: true, value: value } : { ok: false }
   }

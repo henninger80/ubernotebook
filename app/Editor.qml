@@ -129,6 +129,19 @@ FocusScope {
   // callout's icon, a block's handle or a code block's language clicked; a
   // code block copied.
   signal pageOpened(string id)
+  // [fork] How a page link's being opened: "" here, "tab" in a new tab
+  // (Ctrl+click), "split" in the other pane (Ctrl+Shift+click); DocBlock
+  // sets it for the click it's for.
+  property string openIn: ""
+  // [fork] The view's keys for tabs and the pane beside (DocView.handleKey):
+  // not the page's, even when it's only read.
+  function tabKey(e) {
+    var c = (e.modifiers & Qt.ControlModifier) !== 0, s = (e.modifiers & Qt.ShiftModifier) !== 0, a = (e.modifiers & Qt.AltModifier) !== 0
+    if (!c || a) return false
+    if (e.key === Qt.Key_Tab || e.key === Qt.Key_Backtab) return true
+    if (s) return e.key === Qt.Key_S
+    return e.key === Qt.Key_T || e.key === Qt.Key_W || e.key === Qt.Key_PageDown || e.key === Qt.Key_PageUp || (e.key >= Qt.Key_1 && e.key <= Qt.Key_9)
+  }
   signal subpageRequested(string uid)
   signal pageLinkRequested(string uid)
   // A link to a page: to another page (the picker's).
@@ -2747,6 +2760,7 @@ FocusScope {
       var windowKey = (ctrl && !alt && !shift && [Qt.Key_N, Qt.Key_P, Qt.Key_J, Qt.Key_Backslash, Qt.Key_Comma].indexOf(key) >= 0)
         || (ctrl && !alt && (key === Qt.Key_Slash || key === Qt.Key_Question))
         || (ctrl && shift && !alt && (key === Qt.Key_C || key === Qt.Key_T /* [fork] daily note */)) || (!ctrl && !alt && !shift && key === Qt.Key_F1) || (alt && !ctrl && (key === Qt.Key_Left || key === Qt.Key_Right))
+        || tabKey(e)  // [fork]
       if (folding) { e.accepted = true; toggleFold(item.uid); return }
       if (windowKey) return
       if (!moving && !copying) { e.accepted = true; return }
@@ -2896,6 +2910,7 @@ FocusScope {
       return
     }
 
+    if (tabKey(e)) return  // [fork] (the view's: tabs)
     if (key === Qt.Key_Tab || key === Qt.Key_Backtab) {
       e.accepted = true
       var type = typeOf(item.uid)

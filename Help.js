@@ -162,6 +162,26 @@ var SECTIONS = [
       "Pages only. The calendar's daily note button opens the day's."
      ],
      [
+      "Ctrl+T",
+      "Open a new tab, on what's shown, with Search open to go to another page",
+      "Pages only. Ctrl+click a page link (or a page in the sidebar) to open it in a new tab; the middle button on a page in the sidebar does the same. The tabs show while there's more than one, and are there again next time."
+     ],
+     [
+      "Ctrl+W",
+      "Close the tab you're on",
+      "Pages only. In the pane beside the first, closing its last tab closes the pane."
+     ],
+     [
+      "Ctrl+Tab / Ctrl+Shift+Tab",
+      "Go to the next / the previous tab",
+      "Pages only. Ctrl+PageDown / Ctrl+PageUp do the same, Ctrl+1 to Ctrl+8 go to that tab, Ctrl+9 to the last. Each tab has its own back and forward."
+     ],
+     [
+      "Ctrl+Shift+S",
+      "Split the view: what's shown, opened beside it in a second pane. Press it again to close that pane",
+      "Pages only. Ctrl+Shift+click a page link (or a page in the sidebar), or Open beside in a page's menu in the sidebar, to open it there. Drag the line between the panes to make one wider (double-click: half and half). A page open in both panes can only be changed in the one it was opened in first; the other shows it read only, as it's changed."
+     ],
+     [
       "Ctrl+Z / Ctrl+Shift+Z or Ctrl+Y",
       "Undo / redo on the page",
       "Does nothing on a locked page."
