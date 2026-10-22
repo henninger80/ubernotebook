@@ -55,4 +55,16 @@ check("kept in index.json", () => {
   assert.equal(tree("bogus").pages[ids.p].sort, "");
 });
 
+check("the note itself: its page blocks in that order, the text between them in place", () => {
+  const pg = (k) => ({ type: "page", uid: ids[k], indent: 0 });
+  const t = (h) => ({ type: "p", uid: "t" + h, html: h, indent: 0 });
+  const list = [pg("b"), t("1"), pg("a"), pg("c"), t("2"), pg("u")];
+  const ix = tree("title");
+  const out = plain(S.arrange(list, ix.pages, "title")).map((b) => (b.type === "page" ? name(b.uid) : b.html));
+  assert.deepEqual(out, ["c", "1", "a", "b", "2", "u"]);
+  const desc = plain(S.arrange(list, ix.pages, "titleDesc")).map((b) => (b.type === "page" ? name(b.uid) : b.html));
+  assert.deepEqual(desc, ["b", "1", "a", "c", "2", "u"]);
+  assert.equal(S.arrange(list, ix.pages, ""), list, "as on the page: untouched");
+});
+
 console.log(`pagesort: ${passed} checks passed`);

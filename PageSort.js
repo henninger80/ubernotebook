@@ -50,3 +50,28 @@ function sorted(ids, pages, mode) {
     return d || at[a] - at[b]
   })
 }
+
+// A note's own list of blocks with its page blocks (the pages inside it, at
+// the top level of the note, with nothing inside them) in that order, each
+// in a place a page block was: the text between them stays where it is.
+// The same list when the way is "as on the page" or they're in order.
+function arrange(list, pages, mode) {
+  var m = clean(mode)
+  if (!m || !list) return list
+  var slots = [], ids = []
+  list.forEach(function(b, i) {
+    if (b.type !== "page" || (b.indent || 0) !== 0 || !pages[b.uid]) return
+    var next = list[i + 1]
+    if (next && (next.indent || 0) > 0) return
+    slots.push(i)
+    ids.push(b.uid)
+  })
+  if (ids.length < 2) return list
+  var order = sorted(ids, pages, m)
+  if (order.join() === ids.join()) return list
+  var byId = {}
+  slots.forEach(function(i) { byId[list[i].uid] = list[i] })
+  var out = list.slice()
+  slots.forEach(function(i, n) { out[i] = byId[order[n]] })
+  return out
+}

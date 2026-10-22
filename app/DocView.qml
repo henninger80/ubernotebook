@@ -1275,7 +1275,7 @@ FocusScope {
     settingTitle = true
     titleEdit.text = p.title
     settingTitle = false
-    editor.load(Workspace.flatten(p))
+    editor.load(PageSort.arrange(Workspace.flatten(p), workspace ? workspace.index.pages : {}, workspace && workspace.index.pages[p.id] ? workspace.index.pages[p.id].sort : ""))  // [fork] PageSort
     pageDirty = false
     titleHint = ""
     updateBlank()
@@ -1340,6 +1340,17 @@ FocusScope {
     } else {
       view.forceActiveFocus()
     }
+  }
+
+  // [fork] The pages inside this note put in the order chosen for them (PageSort.js).
+  function resortPages() {
+    if (!page || !workspace || mirrored) return
+    var e = workspace.index.pages[page.id]
+    var before = editor.serialize()
+    var list = PageSort.arrange(before, workspace.index.pages, e ? e.sort : "")
+    if (list === before) return
+    editor.load(list)
+    markDirty()
   }
 
   function markDirty() {
@@ -5257,7 +5268,7 @@ FocusScope {
           width: parent.width; theme: view.theme; icon: ""
           text: modelData.title
           checked: rowMenu.sortEntry !== null && PageSort.clean(rowMenu.sortEntry.sort) === modelData.id
-          onClicked: { rowMenu.close(); if (view.workspace) view.workspace.setChildSort(rowMenu.pageId, modelData.id) }
+          onClicked: { rowMenu.close(); if (view.workspace) { view.workspace.setChildSort(rowMenu.pageId, modelData.id); if (view.page && view.page.id === rowMenu.pageId) view.resortPages() } }
         }
       }
      }
