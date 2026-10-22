@@ -23,6 +23,7 @@ import "../Library.js" as Library
 import "../Overlays.js" as Overlays
 import "../Daily.js" as Daily  // [fork]
 import "../Tabs.js" as Tabs  // [fork]
+import "../PageSort.js" as PageSort  // [fork]
 
 // Pages: the other way to write in Uber Notebook, the way Notion does it. The
 // sidebar has every page as a tree; the page you're on has its cover, icon
@@ -5230,9 +5231,39 @@ FocusScope {
     id: rowMenu
     theme: view.theme
     property string pageId: ""
+    // [fork] The ways to sort the pages inside it shown, instead of the rest.
+    property bool sorting: false
+    readonly property var sortEntry: { var r = view.workspace ? view.workspace.revision : 0; return view.workspace ? view.workspace.index.pages[pageId] || null : null }
+    readonly property bool hasPagesIn: !!sortEntry && sortEntry.children.some(function(c) { var e = view.workspace.index.pages[c]; return !!e && !e.trashed && !e.archived && !e.template && !e.synced })
+    readonly property string sortName: { var m = sortEntry ? PageSort.clean(sortEntry.sort) : ""; return PageSort.MODES.filter(function(x) { return x.id === m })[0].title }
+    onClosed: sorting = false
     focus: false
     width: 230
     contentItem: Column {
+     spacing: 2
+     // [fork] How the pages inside it are sorted.
+     Column {
+      objectName: "rowSortChoices"
+      visible: rowMenu.sorting
+      width: parent.width
+      spacing: 2
+      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.back; text: "Sort the pages inside"; onClicked: rowMenu.sorting = false }
+      Rectangle { width: parent.width; height: 1; color: view.theme.line }
+      Repeater {
+        model: PageSort.MODES
+        delegate: MenuRow {
+          required property var modelData
+          objectName: "rowSort_" + (modelData.id || "manual")
+          width: parent.width; theme: view.theme; icon: ""
+          text: modelData.title
+          checked: rowMenu.sortEntry !== null && PageSort.clean(rowMenu.sortEntry.sort) === modelData.id
+          onClicked: { rowMenu.close(); if (view.workspace) view.workspace.setChildSort(rowMenu.pageId, modelData.id) }
+        }
+      }
+     }
+     Column {
+      visible: !rowMenu.sorting
+      width: parent.width
       spacing: 2
       // [fork] In a new tab, or beside.
       MenuRow { objectName: "rowNewTab"; width: parent.width; theme: view.theme; icon: "\u{f075c}"; text: "Open in a new tab"; hint: "Ctrl+click"; onClicked: { rowMenu.close(); view.newTab(rowMenu.pageId) } }
@@ -5260,8 +5291,11 @@ FocusScope {
       MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.duplicate; text: "Duplicate"; onClicked: { rowMenu.close(); view.duplicatePage(rowMenu.pageId) } }
       MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.move; text: "Move to\u2026"; onClicked: { rowMenu.close(); view.movePageAsk(rowMenu.pageId) } }
       MenuRow { objectName: "rowArchive"; width: parent.width; theme: view.theme; icon: view.theme.icons.archive; text: "Archive"; onClicked: { rowMenu.close(); view.archivePage(rowMenu.pageId, true) } }
+      // [fork] PageSort.js
+      MenuRow { objectName: "rowSort"; visible: rowMenu.hasPagesIn; width: parent.width; theme: view.theme; icon: "\u{f04ba}"; text: "Sort the pages inside"; hint: rowMenu.sortName; onClicked: rowMenu.sorting = true }
       Rectangle { width: parent.width; height: 1; color: view.theme.line }
       MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.trash; text: "Move to the trash"; danger: true; onClicked: { rowMenu.close(); view.trashPage(rowMenu.pageId) } }
+     }
     }
   }
 

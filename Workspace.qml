@@ -2,6 +2,7 @@ import QtQuick
 import "Workspace.js" as Workspace
 import "Search.js" as Search  // [fork]
 import "Tasks.js" as Tasks  // [fork]
+import "PageSort.js" as PageSort  // [fork]
 import "Import.js" as Import
 import "Blocks.js" as Blocks
 import "Html.js" as Html
@@ -1393,6 +1394,14 @@ Item {
     var e = index.pages[id]
     if (!e) return
     e.childTemplate = Workspace.isUuid(template) ? template : ""
+    touched()
+  }
+
+  // [fork] The order the pages inside a page are shown in (PageSort.js).
+  function setChildSort(id, mode) {
+    var e = index.pages[id]
+    if (!e) return
+    e.sort = PageSort.clean(mode)
     touched()
   }
 

@@ -37,6 +37,8 @@
 .import "Email.js" as Email
 // [fork] Tasks.js: a page's open to-dos, kept on its entry.
 .import "Tasks.js" as Tasks
+// [fork] PageSort.js: the order the pages inside a page are shown in.
+.import "PageSort.js" as PageSort
 
 var VERSION = 1
 var MAX_DEPTH = 12
@@ -596,6 +598,8 @@ function entry(raw) {
     // A synced block's blocks: a page of their own, out of the tree.
     synced: e.synced === true,
     childTemplate: isUuid(e.childTemplate) ? e.childTemplate : "",
+    // [fork] The order the pages inside it are shown in (PageSort.js).
+    sort: PageSort.clean(e.sort),
     reminders: Array.isArray(e.reminders) ? e.reminders.filter(function(r) {
       return r && isUuid(r.block) && Dates.fromIso(r.at) !== null && typeof r.text === "string"
     }).map(function(r) { return { block: r.block, at: r.at, text: r.text.slice(0, 200) } }).slice(0, 200) : null,
@@ -775,6 +779,7 @@ function rows(index, open) {
     // (The trash's and the archive's aren't in the tree.)
     if (!e || e.trashed || e.archived || e.template || e.synced) return null
     var kids = e.children.filter(function(c) { return index.pages[c] && !index.pages[c].trashed && !index.pages[c].archived && !index.pages[c].template && !index.pages[c].synced })
+    kids = PageSort.sorted(kids, index.pages, e.sort)  // [fork]
     out.push({ id: id, depth: depth, title: e.title, icon: e.icon, hasChildren: kids.length > 0, open: !!(open && open[id]) })
     return open && open[id] ? kids : null
   })
@@ -790,7 +795,7 @@ function rows(index, open) {
 function sidebarRows(index, open, now, together) {
   function shown(id) { var e = index.pages[id]; return !!e && !e.trashed && !e.archived && !e.template && !e.synced }
   function apart(e) { return !together && !!e.project }
-  function kidsOf(e) { return e.children.filter(function(c) { return shown(c) && !apart(index.pages[c]) }) }
+  function kidsOf(e) { return PageSort.sorted(e.children.filter(function(c) { return shown(c) && !apart(index.pages[c]) }), index.pages, e.sort) }  // [fork] PageSort
   function walk(ids, depth, out) {
     walkTree(ids, depth, function(id, d) {
       var e = index.pages[id]
@@ -1066,6 +1071,7 @@ function indexJson(index) {
     if (e.description) out.description = e.description
     if (e.synced) out.synced = true
     if (e.childTemplate) out.childTemplate = e.childTemplate
+    if (e.sort) out.sort = e.sort  // [fork] PageSort.js
     pages[id] = out
   }
   return stringify({ version: VERSION, top: index.top, pages: pages, fired: index.fired || {}, favorites: index.favorites || [], tagColors: index.tagColors || {}, collected: Collection.VERSION })
