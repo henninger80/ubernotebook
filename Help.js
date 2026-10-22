@@ -3308,8 +3308,8 @@ var SECTIONS = [
       ""
      ],
      [
-      "The A–Z / By color button on Tags in Pages' sidebar (or: set tagSort name|color)",
-      "tagSort (default name): sorts tags in the sidebar by name or by color.",
+      "The sort button on Tags in Pages' sidebar: A–Z, Z–A, by color, by color reversed (or: set tagSort name|nameDesc|color|colorDesc)",
+      "tagSort (default name): sorts tags in the sidebar by name or by color; nameDesc and colorDesc the other way round.",
       ""
      ],
      [

@@ -212,7 +212,11 @@ Rectangle {
   function takeFavorites() { if (JSON.stringify(favorites) !== JSON.stringify(favIds)) favIds = favorites }
   onFavoritesChanged: takeFavorites()
 
-  readonly property string tagSort: view.settings.tagSort === "color" ? "color" : "name"
+  readonly property string tagSort: ["name", "nameDesc", "color", "colorDesc"].indexOf(view.settings.tagSort) >= 0 ? view.settings.tagSort : "name"
+  // [fork] A–Z, Z–A, by color, by color the other way round, and round again.
+  readonly property string nextTagSort: ({ name: "nameDesc", nameDesc: "color", color: "colorDesc", colorDesc: "name" })[tagSort]
+  readonly property var tagSortLabel: ({ name: "A\u2013Z", nameDesc: "Z\u2013A", color: "By color", colorDesc: "By color \u2193" })[tagSort]
+  readonly property var tagSortTip: ({ name: "Sorted A\u2013Z", nameDesc: "Sorted Z\u2013A", color: "Sorted by color", colorDesc: "Sorted by color, reversed" })[tagSort]
   readonly property var tagList: {
     var r = view.workspace ? view.workspace.revision : 0
     var k = view.tagColorsKey
@@ -1092,7 +1096,7 @@ Rectangle {
               id: sortText
               anchors.centerIn: parent
               textFormat: Text.PlainText
-              text: bar.tagSort === "color" ? "By color" : "A\u2013Z"
+              text: bar.tagSortLabel
               font.family: bar.theme.uiFont
               font.pixelSize: 10
               color: bar.theme.muted
@@ -1100,9 +1104,9 @@ Rectangle {
             HoverHandler { id: sortHover; cursorShape: Qt.PointingHandCursor }
             TapHandler {
               gesturePolicy: TapHandler.ReleaseWithinBounds
-              onTapped: if (bar.view.service) bar.view.service.setSetting("tagSort", bar.tagSort === "color" ? "name" : "color")
+              onTapped: if (bar.view.service) bar.view.service.setSetting("tagSort", bar.nextTagSort)
             }
-            Tip { shown: sortHover.hovered; text: bar.tagSort === "color" ? "Sorted by color: click for A\u2013Z" : "Sorted by name: click to sort by color" }
+            Tip { shown: sortHover.hovered; text: bar.tagSortTip + ": click to change" }
           }
         }
         Item { width: 1; height: 4 }

@@ -12,8 +12,8 @@
 //
 // The template: `dailyTemplate` (a template's name or id), else one of yours
 // with {{date}} in its title and "daily", "tages" or "journal" in it, else a
-// blank page called "Daily note, {{date}}". In the title {{date}} is written
-// with its year, "Sun 18 Oct 2026", so a day's title is that day's only.
+// blank page called "{{date}}". In the title {{date}} is written
+// as "2026-10-18", so a day's title is that day's only.
 //
 // The settings: Defaults.js (dailyParent, dailyTemplate, dailyByYear).
 // Shared with tests/daily.test.cjs, so keep it plain JavaScript with no QML
@@ -23,7 +23,7 @@
 .import "Templates.js" as Templates
 .import "Dates.js" as Dates
 
-var BLANK_TITLE = "Daily note, {{date}}"
+var BLANK_TITLE = "{{date}}"
 // (How deep a day's page is looked for: in the page, or in its year's.)
 var DEPTH = 2
 
@@ -152,11 +152,11 @@ function template(index, name) {
   return list.length ? list[0].id : ""
 }
 
-// A title filled in for `at` (a Date): {{date}} with its year, the rest as
+// A title filled in for `at` (a Date): {{date}} as 2026-10-18, the rest as
 // Templates.fill does. fmt(isoDay, pattern) writes a date in words.
 function titleFor(title, at, fmt) {
-  var long = Dates.SHORT_DAYS[at.getDay()] + " " + at.getDate() + " " + Dates.SHORT_MONTHS[at.getMonth()] + " " + at.getFullYear()
-  return Templates.fill(String(title || "").replace(/\{\{\s*date\s*\}\}/gi, long), false, at, fmt)
+  var iso = at.getFullYear() + "-" + pad(at.getMonth() + 1) + "-" + pad(at.getDate())
+  return Templates.fill(String(title || "").replace(/\{\{\s*date\s*\}\}/gi, iso), false, at, fmt)
 }
 
 // Whether the newest is first among these pages (by their day, or a year's

@@ -1,6 +1,7 @@
 // PageSort.js - (fork) the order the sidebar shows the pages inside a page
 // in: as they are on it (the default, what dragging changes), by name, by
-// when they were last changed, or by when they were made. Chosen from a
+// when they were last changed, or by when they were made, each either way
+// round. Chosen from a
 // page's ⋯ menu in the sidebar, kept on its entry in index.json (`sort`),
 // so it's the same wherever the notebook is open. Only what's shown: the
 // page's own blocks stay where they are.
@@ -12,8 +13,10 @@
 // Each way, as kept, with its name in the menu.
 var MODES = [
   { id: "", title: "As on the page" },
-  { id: "title", title: "By name" },
+  { id: "title", title: "Name A\u2013Z" },
+  { id: "titleDesc", title: "Name Z\u2013A" },
   { id: "modified", title: "Last changed first" },
+  { id: "modifiedOld", title: "Last changed last" },
   { id: "created", title: "Newest first" },
   { id: "createdOld", title: "Oldest first" }
 ]
@@ -35,14 +38,14 @@ function sorted(ids, pages, mode) {
   function name(id) { return String(e(id).title || "").trim() }
   return ids.slice().sort(function(a, b) {
     var d = 0
-    if (m === "title") {
+    if (m === "title" || m === "titleDesc") {
       var x = name(a), y = name(b)
       // (Untitled ones last.)
-      d = !x !== !y ? (x ? -1 : 1) : x.localeCompare(y, undefined, { numeric: true, sensitivity: "base" })
+      d = !x !== !y ? (x ? -1 : 1) : x.localeCompare(y, undefined, { numeric: true, sensitivity: "base" }) * (m === "titleDesc" && x && y ? -1 : 1)
     } else {
-      var key = m === "modified" ? "modified" : "created"
+      var key = m === "modified" || m === "modifiedOld" ? "modified" : "created"
       var p = String(e(a)[key] || ""), q = String(e(b)[key] || "")
-      d = p === q ? 0 : (p < q ? -1 : 1) * (m === "createdOld" ? 1 : -1)
+      d = p === q ? 0 : (p < q ? -1 : 1) * (m === "createdOld" || m === "modifiedOld" ? 1 : -1)
     }
     return d || at[a] - at[b]
   })

@@ -1452,6 +1452,9 @@ function tagColorOf(colors, name) {
 // in each; each with how deep it is under a tag in the list ("work/acme" is
 // 1 under "work"). [{ name, label, pages, blocks, depth, color }]
 function sortTags(list, colors, by) {
+  // [fork] by: name, nameDesc, color or colorDesc (the colors, or the names, the other way round).
+  var desc = /Desc$/.test(by)
+  by = String(by).replace(/Desc$/, "")
   var names = {}
   list.forEach(function(t) { names[t.name] = true })
   function depth(name) {
@@ -1470,12 +1473,19 @@ function sortTags(list, colors, by) {
     out.sort(function(a, b) {
       function rank(c) { var i = Blocks.COLORS.indexOf(c); return c === "" ? 1000 : i >= 0 ? i : 100 }
       var ra = rank(a.color), rb = rank(b.color)
-      if (ra !== rb) return ra - rb
-      if (ra === 100 && a.color !== b.color) return a.color < b.color ? -1 : 1
+      if (ra !== rb) return desc ? rb - ra : ra - rb
+      if (ra === 100 && a.color !== b.color) return (a.color < b.color ? -1 : 1) * (desc ? -1 : 1)
       return a.name < b.name ? -1 : a.name > b.name ? 1 : 0
     })
   } else {
-    out.sort(function(a, b) { return a.name < b.name ? -1 : a.name > b.name ? 1 : 0 })
+    // (Name by name down the "/"s, so a tag's own come after it either way round.)
+    out.sort(function(a, b) {
+      var x = a.name.split("/"), y = b.name.split("/")
+      for (var i = 0; i < x.length && i < y.length; i++) {
+        if (x[i] !== y[i]) return (x[i] < y[i] ? -1 : 1) * (desc ? -1 : 1)
+      }
+      return x.length - y.length
+    })
   }
   return out
 }

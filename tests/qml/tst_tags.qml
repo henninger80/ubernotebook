@@ -269,12 +269,16 @@ Item {
       ws.setTagColor("home", "red")
       var sort = named(root, "tagSort")
       mouseClick(sort)
+      compare(service.settings.tagSort, "nameDesc")
+      mouseClick(sort)
       compare(service.settings.tagSort, "color")
       tryVerify(function() {
         // (Chips, in rows: along each, then down.)
         var rows = all(root, function(it) { return it.objectName === "tagChip" }, []).sort(function(a, b) { return a.y - b.y || a.x - b.x })
         return rows.map(function(r) { return r.modelData.name }).join() === "work,work/acme,home"
       }, 1000, "blue before red")
+      mouseClick(sort)
+      compare(service.settings.tagSort, "colorDesc")
       mouseClick(sort)
       compare(service.settings.tagSort, "name")
       // The # menu shows each tag in its color.

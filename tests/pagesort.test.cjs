@@ -38,6 +38,7 @@ check("the ways, as they're kept", () => {
 check("each way in the sidebar", () => {
   assert.deepEqual(shown(tree()), ["b", "a", "c", "u"], "as on the page");
   assert.deepEqual(shown(tree("title")), ["c", "a", "b", "u"], "by name: numbers as numbers, case aside, untitled last");
+  assert.deepEqual(shown(tree("titleDesc")), ["b", "a", "c", "u"], "Z-A: untitled still last");
   assert.deepEqual(shown(tree("modified")), ["c", "b", "a", "u"]);
   assert.deepEqual(shown(tree("created")), ["a", "b", "u", "c"], "the same day: as on the page");
   assert.deepEqual(shown(tree("createdOld")), ["c", "b", "u", "a"]);

@@ -238,7 +238,7 @@ var SCHEMA = {
     space: ["notebooks", "pages"],
     exportTo: ["ask", "folder"],
     quickTo: ["notebook", "pages"],
-    tagSort: ["name", "color"],
+    tagSort: ["name", "nameDesc", "color", "colorDesc"],
     calendarView: ["month", "week", "agenda", "compact"],
     clock: ["12", "24"],
     peopleLayout: ["list", "cards"],

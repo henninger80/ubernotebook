@@ -101,7 +101,7 @@ check("its template, and its title with the year", () => {
   delete ix.pages.tpl;
   ix.top = ["dn", "other", "tpl2"];
   assert.equal(Daily.template(ix, ""), "", "none: a blank page");
-  assert.equal(Daily.titleFor("Tagesnotiz, {{date}}", new Date(2026, 9, 18, 9, 30)), "Tagesnotiz, Sun 18 Oct 2026");
+  assert.equal(Daily.titleFor("Tagesnotiz, {{date}}", new Date(2026, 9, 18, 9, 30)), "Tagesnotiz, 2026-10-18");
   assert.equal(Daily.dateOfTitle(Daily.titleFor(Daily.BLANK_TITLE, new Date(2027, 0, 1)), now), "2027-01-01");
 });
 

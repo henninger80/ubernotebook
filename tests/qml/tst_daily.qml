@@ -62,7 +62,7 @@ Item {
     function fileOf(id) { return files.parseJson(files.disk[Workspace.pageFile(files.rootPath, id)] || "") }
     function titled(t) { return Object.keys(ws.index.pages).filter(function(id) { return ws.index.pages[id].title === t && !ws.index.pages[id].trashed }) }
     function today() { var n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()) }
-    function long(d) { return Dates.SHORT_DAYS[d.getDay()] + " " + d.getDate() + " " + Dates.SHORT_MONTHS[d.getMonth()] + " " + d.getFullYear() }
+    function long(d) { return Dates.iso(d) }
     function find(item, test) {
       if (!item) return null
       if (test(item)) return item
@@ -75,7 +75,7 @@ Item {
       fresh()
       view.forceActiveFocus()
       keyClick(Qt.Key_T, Qt.ControlModifier | Qt.ShiftModifier)
-      var t = "Daily note, " + long(today())
+      var t = long(today())
       tryVerify(function() { return view.page && view.page.title === t }, 2000, view.page ? view.page.title : "")
       var id = view.page.id
       var parent = titled("Daily notes")
@@ -142,9 +142,9 @@ Item {
       fresh({ dailyParent: "Journal", dailyByYear: false })
       var r = json(api.daily("2026-10-16"))
       verify(r.ok, JSON.stringify(r))
-      compare(r.title, "Daily note, Fri 16 Oct 2026")
+      compare(r.title, "2026-10-16")
       compare(r.made, true)
-      compare(r.path, "Journal / Daily note, Fri 16 Oct 2026")
+      compare(r.path, "Journal / 2026-10-16")
       var r2 = json(api.daily("2026-10-16"))
       compare(r2.id, r.id)
       compare(r2.made, false)
@@ -163,7 +163,7 @@ Item {
     // The start page (startPage): the first time only.
     function test_6_the_start_page() {
       fresh({ startPage: "daily" })
-      tryVerify(function() { return view.page && view.page.title === "Daily note, " + long(today()) }, 2000, view.page ? view.page.title : "")
+      tryVerify(function() { return view.page && view.page.title === long(today()) }, 2000, view.page ? view.page.title : "")
       var daily = view.page.id
       var other = ws.createPage({ parent: "", title: "Plans" })
       view.open(other.id)
