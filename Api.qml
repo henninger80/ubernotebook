@@ -897,7 +897,7 @@ QtObject {
     if (t && !name) return fail("that isn't a tag (#todo, or \"\" for every task)")
     var ix = workspace.index
     return answer(Tasks.all(ix, new Date(), name).map(function(x) {
-      return { page: x.page, title: x.title, path: where(x.page), block: x.b, text: x.t, date: x.d, bucket: x.bucket, priority: x.p, inProgress: x.s === "doing", tags: x.g }
+      return { page: x.page, title: x.title, path: where(x.page), block: x.b, text: x.t, date: x.d, bucket: x.bucket, priority: x.p, inProgress: x.s === "doing", status: Tasks.statusOf(x), tags: x.g }
     }))
   }
 

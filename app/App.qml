@@ -361,7 +361,7 @@ FocusScope {
     onImportRequested: function(folder) {
       if (root.service) root.service.pickImport(folder, function(paths) { if (paths.length) docs.importPaths(paths, "") })
     }
-    onSplitRequested: function(id) { splitPane.openBeside(id) }  // [fork]
+    onSplitRequested: function(id, then) { splitPane.openBeside(id, then) }  // [fork]
     onSplitClosed: splitPane.close()  // [fork]
   }
 

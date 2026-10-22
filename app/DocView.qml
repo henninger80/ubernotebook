@@ -217,7 +217,7 @@ FocusScope {
   readonly property string tabAtKey: paneName === "split" ? "splitTabAt" : "tabAt"
   // A page to open in the other pane (made if there's none), and this pane
   // closed (the first: the one beside it).
-  signal splitRequested(string id)
+  signal splitRequested(string id, var then)
   signal splitClosed()
 
   // The tabs kept last time, brought back: the id of the one you were on, or "".
@@ -252,7 +252,7 @@ FocusScope {
 
   // A new tab after this one, on `id`; none: on what's shown, with Search
   // open to go elsewhere.
-  function newTab(id) {
+  function newTab(id, then) {
     var what = id || shownId()
     commit()
     var o = Tabs.opened(tabs, tabAt, history, historyAt, false)
@@ -260,7 +260,7 @@ FocusScope {
     tabAt = o.at
     history = []
     historyAt = -1
-    if (what) open(what)
+    if (what) open(what, false, then)
     if (!id) openFind()
   }
   function switchTab(i) {
@@ -294,14 +294,14 @@ FocusScope {
 
   // A page in the other pane: from the first, the one beside it (opened if
   // it isn't); from that one, the first.
-  function openBeside(id) {
+  function openBeside(id, then) {
     if (!id) id = shownId()
-    if (paneName === "split" && peer) { peer.open(id); peer.forceActiveFocus(); return }
-    splitRequested(id)
+    if (paneName === "split" && peer) { peer.open(id, false, then); peer.forceActiveFocus(); return }
+    splitRequested(id, then)
   }
   function toggleSplit() {
     if (paneName === "split" || peer) { commit(); if (paneName === "split") splitClosed(); else peer.splitClosed(); return }
-    splitRequested(shownId())
+    splitRequested(shownId(), null)
   }
   // A page link: with Ctrl in a new tab, with Ctrl+Shift beside (Editor.openIn).
   function openFromLink(id, how) {

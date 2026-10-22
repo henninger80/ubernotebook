@@ -82,4 +82,30 @@ check("the calendar's, and how a date is said", () => {
   assert.equal(Tasks.bucketOf("2026-10-26", now), "later");
 });
 
+check("done and cancelled, and each one's status", () => {
+  const done = plain(Tasks.doneOfBlock({ uid: U(20), type: "check", checked: true, html: "Ship it · fällig " + date("2026-10-10") + " · erledigt " + date("2026-10-12") }));
+  assert.deepEqual(done, { b: U(20), t: "Ship it", d: "2026-10-10", e: "2026-10-12" });
+  const gone = plain(Tasks.doneOfBlock({ uid: U(21), type: "check", checked: true, html: "Drop it " + tag("abgebrochen") }));
+  assert.equal(gone.c, 1);
+  assert.equal(Tasks.doneOfBlock({ uid: U(22), type: "check", html: "Open" }), null);
+  assert.equal(Tasks.doneOfBlocks([{ uid: U(23), type: "check", checked: true, html: "x" }, { uid: U(24), type: "p", html: "y" }]).length, 1);
+  assert.deepEqual(plain(Tasks.cleanDone([{ b: U(25), t: "x", e: "nope", c: 1 }, { b: "bad" }])), [{ b: U(25), t: "x", c: 1 }]);
+  assert.equal(Tasks.statusOf({ done: true, c: 1 }), "cancelled");
+  assert.equal(Tasks.statusOf({ done: true }), "done");
+  assert.equal(Tasks.statusOf({ s: "doing" }), "doing");
+  assert.equal(Tasks.statusOf({ s: "" }), "todo");
+  assert.equal(plain(Tasks.ofBlock({ uid: U(26), type: "check", html: "Maybe " + tag("abgebrochen") })).s, "cancelled");
+  const index = { pages: {
+    [U(30)]: { title: "A", parent: "", modified: "2026-10-01", tasks: [{ b: U(31), t: "Open one" }, { b: U(32), t: "Busy", s: "doing" }],
+      done: [{ b: U(33), t: "Old", e: "2026-09-01" }, { b: U(34), t: "New", e: "2026-10-15" }, { b: U(35), t: "Gone", c: 1 }] }
+  } };
+  const names = (l) => plain(l.map((t) => t.t));
+  assert.deepEqual(names(Tasks.closed(index, "")), ["New", "Old", "Gone"], "the last done first");
+  assert.deepEqual(names(Tasks.forStatus(index, now, "", "done")), ["New", "Old"]);
+  assert.deepEqual(names(Tasks.forStatus(index, now, "", "cancelled")), ["Gone"]);
+  assert.deepEqual(names(Tasks.forStatus(index, now, "", "doing")), ["Busy"]);
+  assert.deepEqual(names(Tasks.forStatus(index, now, "", "todo")), ["Open one"]);
+  assert.deepEqual(names(Tasks.forStatus(index, now, "", "open")), ["Busy", "Open one"]);
+});
+
 console.log("tasks: " + passed + " checks passed");

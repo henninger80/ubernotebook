@@ -22,7 +22,9 @@ beside the first, with tabs of its own.
 - **Ctrl+Shift+S**, or the split button in the bar, opens what's shown beside it
   in a second pane. Press it again, or close the pane's last tab, to close it.
 - **Ctrl+Shift+click** on a page link, or on a page in the sidebar, opens the page
-  in the other pane. So does "Open beside" in a page's sidebar menu.
+  in the other pane. So does "Open beside" in a page's sidebar menu, and the
+  pane button on a task in Tasks. If the pane is already open, the page shows
+  in its current tab; Back takes you back.
 - Drag the line between the panes to resize them (25–75 %). Double-click the line
   to split them evenly again. The width is kept in `splitWidth`.
 - If the same page is open in both panes, only the pane where it was opened first

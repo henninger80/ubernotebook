@@ -28,8 +28,9 @@ Item {
   width: shown && parent ? Math.round(parent.width * (100 - share) / 100) : 0
   visible: shown
 
-  // A page beside the first: the pane opened on it, else it in a new tab there.
-  function openBeside(id) {
+  // A page beside the first: the pane opened on it, else it shown there in
+  // the tab you're on (Back goes back). `then`: as DocView.open's.
+  function openBeside(id, then) {
     if (!shown) {
       opening = true
       // (Made at once: the setting's change makes it, Loader's not asynchronous.)
@@ -37,11 +38,10 @@ Item {
       opening = false
       if (!loader.item) return
       loader.item.tabsRestored = true
-      if (id) loader.item.open(id)
+      if (id) loader.item.open(id, false, then)
       else loader.item.activate()
     } else if (loader.item && id) {
-      if (loader.item.shownId() === "") loader.item.open(id)
-      else loader.item.newTab(id)
+      loader.item.open(id, false, then)
     }
     if (loader.item) loader.item.forceActiveFocus()
   }

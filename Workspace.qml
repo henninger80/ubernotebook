@@ -409,7 +409,12 @@ Item {
         ws.texts[id] = page.text || Workspace.pageText(page)
         // [fork] Its tasks, if the tree doesn't have them yet (Tasks.js).
         var en = ws.index.pages[id]
-        if (en && en.tasks === null) { en.tasks = Tasks.ofBlocks(Workspace.flatten(page)); tasksFound = true }
+        if (en && (en.tasks === null || en.done === null)) {
+          var flat = Workspace.flatten(page)
+          en.tasks = Tasks.ofBlocks(flat)
+          en.done = Tasks.doneOfBlocks(flat)
+          tasksFound = true
+        }
       }
       if (got.length) { scanTimer.later(next); return }
       var lot = ids.splice(0, 200).filter(function(id) { return ws.texts[id] === undefined && !ws.written[id] })
@@ -477,9 +482,11 @@ Item {
     if (JSON.stringify(checks) !== JSON.stringify(e.checks)) { e.checks = checks; changed = true }
     // [fork] Its open to-dos (Tasks.js): the Tasks view and the calendar
     // told, the tree written soon or once writing pauses as it is.
-    var tasks = Tasks.ofBlocks(Workspace.flatten(page))
-    var tasksChanged = JSON.stringify(tasks) !== JSON.stringify(e.tasks)
-    if (tasksChanged) e.tasks = tasks
+    var flat = Workspace.flatten(page)
+    var tasks = Tasks.ofBlocks(flat)
+    var done = Tasks.doneOfBlocks(flat)
+    var tasksChanged = JSON.stringify(tasks) !== JSON.stringify(e.tasks) || JSON.stringify(done) !== JSON.stringify(e.done)
+    if (tasksChanged) { e.tasks = tasks; e.done = done }
     if (changed) touched()
     else { if (tasksChanged) revision++; saveIndex(true) }  // [fork] lazy: only its time (or its tasks) changed
     saved(page.id)

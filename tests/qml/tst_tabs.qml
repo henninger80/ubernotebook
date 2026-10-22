@@ -29,7 +29,7 @@ Item {
     theme: th
     workspace: ws
     service: service
-    onSplitRequested: function(id) { split.openBeside(id) }
+    onSplitRequested: function(id, then) { split.openBeside(id, then) }
     onSplitClosed: split.close()
   }
 

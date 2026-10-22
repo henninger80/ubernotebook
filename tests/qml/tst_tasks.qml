@@ -18,7 +18,12 @@ Item {
   FakeService { id: service; user: ({ sounds: false }) }
   Theme { id: th }
   UberNotebook.Workspace { id: ws; files: files }
-  DocView { id: view; anchors.fill: parent; theme: th; workspace: ws; service: service }
+  DocView {
+    id: view; anchors.fill: parent; anchors.rightMargin: split.width; theme: th; workspace: ws; service: service
+    onSplitRequested: function(id, then) { split.openBeside(id, then) }
+    onSplitClosed: split.close()
+  }
+  SplitPane { id: split; anchors.right: parent.right; anchors.top: parent.top; anchors.bottom: parent.bottom; theme: th; workspace: ws; service: service; first: view }
   UberNotebook.Api { id: api; workspace: ws; files: files; settings: service.settings }
 
   TestCase {
@@ -26,6 +31,7 @@ Item {
     when: windowShown
 
     function fresh() {
+      split.close()
       files.reset()
       view.page = null
       view.tasksShown = false
@@ -143,6 +149,63 @@ Item {
       compare(r[2].tags, ["kopfsprung"])
       compare(JSON.parse(api.tasks("#kopfsprung")).length, 1)
       compare(JSON.parse(api.tasks("no way!")).ok, false)
+    }
+  
+    function test_4_by_status() {
+      fresh()
+      var p = ws.createPage({ parent: "", title: "States", blocks: [
+        { type: "check", html: "Plan it", indent: 0 },
+        { type: "check", html: "Write it " + tag("in-arbeit"), indent: 0 },
+        { type: "check", html: "Shipped it · erledigt " + dated(-1), checked: true, indent: 0 },
+        { type: "check", html: "Dropped it " + tag("abgebrochen"), checked: true, indent: 0 }
+      ] })
+      var e = ws.index.pages[p.id]
+      compare(e.tasks.length, 2)
+      compare(e.done.length, 2, "the ticked ones kept too")
+      compare(e.done[0].e, day(-1), "when it was done")
+      compare(e.done[1].c, 1, "cancelled")
+      view.openTasks()
+      var tv = view.taskView
+      function mine() { return tv.list.filter(function(t) { return t.page === p.id }).map(function(t) { return t.t }) }
+      compare(mine(), ["Write it", "Plan it"], "open: in progress first")
+      mouseClick(named(tv, "taskStatus_todo"))
+      compare(mine(), ["Plan it"])
+      mouseClick(named(tv, "taskStatus_doing"))
+      compare(mine(), ["Write it"])
+      mouseClick(named(tv, "taskStatus_done"))
+      compare(mine(), ["Shipped it"])
+      compare(tv.groups.length, 1)
+      mouseClick(named(tv, "taskStatus_cancelled"))
+      compare(mine(), ["Dropped it"])
+      // Unticked here: open again.
+      tv.tick(p.id, ws.index.pages[p.id].done[1].b, false, "Dropped it")
+      tryVerify(function() { return ws.index.pages[p.id].done.length === 1 }, 2000)
+      compare(ws.index.pages[p.id].tasks.length, 3)
+      compare(mine(), ["Dropped it"], "cancelled but not ticked: still cancelled")
+      tv.status = "open"
+    }
+
+    function test_5_its_page_in_a_tab_or_beside() {
+      fresh()
+      var home = view.page.id
+      var p = plans()
+      view.openTasks()
+      var tv = view.taskView
+      var t = tv.list.filter(function(x) { return x.page === p.id })[0]
+      tv.openTask(t, "tab")
+      tryVerify(function() { return view.page && view.page.id === p.id }, 2000)
+      compare(view.tabs.length, 2, "in a new tab")
+      view.switchTab(0)
+      tryVerify(function() { return view.tasksShown }, 2000, "Tasks still in the first tab")
+      tv.openTask(t, "split")
+      verify(split.shown)
+      tryVerify(function() { return split.pane.page && split.pane.page.id === p.id }, 2000)
+      verify(view.tasksShown, "Tasks stay where they are")
+      // Another, beside again: shown there, in the same tab.
+      tv.openTask(tv.list.filter(function(x) { return x.page === p.id })[1], "split")
+      compare(split.pane.tabs.length, 1)
+      wait(50)
+      split.close()
     }
   }
 }

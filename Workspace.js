@@ -584,6 +584,8 @@ function entry(raw) {
     checks: e.checks && typeof e.checks === "object" ? cleanChecks(e.checks) : null,
     // [fork] Its open to-dos, as tasks (Tasks.js; null: not worked out yet).
     tasks: Array.isArray(e.tasks) ? Tasks.clean(e.tasks) : null,
+    // [fork] And its ticked ones (Tasks.cleanDone; null: not worked out yet).
+    done: Array.isArray(e.done) ? Tasks.cleanDone(e.done) : null,
     // Put away in the archive (with the pages in it).
     archived: e.archived === true,
     // A template (with the pages in it), and the template new pages inside
@@ -1058,6 +1060,7 @@ function indexJson(index) {
     if (e.project) out.project = e.project
     if (e.checks) out.checks = e.checks
     if (e.tasks) out.tasks = e.tasks  // [fork] Tasks.js
+    if (e.done) out.done = e.done  // [fork] Tasks.js
     if (e.archived) out.archived = true
     if (e.template) out.template = true
     if (e.description) out.description = e.description

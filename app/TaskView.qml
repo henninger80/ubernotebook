@@ -1,12 +1,17 @@
 import QtQuick
 import QtQuick.Controls
 import "../Tasks.js" as Tasks
+import "../Tabs.js" as Tabs
 
 // (fork) Tasks in Pages (the Tasks tile in the sidebar): every open to-do on
 // your pages (Tasks.js), overdue first, then today's, the next 7 days',
-// later and those with no date (folded to start with). The tags they have
-// most filter them. A to-do ticks here (and can be unticked a moment after);
-// a click opens its page there. Read only while it's shown.
+// later and those with no date (folded to start with). Their status
+// filters them (to do, in progress; or the ticked ones, done or cancelled,
+// the last done first), and so do the tags they have most. A to-do ticks
+// here (and can be unticked a moment after; a done one unticks); a click
+// opens its page there, with Ctrl (or the middle button, or its tab
+// button) in a new tab, with Ctrl+Shift (or its pane button) beside, in
+// the other pane (Tabs.js). Read only while it's shown.
 Item {
   id: tv
 
@@ -16,16 +21,34 @@ Item {
   property var view: null
   // The tag the tasks are filtered by ("" every one).
   property string tag: ""
+  // Their status (Tasks.STATUSES): "open" every one not ticked.
+  property string status: "open"
+  readonly property bool closedShown: status === "done" || status === "cancelled"
+  // (So many shown, the ticked ones: more a click away.)
+  property int most: 100
   // The buckets folded: { none: true }.
   property var folded: ({ none: true })
   // The to-dos' words as written on their pages: { "<page>/<block>": html }.
   property var htmlOf: ({})
   property real nowMs: Date.now()
 
-  readonly property var list: { var r = workspace ? workspace.revision : 0; return workspace && visible ? Tasks.all(workspace.index, new Date(nowMs), tag) : [] }
-  readonly property var everyTag: { var r = workspace ? workspace.revision : 0; return workspace && visible ? Tasks.topTags(Tasks.all(workspace.index, new Date(nowMs), ""), 7) : [] }
-  readonly property var groups: Tasks.buckets(list)
-  readonly property int overdue: groups[0].tasks.length
+  readonly property var list: { var r = workspace ? workspace.revision : 0; return workspace && visible ? Tasks.forStatus(workspace.index, new Date(nowMs), tag, status) : [] }
+  readonly property var everyTag: { var r = workspace ? workspace.revision : 0; return workspace && visible ? Tasks.topTags(Tasks.forStatus(workspace.index, new Date(nowMs), "", status), 7) : [] }
+  // How many of each status (the chips say).
+  readonly property var counts: {
+    var r = workspace ? workspace.revision : 0
+    if (!workspace || !visible) return ({})
+    var open = Tasks.all(workspace.index, new Date(nowMs), tag), shut = Tasks.closed(workspace.index, tag)
+    var out = { open: open.length }
+    ;["todo", "doing"].forEach(function(k) { out[k] = Tasks.withStatus(open, k).length })
+    out.done = Tasks.withStatus(shut, "done").length
+    out.cancelled = Tasks.withStatus(shut, "cancelled").length + Tasks.withStatus(open, "cancelled").length
+    return out
+  }
+  readonly property var groups: closedShown
+    ? [{ id: "closed", label: status === "done" ? "Done" : "Cancelled", tasks: list.slice(0, most) }]
+    : Tasks.buckets(list)
+  readonly property int overdue: closedShown ? 0 : groups[0].tasks.length
 
   function red() { return theme && theme.dark ? "#ff6b6b" : "#d93f3f" }
 
@@ -36,12 +59,21 @@ Item {
     list.forEach(function(t) { if (ids.indexOf(t.page) < 0) ids.push(t.page) })
     workspace.readPages(ids, function(pages) {
       var m = {}
-      pages.forEach(function(p) { for (var uid in p.blocks) { var b = p.blocks[uid]; if (b.type === "check" && !b.checked) m[p.id + "/" + uid] = b.html || "" } })
+      pages.forEach(function(p) { for (var uid in p.blocks) { var b = p.blocks[uid]; if (b.type === "check") m[p.id + "/" + uid] = b.html || "" } })
       tv.htmlOf = m
     })
   }
   onVisibleChanged: if (visible) { nowMs = Date.now(); load() }
   onTagChanged: load()
+  onStatusChanged: { most = 100; load() }
+
+  // A task's page, on its to-do: here, in a new tab ("tab") or beside ("split").
+  function openTask(t, how) {
+    var then = { block: t.b }
+    if (how === "tab") view.newTab(t.page, then)
+    else if (how === "split") view.openBeside(t.page, then)
+    else view.open(t.page, false, then)
+  }
   Connections {
     target: tv.workspace
     function onRevisionChanged() { if (tv.visible) reloadTimer.restart() }
@@ -57,7 +89,9 @@ Item {
       if (!b || b.type !== "check") return false
       b.checked = on
     })
-    if (on && view) view.toastUndo("Done: " + (words.length > 40 ? words.slice(0, 39) + "…" : words), function() { tv.tick(pageId, uid, false, words) })
+    var w = words.length > 40 ? words.slice(0, 39) + "…" : words
+    if (on && view) view.toastUndo("Done: " + w, function() { tv.tick(pageId, uid, false, words) })
+    else if (!on && view && tv.closedShown) view.toastUndo("Open again: " + w, function() { tv.tick(pageId, uid, true, words) })
   }
   function fold(id) {
     var f = JSON.parse(JSON.stringify(folded))
@@ -98,10 +132,27 @@ Item {
           objectName: "taskCount"
           topPadding: 12
           textFormat: Text.PlainText
-          text: tv.list.length + " open" + (tv.overdue ? "  ·  " + tv.overdue + " overdue" : "")
+          text: tv.list.length + " " + ({ open: "open", todo: "to do", doing: "in progress", done: "done", cancelled: "cancelled" })[tv.status] + (tv.overdue ? "  ·  " + tv.overdue + " overdue" : "")
           font.family: tv.theme.uiFont
           font.pixelSize: 13
           color: tv.overdue ? tv.red() : tv.theme.muted
+        }
+      }
+
+      // Their status: one picked filters them.
+      Flow {
+        width: parent.width
+        spacing: 6
+        Repeater {
+          model: Tasks.STATUSES
+          delegate: Chip {
+            required property var modelData
+            objectName: "taskStatus_" + modelData.id
+            theme: tv.theme
+            text: modelData.label + (tv.counts[modelData.id] !== undefined ? "  " + tv.counts[modelData.id] : "")
+            checked: tv.status === modelData.id
+            onClicked: tv.status = modelData.id
+          }
         }
       }
 
@@ -129,7 +180,7 @@ Item {
         width: parent.width
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: tv.tag ? "No open to-do with #" + tv.tag + "." : "No open to-dos. Every to-do on your pages that isn't ticked is here, with its date (@ a day in its line) and #prio-hoch, #prio-niedrig or #in-arbeit."
+        text: tv.status !== "open" ? "None " + (tv.status === "todo" ? "to do" : tv.status === "doing" ? "in progress" : tv.status) + (tv.tag ? " with #" + tv.tag : "") + "." : tv.tag ? "No open to-do with #" + tv.tag + "." : "No open to-dos. Every to-do on your pages that isn't ticked is here, with its date (@ a day in its line) and #prio-hoch, #prio-niedrig or #in-arbeit."
         font.family: tv.theme.uiFont
         font.pixelSize: 14
         color: tv.theme.muted
@@ -156,7 +207,7 @@ Item {
               x: 8
               anchors.verticalCenter: parent.verticalCenter
               textFormat: Text.PlainText
-              text: (group.isFolded ? "▸  " : "▾  ") + group.modelData.label + "  " + group.modelData.tasks.length
+              text: (group.isFolded ? "▸  " : "▾  ") + group.modelData.label + "  " + (group.modelData.id === "closed" ? tv.list.length : group.modelData.tasks.length)
               font.family: tv.theme.uiFont
               font.pixelSize: 12
               font.weight: Font.DemiBold
@@ -188,20 +239,29 @@ Item {
                 width: 16
                 height: 16
                 radius: 4
-                color: "transparent"
+                color: row.modelData.done ? Qt.alpha(tv.theme.text, 0.3) : "transparent"
                 border.width: 1.5
                 border.color: row.modelData.p > 0 ? tv.red() : Qt.alpha(tv.theme.text, 0.45)
+                Text {
+                  visible: row.modelData.done === true
+                  anchors.centerIn: parent
+                  textFormat: Text.PlainText
+                  text: row.modelData.c ? "✕" : "✓"
+                  font.pixelSize: 11
+                  color: tv.theme.background
+                }
                 HoverHandler { cursorShape: Qt.PointingHandCursor }
                 TapHandler {
                   gesturePolicy: TapHandler.ReleaseWithinBounds
-                  onTapped: tv.tick(row.modelData.page, row.modelData.b, true, row.modelData.t)
+                  onTapped: tv.tick(row.modelData.page, row.modelData.b, !row.modelData.done, row.modelData.t)
                 }
               }
               Text {
                 id: words
                 x: 34
                 y: 7
-                width: parent.width - x - 10
+                width: parent.width - x - 10 - (rowHover.hovered ? openButtons.width + 6 : 0)
+                opacity: row.modelData.done ? 0.6 : 1
                 wrapMode: Text.Wrap
                 textFormat: row.html ? Text.RichText : Text.PlainText
                 text: row.html && tv.view ? tv.view.blockHtml(row.html) : row.modelData.t
@@ -219,7 +279,15 @@ Item {
                 anchors.topMargin: 2
                 spacing: 10
                 Text {
-                  visible: row.modelData.d !== ""
+                  visible: row.modelData.done === true && (row.modelData.e || "") !== ""
+                  textFormat: Text.PlainText
+                  text: (row.modelData.c ? "cancelled " : "done ") + Tasks.when(row.modelData.e || "", new Date(tv.nowMs)).replace(/ days late$/, " days ago")
+                  font.family: tv.theme.uiFont
+                  font.pixelSize: 12
+                  color: tv.theme.muted
+                }
+                Text {
+                  visible: row.modelData.d !== "" && !row.modelData.done
                   textFormat: Text.PlainText
                   text: Tasks.when(row.modelData.d, new Date(tv.nowMs))
                   font.family: tv.theme.uiFont
@@ -247,12 +315,57 @@ Item {
               }
               HoverHandler { id: rowHover; cursorShape: Qt.PointingHandCursor }
               TapHandler {
+                id: rowTap
                 onTapped: function(point) {
                   if (words.linkAt(point.position.x - words.x, point.position.y - words.y)) return
-                  tv.view.open(row.modelData.page, false, { block: row.modelData.b })
+                  tv.openTask(row.modelData, Tabs.openHow(rowTap.point.modifiers))
+                }
+              }
+              TapHandler { acceptedButtons: Qt.MiddleButton; onTapped: tv.openTask(row.modelData, "tab") }
+              // Its page in a new tab, or beside.
+              Row {
+                id: openButtons
+                objectName: "taskOpen"
+                anchors.right: parent.right
+                anchors.rightMargin: 6
+                y: 6
+                spacing: 2
+                visible: rowHover.hovered
+                IconButton {
+                  objectName: "taskOpenTab"
+                  theme: tv.theme; icon: "\u{f075c}"; size: 26; iconSize: 14; tint: tv.theme.muted
+                  tip: "Its page in a new tab  Ctrl+click"
+                  onClicked: tv.openTask(row.modelData, "tab")
+                }
+                IconButton {
+                  objectName: "taskOpenBeside"
+                  theme: tv.theme; icon: "\u{f0bcc}"; size: 26; iconSize: 14; tint: tv.theme.muted
+                  tip: tv.view && tv.view.paneName === "split" ? "Its page in the first pane  Ctrl+Shift+click" : "Its page beside, in the other pane  Ctrl+Shift+click"
+                  onClicked: tv.openTask(row.modelData, "split")
                 }
               }
             }
+          }
+
+          // (Ticked ones: so many, more a click away.)
+          Rectangle {
+            objectName: "taskMore"
+            visible: group.modelData.id === "closed" && !group.isFolded && tv.list.length > tv.most
+            width: parent.width
+            height: 34
+            radius: 7
+            color: moreHover.hovered ? tv.theme.hover : "transparent"
+            Text {
+              x: 34
+              anchors.verticalCenter: parent.verticalCenter
+              textFormat: Text.PlainText
+              text: "Show " + Math.min(100, tv.list.length - tv.most) + " more"
+              font.family: tv.theme.uiFont
+              font.pixelSize: 13
+              color: tv.theme.accent
+            }
+            HoverHandler { id: moreHover; cursorShape: Qt.PointingHandCursor }
+            TapHandler { onTapped: { tv.most += 100; tv.load() } }
           }
         }
       }

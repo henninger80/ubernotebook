@@ -62,9 +62,15 @@ The logic is in `Daily.js`.
 **Tasks** in the sidebar (next to Calendar) lists every open to-do on your
 pages, outside the trash, the archive and the templates. They are grouped as
 *Overdue*, *Today*, *Next 7 days*, *Later* and *No date* (folded to start
-with). The tags they have most filter them. Ticking one there ticks it on its
-page, and *Undo* in the toast takes it back. A click opens its page at that
-to-do.
+with). Its status filters them: *Open* (every one not ticked), *To do*, *In
+progress*, *Done* and *Cancelled*; the ticked ones are listed with the last
+done first (by the date after "erledigt" or "done" in the line), 100 at a
+time. The tags they have most filter them too. Ticking one there ticks it on
+its page (a done one there unticks it), and *Undo* in the toast takes it
+back. A click opens its page at that to-do. Ctrl+click, the middle button or
+the tab button on its row opens the page in a new tab. Ctrl+Shift+click or
+the pane button opens it beside, in the other pane, so the tasks stay in view
+(docs/tabs.md).
 
 What a to-do line says makes it a task:
 
@@ -74,10 +80,12 @@ What a to-do line says makes it a task:
 | `#prio-hoch`, `#prio-high`, `#high`, `#wichtig`, `#dringend`, `#urgent` | important (first on its day, its box red) |
 | `#prio-niedrig`, `#prio-low`, `#low` | not so important |
 | `#in-arbeit`, `#doing`, `#in-progress` | in progress |
+| `#abgebrochen`, `#canceled`, `#cancelled` | cancelled (ticked or not) |
+| ticked | done (kept as `done` on the entry: words, date, when done, cancelled, tags) |
 
 Dated tasks are also on the calendar (☐), one click away from their page.
 `omarchy-shell uber-notebook tasks ""` (or `tasks "#prio-hoch"`) lists them as
-JSON. The start page can be *Tasks* too.
+JSON, each with its `status`. The start page can be *Tasks* too.
 
 **How:** a page's index entry keeps its open to-dos as it's saved (`tasks`:
 block, words, date, priority, in progress, tags; empty fields left out).
