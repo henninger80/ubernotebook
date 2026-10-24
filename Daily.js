@@ -11,7 +11,8 @@
 // there, else last.
 //
 // The template: `dailyTemplate` (a template's name or id), else one of yours
-// with {{date}} in its title and "daily", "tages" or "journal" in it, else a
+// with {{date}} in its title and "daily", "tages" or "journal" in it (or
+// called just {{date}}), else a
 // blank page called "{{date}}". In the title {{date}} is written
 // as "2026-10-18", so a day's title is that day's only.
 //
@@ -148,7 +149,10 @@ function noteLabel(n, view) {
 function template(index, name) {
   var named = Workspace.templateNamed(index, name)
   if (named) return named
-  var list = Workspace.templates(index).filter(function(t) { return /\{\{\s*date\s*\}\}/i.test(t.title) && /daily|tages|journal/i.test(t.title) })
+  var all = Workspace.templates(index)
+  var list = all.filter(function(t) { return /\{\{\s*date\s*\}\}/i.test(t.title) && /daily|tages|journal/i.test(t.title) })
+  // (A template called just {{date}}: a day's page is titled by its date alone.)
+  if (!list.length) list = all.filter(function(t) { return /^\s*\{\{\s*date\s*\}\}\s*$/i.test(t.title) })
   return list.length ? list[0].id : ""
 }
 
