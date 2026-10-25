@@ -136,7 +136,7 @@ function graphTimes(items, complex, into) {
   var keep = {}
   complex.forEach(function(id) { keep[id] = true })
   ;(items || []).forEach(function(g) {
-    if (g && !g.isCancelled && keep[g.seriesMasterId]) into[g.id] = { rid: g.id, n: graphNorm(g), repeat: null, modified: Date.parse(g.lastModifiedDateTime) || 0 }
+    if (g && !g.isCancelled && keep[g.seriesMasterId]) into[g.id] = { rid: g.id, n: graphNorm(g), repeat: null, modified: Date.parse(g.lastModifiedDateTime) || 0, instance: true }
   })
   return into
 }
@@ -216,7 +216,7 @@ function googleEvents(items, now) {
 // A complex series' times (its instances): single events.
 function googleTimes(items, into) {
   ;(items || []).forEach(function(e) {
-    if (e && e.status !== "cancelled" && e.start) into[e.id] = { rid: e.id, n: googleNorm(e), repeat: null, modified: Date.parse(e.updated) || 0 }
+    if (e && e.status !== "cancelled" && e.start) into[e.id] = { rid: e.id, n: googleNorm(e), repeat: null, modified: Date.parse(e.updated) || 0, instance: true }
   })
   return into
 }
@@ -355,17 +355,25 @@ function plan(o) {
 //
 // actions: { op: "createG"|"createO", n } | { op: "updateG"|"updateO", rid, n }
 //   | { op: "deleteG"|"deleteO", rid }. createG/createO are linked by the caller
-//   ({ o, g }). Single events only: repeating ones stay where they are.
+//   ({ o, g }). Single events only: repeating ones stay where they are. The times
+//   of a complex series (remotes with `instance`) are not bridged, but an equal
+//   single event on the other side is not made again next to them.
 function planBridge(o) {
   var now = o.now || new Date()
   var w = span(now)
   var mid = o.last ? (o.last + now.getTime()) / 2 : now.getTime()
   function singles(map) {
     var out = {}
-    Object.keys(map || {}).forEach(function(k) { if (!map[k].repeat) out[k] = map[k] })
+    Object.keys(map || {}).forEach(function(k) { if (!map[k].repeat && !map[k].instance) out[k] = map[k] })
+    return out
+  }
+  function shadows(map) {
+    var out = {}
+    Object.keys(map || {}).forEach(function(k) { if (map[k].instance) out[fp(map[k].n, null)] = true })
     return out
   }
   var O = singles(o.o365), G = singles(o.google)
+  var shadowO = shadows(o.o365), shadowG = shadows(o.google)
   var links = o.links || []
   var actions = [], kept = [], gone = 0, usedO = {}, usedG = {}
   function inWindow(start) { var d = String(start).slice(0, 10); return d >= w[0] && d <= w[1] }
@@ -409,12 +417,14 @@ function planBridge(o) {
   Object.keys(G).forEach(function(rid) {
     if (usedG[rid]) return
     var f = fp(G[rid].n, null)
+    if (shadowO[f]) return
     ;(freeG[f] = freeG[f] || []).push(rid)
   })
   var made = { g: 0, o: 0 }
   Object.keys(O).forEach(function(rid) {
     if (usedO[rid]) return
     var f = fp(O[rid].n, null), pool = freeG[f]
+    if (!(pool && pool.length) && shadowG[f]) return
     if (pool && pool.length) {
       kept.push({ o: rid, g: pool.shift(), fp: f, title: O[rid].n.title, start: O[rid].n.start })
       return

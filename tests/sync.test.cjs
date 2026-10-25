@@ -189,6 +189,15 @@ check("[fork] Google and Office 365 straight: pairs, new, changed and gone", () 
   assert.ok(plain(p.actions).some((a) => a.op === "updateO" && a.rid === "o1"));
 });
 
+check("[fork] Google and Office 365 straight: a complex series' times are not made again next to it", () => {
+  const O = remoteOf([graph("o1", "Series", "2026-11-10T09:00", "2026-11-10T10:00")]);
+  O.o1.instance = true;
+  const G = plain({ g1: { rid: "g1", n: Sync.norm(ev("x", "Series", "2026-11-10T09:00", "2026-11-10T10:00")), repeat: null, modified: 1 } });
+  const p = Sync.planBridge({ o365: O, google: G, links: [], now });
+  assert.deepEqual(plain(p.actions), []);
+  assert.deepEqual(plain(p.links), []);
+});
+
 check("an event goes to the calendar it's given, else the default; given elsewhere, out of this one", () => {
   const local = [ev("a", "A", "2026-10-20T09:00", "2026-10-20T10:00"), ev("b", "B", "2026-10-20T11:00", "2026-10-20T12:00"), ev("c", "C", "2026-10-20T13:00", "2026-10-20T14:00")];
   let p = Sync.plan(base({ local, assigned: { b: "google:primary", c: "local" } }));

@@ -627,8 +627,8 @@ Item {
           sync.saveBridge()
           done()
         })
-      }, true)
-    }, true)
+      })
+    })
   }
 
   function fetchRemote(c, meta, done, plain) {
