@@ -684,7 +684,7 @@ Item {
         next()
       }
     }
-    var f = Sync.fp(a.n, null)
+    var f = a.n ? Sync.fp(a.n, null) : ""
     if (a.op === "createG") api("google", "POST", gb, Sync.googleBody(a.n, tz), made(function(id) { return { o: a.rid, g: id, fp: f, title: a.n.title, start: a.n.start } }))
     else if (a.op === "createO") api("o365", "POST", ob, Sync.graphBody(a.n, tz), made(function(id) { return { o: id, g: a.rid, fp: f, title: a.n.title, start: a.n.start } }))
     else if (a.op === "updateG") api("google", "PATCH", gb + "/" + encodeURIComponent(a.rid), Sync.googlePatch(a.n, false, tz), function(ok, json, problem) { if (ok) sync.stats.out++; else failed(problem); next() })
