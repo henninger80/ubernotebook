@@ -531,7 +531,7 @@ Item {
     function next() {
       if (i >= steps.length) { done(); return }
       var s = steps[i++]
-      try { s(next) } catch (e) { sync.problems = sync.problems.concat(["" + e]); next() }
+      try { s(next) } catch (e) { sync.problems = sync.problems.concat(["" + e + " @ " + String(e.stack || "").split("\n").slice(0, 3).join(" | ") + " " + (e.lineNumber || "")]); next() }
     }
     next()
   }
