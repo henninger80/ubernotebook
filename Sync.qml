@@ -383,7 +383,8 @@ Item {
           name: account === "o365" ? it.name : (it.summaryOverride || it.summary || it.id),
           color: was && was.ownColor ? was.color : (account === "o365" ? (it.hexColor || "") : (it.backgroundColor || "")),
           ownColor: !!(was && was.ownColor),
-          on: was ? was.on === true : main,
+          // [fork] (With the bridge on, Google's main calendar stays out of here: new, it starts off.)
+          on: was ? was.on === true : (main && !(account === "google" && sync.bridgeOn)),
           writable: account === "o365" ? it.canEdit !== false : (it.accessRole === "owner" || it.accessRole === "writer"),
           primary: main
         }
