@@ -117,18 +117,20 @@ function graphActive(g, today) {
 // remote: { rid, n, repeat, modified (ms) }.
 function graphEvents(items, now) {
   var w = span(now), today = dayIso(now || new Date())
-  var out = {}, complex = []
+  var out = {}, complex = [], series = {}
   ;(items || []).forEach(function(g) {
     if (!g || g.isCancelled || g.type === "occurrence" || g.type === "exception") return
     var repeat = null
     if (g.type === "seriesMaster") {
       if (!graphActive(g, today)) return
+      var gc = recOfGraph(g) // [fork] for the bridge
+      if (gc) series[g.id] = { rid: g.id, n: graphNorm(g), rec: gc, modified: Date.parse(g.lastModifiedDateTime) || 0 }
       repeat = graphRepeat(g)
       if (repeat === "complex") { complex.push(g.id); return }
     } else if (String(g.end.dateTime).slice(0, 10) < w[0] || String(g.start.dateTime).slice(0, 10) > w[1]) return
     out[g.id] = { rid: g.id, n: graphNorm(g), repeat: repeat, modified: Date.parse(g.lastModifiedDateTime) || 0 }
   })
-  return { events: out, complex: complex }
+  return { events: out, complex: complex, series: series }
 }
 
 // The times of complex series (calendarView): single events.
@@ -198,9 +200,11 @@ function googleRepeat(e) {
 // Google's events (one calendar's): { events: { rid: remote }, complex: [series ids] }.
 function googleEvents(items, now) {
   var w = span(now), today = dayIso(now || new Date())
-  var out = {}, complex = []
+  var out = {}, complex = [], series = {}
   ;(items || []).forEach(function(e) {
     if (!e || e.status === "cancelled" || e.recurringEventId || !e.start) return
+    var gc = e.recurrence && e.recurrence.length ? recOfRrule(e) : null // [fork] for the bridge
+    if (gc && (!gc.until || gc.until >= today)) series[e.id] = { rid: e.id, n: googleNorm(e), rec: gc, modified: Date.parse(e.updated) || 0 }
     var repeat = googleRepeat(e)
     if (repeat === "complex") { complex.push(e.id); return }
     if (repeat && repeat.until && repeat.until < today) return
@@ -210,7 +214,7 @@ function googleEvents(items, now) {
     }
     out[e.id] = { rid: e.id, n: googleNorm(e), repeat: repeat, modified: Date.parse(e.updated) || 0 }
   })
-  return { events: out, complex: complex }
+  return { events: out, complex: complex, series: series }
 }
 
 // A complex series' times (its instances): single events.
@@ -355,7 +359,7 @@ function plan(o) {
 //
 // actions: { op: "createG"|"createO", n } | { op: "updateG"|"updateO", rid, n }
 //   | { op: "deleteG"|"deleteO", rid }. createG/createO are linked by the caller
-//   ({ o, g }). Single events only: repeating ones stay where they are. The times
+//   ({ o, g }). Series: see planSeries (a series of a pattern it can't say stays where it is). The times
 //   of a complex series (remotes with `instance`) are not bridged, but an equal
 //   single event on the other side is not made again next to them.
 function planBridge(o) {
@@ -374,7 +378,9 @@ function planBridge(o) {
   }
   var O = singles(o.o365), G = singles(o.google)
   var shadowO = shadows(o.o365), shadowG = shadows(o.google)
-  var links = o.links || []
+  var allLinks = o.links || []
+  var links = allLinks.filter(function(l) { return !l.series })
+  var sp = planSeries({ o365: o.o365Series, google: o.googleSeries, links: allLinks.filter(function(l) { return l.series }), today: dayIso(now) })
   var actions = [], kept = [], gone = 0, usedO = {}, usedG = {}
   function inWindow(start) { var d = String(start).slice(0, 10); return d >= w[0] && d <= w[1] }
 
@@ -409,8 +415,9 @@ function planBridge(o) {
     }
     kept.push(link)
   })
-  if (links.length && gone > Math.max(5, Math.floor(links.length / 2)))
-    return { actions: [], links: links, deletions: gone, refused: true, reason: gone + " of " + links.length + " events gone at once (safety guard)" }
+  gone += sp.deletions
+  if (allLinks.length && gone > Math.max(5, Math.floor(allLinks.length / 2)))
+    return { actions: [], links: allLinks, deletions: gone, refused: true, reason: gone + " of " + allLinks.length + " events gone at once (safety guard)" }
 
   // New on one side: the same event on the other is linked, else made there.
   var freeG = {}
@@ -438,10 +445,225 @@ function planBridge(o) {
       made.o++
     })
   })
+  made.g += sp.made.g
+  made.o += sp.made.o
   var most = o.maxNew || MAX_NEW
-  if (links.length && (made.g > most || made.o > most))
-    return { actions: [], links: links, deletions: gone, refused: true, reason: "would make " + made.g + " in Google and " + made.o + " in Office 365 at once (safety guard)" }
-  return { actions: actions, links: kept, deletions: gone, refused: false }
+  if (allLinks.length && (made.g > most || made.o > most))
+    return { actions: [], links: allLinks, deletions: gone, refused: true, reason: "would make " + made.g + " in Google and " + made.o + " in Office 365 at once (safety guard)" }
+  return { actions: actions.concat(sp.actions), links: kept.concat(sp.links), deletions: gone, refused: false }
+}
+
+// ---- [fork] series, in the bridge --------------------------------------------------------------
+//
+// A series is bridged as a whole: its title, place, time of day and pattern
+// (not the odd day moved or dropped from it, those stay where they are). Its
+// pattern is kept in one plain form both sides convert to and from:
+//   { freq: "daily"|"weekly"|"monthly"|"yearly", interval, days: ["MO"..],
+//     nth (1-4, -1: the 2nd Tuesday), monthday, month, until: "YYYY-MM-DD", count }
+// A series it can't say that way (null) stays where it is. Office 365 leads:
+// where the two differ, Google gets Office 365's.
+
+var WEEK = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
+var GRAPH_DAY = { monday: "MO", tuesday: "TU", wednesday: "WE", thursday: "TH", friday: "FR", saturday: "SA", sunday: "SU" }
+var DAY_GRAPH = { MO: "monday", TU: "tuesday", WE: "wednesday", TH: "thursday", FR: "friday", SA: "saturday", SU: "sunday" }
+var GRAPH_INDEX = { first: 1, second: 2, third: 3, fourth: 4, last: -1 }
+var INDEX_GRAPH = { "1": "first", "2": "second", "3": "third", "4": "fourth", "-1": "last" }
+
+function sortDays(list) { return list.slice().sort(function(a, b) { return WEEK.indexOf(a) - WEEK.indexOf(b) }) }
+function dayOfIso(iso) { var d = new Date(Number(iso.slice(0, 4)), Number(iso.slice(5, 7)) - 1, Number(iso.slice(8, 10)), 12); return WEEK[(d.getDay() + 6) % 7] }
+function blankRec(freq, interval) { return { freq: freq, interval: Math.max(1, Number(interval) || 1), days: [], nth: 0, monthday: 0, month: 0, until: "", count: 0 } }
+
+// Office 365's recurrence -> the plain form, or null.
+function recOfGraph(g) {
+  var rec = g && g.recurrence
+  if (!rec || !rec.pattern) return null
+  var p = rec.pattern, r = rec.range || {}, c
+  var days = (p.daysOfWeek || []).map(function(d) { return GRAPH_DAY[String(d).toLowerCase()] }).filter(Boolean)
+  if (p.type === "daily") c = blankRec("daily", p.interval)
+  else if (p.type === "weekly") { c = blankRec("weekly", p.interval); c.days = sortDays(days) }
+  else if (p.type === "absoluteMonthly") { c = blankRec("monthly", p.interval); c.monthday = Number(p.dayOfMonth) || 0 }
+  else if (p.type === "relativeMonthly") { c = blankRec("monthly", p.interval); c.days = sortDays(days); c.nth = GRAPH_INDEX[String(p.index).toLowerCase()] || 0 }
+  else if (p.type === "absoluteYearly") { c = blankRec("yearly", 1); c.month = Number(p.month) || 0; c.monthday = Number(p.dayOfMonth) || 0 }
+  else if (p.type === "relativeYearly") { c = blankRec("yearly", 1); c.month = Number(p.month) || 0; c.days = sortDays(days); c.nth = GRAPH_INDEX[String(p.index).toLowerCase()] || 0 }
+  else return null
+  if (c.freq === "monthly" && !c.nth && !c.monthday) return null
+  if (c.freq === "monthly" && c.nth && c.days.length !== 1) return null
+  if (c.freq === "yearly" && (!c.month || (!c.monthday && !(c.nth && c.days.length === 1)))) return null
+  if (r.type === "endDate" && r.endDate) c.until = String(r.endDate).slice(0, 10)
+  else if (r.type === "numbered") c.count = Number(r.numberOfOccurrences) || 0
+  return c
+}
+
+// An RRULE -> the plain form, or null. start: the series' first day.
+function recOfRrule(e) {
+  var rules = (e.recurrence || []).filter(function(l) { return /^RRULE:/i.test(l) })
+  if (rules.length !== 1 || !e.start) return null
+  var parts = {}
+  rules[0].replace(/^RRULE:/i, "").split(";").forEach(function(kv) {
+    var i = kv.indexOf("=")
+    if (i > 0) parts[kv.slice(0, i).toUpperCase()] = kv.slice(i + 1).toUpperCase()
+  })
+  var start = String(e.start.date || e.start.dateTime).slice(0, 10)
+  var every = parts.INTERVAL
+  var days = [], nth = 0
+  if (parts.BYDAY) {
+    var bad = false
+    parts.BYDAY.split(",").forEach(function(d) {
+      var m = /^(-?\d)?(MO|TU|WE|TH|FR|SA|SU)$/.exec(d)
+      if (!m) { bad = true; return }
+      if (m[1]) nth = Number(m[1])
+      days.push(m[2])
+    })
+    if (bad) return null
+  }
+  if (parts.BYSETPOS) {
+    if (parts.BYSETPOS.indexOf(",") >= 0) return null
+    nth = Number(parts.BYSETPOS)
+  }
+  var c
+  if (parts.FREQ === "DAILY") { if (parts.BYDAY) return null; c = blankRec("daily", every) }
+  else if (parts.FREQ === "WEEKLY") { if (nth) return null; c = blankRec("weekly", every); c.days = sortDays(days.length ? days : [dayOfIso(start)]) }
+  else if (parts.FREQ === "MONTHLY") {
+    c = blankRec("monthly", every)
+    if (days.length) { if (days.length !== 1 || !nth || parts.BYMONTHDAY) return null; c.days = days; c.nth = nth }
+    else {
+      if (parts.BYMONTHDAY && parts.BYMONTHDAY.indexOf(",") >= 0) return null
+      c.monthday = Number(parts.BYMONTHDAY) || Number(start.slice(8, 10))
+    }
+  } else if (parts.FREQ === "YEARLY") {
+    c = blankRec("yearly", 1)
+    if (Number(every) > 1 || (parts.BYMONTH || "").indexOf(",") >= 0) return null
+    c.month = Number(parts.BYMONTH) || Number(start.slice(5, 7))
+    if (days.length) { if (days.length !== 1 || !nth) return null; c.days = days; c.nth = nth }
+    else c.monthday = Number(parts.BYMONTHDAY) || Number(start.slice(8, 10))
+  } else return null
+  if (parts.COUNT) c.count = Number(parts.COUNT) || 0
+  else if (parts.UNTIL) c.until = parts.UNTIL.slice(0, 4) + "-" + parts.UNTIL.slice(4, 6) + "-" + parts.UNTIL.slice(6, 8)
+  return c
+}
+
+// The plain form -> an RRULE (allDay: UNTIL is a date, else the end of that day, UTC).
+function rruleOf(c, allDay) {
+  var s = "FREQ=" + c.freq.toUpperCase()
+  if (c.interval > 1) s += ";INTERVAL=" + c.interval
+  if (c.freq === "weekly") s += ";BYDAY=" + c.days.join(",")
+  if (c.freq === "monthly") s += c.nth ? ";BYDAY=" + c.nth + c.days[0] : ";BYMONTHDAY=" + c.monthday
+  if (c.freq === "yearly") s += ";BYMONTH=" + c.month + (c.nth ? ";BYDAY=" + c.nth + c.days[0] : ";BYMONTHDAY=" + c.monthday)
+  if (c.count) s += ";COUNT=" + c.count
+  else if (c.until) s += ";UNTIL=" + c.until.replace(/-/g, "") + (allDay ? "" : "T235959Z")
+  return "RRULE:" + s
+}
+
+// The plain form -> Office 365's recurrence. start: the series' first day.
+function graphRecurrence(c, start, tz) {
+  var p = { interval: c.interval, month: 0, dayOfMonth: 0, daysOfWeek: [], firstDayOfWeek: "sunday", index: "first" }
+  if (c.freq === "daily") p.type = "daily"
+  else if (c.freq === "weekly") { p.type = "weekly"; p.daysOfWeek = c.days.map(function(d) { return DAY_GRAPH[d] }) }
+  else if (c.freq === "monthly") {
+    if (c.nth) { p.type = "relativeMonthly"; p.daysOfWeek = [DAY_GRAPH[c.days[0]]]; p.index = INDEX_GRAPH[String(c.nth)] }
+    else { p.type = "absoluteMonthly"; p.dayOfMonth = c.monthday }
+  } else {
+    p.interval = 1
+    p.month = c.month
+    if (c.nth) { p.type = "relativeYearly"; p.daysOfWeek = [DAY_GRAPH[c.days[0]]]; p.index = INDEX_GRAPH[String(c.nth)] }
+    else { p.type = "absoluteYearly"; p.dayOfMonth = c.monthday }
+  }
+  var r = { startDate: start, recurrenceTimeZone: tz }
+  if (c.count) { r.type = "numbered"; r.numberOfOccurrences = c.count }
+  else if (c.until) { r.type = "endDate"; r.endDate = c.until }
+  else r.type = "noEnd"
+  return { pattern: p, range: r }
+}
+
+// The two fingerprints of a series: what makes it that series (title, time of
+// day, place, pattern), and all of it (the end too). Not the first day.
+function seriesKey(n, c) {
+  return JSON.stringify([n.title, n.allDay ? "" : n.start.slice(11, 16), n.allDay ? "" : n.end.slice(11, 16), n.allDay, n.place,
+                         c.freq, c.interval, c.days, c.nth, c.monthday, c.month])
+}
+function seriesFp(n, c) { return seriesKey(n, c) + JSON.stringify([c.until, c.count]) }
+
+function dayCount(a, b) { return Math.round((Date.UTC(Number(b.slice(0, 4)), Number(b.slice(5, 7)) - 1, Number(b.slice(8, 10))) - Date.UTC(Number(a.slice(0, 4)), Number(a.slice(5, 7)) - 1, Number(a.slice(8, 10)))) / 86400000) }
+
+// n (a series' title, place and times), on the other series' first day.
+function rebase(n, base) {
+  var d0 = String(base.start).slice(0, 10)
+  var d1 = addDaysIso(d0, dayCount(n.start.slice(0, 10), n.end.slice(0, 10)))
+  return { title: n.title, place: n.place, allDay: n.allDay, start: n.allDay ? d0 : d0 + n.start.slice(10), end: n.allDay ? d1 : d1 + n.end.slice(10) }
+}
+
+function graphSeriesBody(n, c, tz) {
+  var b = graphBody(n, tz)
+  b.recurrence = graphRecurrence(c, n.start.slice(0, 10), tz)
+  return b
+}
+function googleSeriesBody(n, c, tz) {
+  var b = googleBody(n, tz)
+  b.recurrence = [rruleOf(c, n.allDay)]
+  return b
+}
+
+// A series that has run out by today (an end date, or a count of times that
+// even the longest gaps put behind it).
+function seriesOver(n, c, today) {
+  if (c.until) return c.until < today
+  if (!c.count) return false
+  var gap = { daily: 1, weekly: 7, monthly: 31, yearly: 366 }[c.freq] * c.interval
+  return addDaysIso(n.start.slice(0, 10), c.count * gap + 7) < today
+}
+
+// planSeries({ o365: { rid: series }, google: { rid: series }, links, today, maxNew })
+//   series: { rid, n, rec } (n: the first time of it) -> { actions, links, deletions }
+// actions: { op: "createG", series: true, rid (the source), n, rec, link }
+//   | { op: "updateG", series: true, rid, n (rebased), rec, title }
+//   | { op: "deleteG", series: true, rid, title }.
+function planSeries(o) {
+  var O = o.o365 || {}, G = o.google || {}, today = o.today
+  var actions = [], kept = [], gone = 0, usedO = {}, usedG = {}
+  ;(o.links || []).forEach(function(l) {
+    var so = O[l.o], sg = G[l.g]
+    usedO[l.o] = true
+    usedG[l.g] = true
+    if (!so && !sg) { gone++; return }
+    if (!so || !sg) {
+      if (l.until && l.until < today) { kept.push(l); return } // (ended)
+      // (Office 365 leads: a series dropped from Google is left in Office 365,
+      // and not made in Google again; one dropped from Office 365 goes.)
+      if (so) { kept.push(l); return }
+      actions.push({ op: "deleteG", series: true, rid: l.g, title: l.title })
+      gone++
+      return
+    }
+    var fo = seriesFp(so.n, so.rec), fg = seriesFp(sg.n, sg.rec)
+    // (Only when one side changed since last time: a form Google gives back
+    // otherwise would be sent again every sync.)
+    if (fo !== fg && (fo !== l.fp || fg !== l.fg))
+      actions.push({ op: "updateG", series: true, rid: l.g, n: rebase(so.n, sg.n), rec: so.rec, title: so.n.title })
+    kept.push({ o: l.o, g: l.g, series: true, fp: fo, fg: fg, title: so.n.title, start: so.n.start, until: so.rec.until })
+  })
+  var free = {}
+  Object.keys(G).forEach(function(rid) {
+    if (usedG[rid]) return
+    var k = seriesKey(G[rid].n, G[rid].rec)
+    ;(free[k] = free[k] || []).push(rid)
+  })
+  var made = { g: 0, o: 0 }
+  Object.keys(O).forEach(function(rid) {
+    if (usedO[rid]) return
+    var so = O[rid], k = seriesKey(so.n, so.rec), pool = free[k]
+    if (!(pool && pool.length) && seriesOver(so.n, so.rec, today)) return
+    if (pool && pool.length) {
+      // (The same series already: linked as it is, Google's changed only later.)
+      var g = pool.shift()
+      kept.push({ o: rid, g: g, series: true, fp: seriesFp(so.n, so.rec), fg: seriesFp(G[g].n, G[g].rec), title: so.n.title, start: so.n.start, until: so.rec.until })
+      return
+    }
+    actions.push({ op: "createG", series: true, rid: rid, n: so.n, rec: so.rec, title: so.n.title,
+                   link: { series: true, fp: seriesFp(so.n, so.rec), fg: seriesFp(so.n, so.rec), title: so.n.title, start: so.n.start, until: so.rec.until } })
+    made.g++
+  })
+  // (A series only in Google stays there: Office 365 leads.)
+  return { actions: actions, links: kept, deletions: gone, made: made }
 }
 
 // Our event, changed to the one there (or made from it).

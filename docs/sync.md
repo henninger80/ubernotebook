@@ -39,10 +39,19 @@ Settings → Accounts & sync → "Google ⇄ Office 365, unseen". On, Google's m
 calendar leaves this app (it's turned off here) and, behind the scenes, Google's
 main calendar and Office 365's are kept the same: a single event new, changed
 or deleted on one is so on the other at the next sync; events that are equal
-already are linked, not made twice. Repeating events stay where they are. Only
-Office 365's calendar is shown. `Sync.planBridge` plans it; the pairs are in
+already are linked, not made twice. Only Office 365's calendar is shown. `Sync.planBridge` plans it; the pairs are in
 `bridge.json`. A sync that would make more than 40 events on one side (once
 paired) or lose more than half of the pairs is stopped (safety guard).
+
+Series are bridged as a whole (`Sync.planSeries`): title, place, time of day
+and pattern (every week, the 2nd Tuesday, ...), not the single days moved or
+dropped from it. Office 365 leads: a series new there is made in Google, one
+changed there changes in Google (the first day stays Google's), one gone there
+goes from Google. A series only in Google stays there, and one dropped from
+Google is left in Office 365. A series equal on both sides is linked as it is,
+nothing sent. A pattern that can't be said both ways (several month days,
+several weekdays on a monthly one, ...) stays unbridged. Series that have run
+out are not made.
 
 ## Google: a client of your own
 

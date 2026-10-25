@@ -614,11 +614,11 @@ Item {
     })
     if (!co || !cg) { sync.problems = sync.problems.concat(["Google/Office 365: no main calendar"]); done(); return }
     phase = "Google ⇄ Office 365"
-    fetchRemote(co, config.calendars[co.key], function(ro, p1) {
+    fetchRemote(co, config.calendars[co.key], function(ro, p1, so) {
       if (!ro) { sync.problems = sync.problems.concat(["Office 365: " + p1]); done(); return }
-      fetchRemote(cg, config.calendars[cg.key], function(rg, p2) {
+      fetchRemote(cg, config.calendars[cg.key], function(rg, p2, sg) {
         if (!rg) { sync.problems = sync.problems.concat(["Google: " + p2]); done(); return }
-        var p = Sync.planBridge({ o365: ro, google: rg, links: sync.bridgeLinks, last: sync.bridgeLast, now: new Date() })
+        var p = Sync.planBridge({ o365: ro, google: rg, o365Series: so, googleSeries: sg, links: sync.bridgeLinks, last: sync.bridgeLast, now: new Date() })
         if (p.refused) { sync.problems = sync.problems.concat(["Google ⇄ Office 365: stopped, " + p.reason]); done(); return }
         sync.bridgeLinks = p.links
         sync.saveBridge()
@@ -640,11 +640,11 @@ Item {
       all("o365", base + "/events?$top=100&$select=id,subject,start,end,isAllDay,location,recurrence,type,lastModifiedDateTime,isCancelled", function(items, problem) {
         if (!items) { done(null, problem); return }
         var got = Sync.graphEvents(items, now)
-        if (plain || !got.complex.length) { done(got.events, ""); return }
+        if (plain || !got.complex.length) { done(got.events, "", got.series); return }
         all("o365", base + "/calendarView?" + Sync.query({ startDateTime: w[0] + "T00:00:00", endDateTime: w[1] + "T00:00:00", "$top": 100,
             "$select": "id,subject,start,end,isAllDay,location,type,lastModifiedDateTime,isCancelled,seriesMasterId" }), function(times, p2) {
           if (!times) { done(null, p2); return }
-          done(Sync.graphTimes(times, got.complex, got.events), "")
+          done(Sync.graphTimes(times, got.complex, got.events), "", got.series)
         })
       })
     } else {
@@ -660,7 +660,7 @@ Item {
             next()
           })
         } })
-        sync.series(each, function() { done(into, "") })
+        sync.series(each, function() { done(into, "", got.series) })
       })
     }
   }
@@ -685,7 +685,12 @@ Item {
       }
     }
     var f = a.n ? Sync.fp(a.n, null) : ""
-    if (a.op === "createG") api("google", "POST", gb, Sync.googleBody(a.n, tz), made(function(id) { return { o: a.rid, g: id, fp: f, title: a.n.title, start: a.n.start } }))
+    function seriesLink(o, g) { return function() { var l = { o: o, g: g }; for (var k in a.link) l[k] = a.link[k]; return l } }
+    if (a.series && a.op === "createG") api("google", "POST", gb, Sync.googleSeriesBody(a.n, a.rec, tz), made(function(id) { return seriesLink(a.rid, id)() }))
+    else if (a.series && a.op === "createO") api("o365", "POST", ob, Sync.graphSeriesBody(a.n, a.rec, tz), made(function(id) { return seriesLink(id, a.rid)() }))
+    else if (a.series && a.op === "updateG") api("google", "PATCH", gb + "/" + encodeURIComponent(a.rid), Sync.googleSeriesBody(a.n, a.rec, tz), function(ok, json, problem) { if (ok) sync.stats.out++; else failed(problem); next() })
+    else if (a.series && a.op === "updateO") api("o365", "PATCH", graph + "/me/events/" + encodeURIComponent(a.rid), Sync.graphSeriesBody(a.n, a.rec, tz), function(ok, json, problem) { if (ok) sync.stats.out++; else failed(problem); next() })
+    else if (a.op === "createG") api("google", "POST", gb, Sync.googleBody(a.n, tz), made(function(id) { return { o: a.rid, g: id, fp: f, title: a.n.title, start: a.n.start } }))
     else if (a.op === "createO") api("o365", "POST", ob, Sync.graphBody(a.n, tz), made(function(id) { return { o: id, g: a.rid, fp: f, title: a.n.title, start: a.n.start } }))
     else if (a.op === "updateG") api("google", "PATCH", gb + "/" + encodeURIComponent(a.rid), Sync.googlePatch(a.n, false, tz), function(ok, json, problem) { if (ok) sync.stats.out++; else failed(problem); next() })
     else if (a.op === "updateO") api("o365", "PATCH", graph + "/me/events/" + encodeURIComponent(a.rid), Sync.graphPatch(a.n, false, tz), function(ok, json, problem) { if (ok) sync.stats.out++; else failed(problem); next() })

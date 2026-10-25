@@ -198,6 +198,69 @@ check("[fork] Google and Office 365 straight: a complex series' times are not ma
   assert.deepEqual(plain(p.links), []);
 });
 
+check("[fork] series: a pattern goes to the plain form and back, both sides", () => {
+  const second = graph("m", "BR", "2026-05-12T10:00", "2026-05-12T11:00", { type: "seriesMaster",
+    recurrence: { pattern: { type: "relativeMonthly", interval: 1, daysOfWeek: ["tuesday"], index: "second" }, range: { type: "endDate", startDate: "2026-05-12", endDate: "2027-05-12" } } });
+  const c = plain(Sync.recOfGraph(second));
+  assert.deepEqual(c, { freq: "monthly", interval: 1, days: ["TU"], nth: 2, monthday: 0, month: 0, until: "2027-05-12", count: 0 });
+  assert.equal(Sync.rruleOf(c, false), "RRULE:FREQ=MONTHLY;BYDAY=2TU;UNTIL=20270512T235959Z");
+  assert.deepEqual(plain(Sync.recOfRrule({ start: { dateTime: "2026-04-14T10:00:00+02:00" }, recurrence: ["RRULE:FREQ=MONTHLY;BYDAY=2TU;UNTIL=20270512T235959Z"] })), c);
+  assert.deepEqual(plain(Sync.recOfRrule({ start: { dateTime: "2026-04-14T10:00:00+02:00" }, recurrence: ["RRULE:FREQ=MONTHLY;BYDAY=TU;BYSETPOS=2;UNTIL=20270512"] })), c);
+  const back = plain(Sync.graphRecurrence(c, "2026-05-12", "Europe/Berlin"));
+  assert.deepEqual(back.pattern.daysOfWeek, ["tuesday"]);
+  assert.equal(back.pattern.type + back.pattern.index, "relativeMonthlysecond");
+  assert.deepEqual(plain(Sync.recOfGraph({ recurrence: back })), c);
+  // Weekly on days, every day-of-month, yearly, counted.
+  const w = Sync.recOfRrule({ start: { date: "2026-10-19" }, recurrence: ["RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=FR,MO;COUNT=6"] });
+  assert.deepEqual(plain(w).days, ["MO", "FR"]);
+  assert.equal(Sync.rruleOf(w, true), "RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,FR;COUNT=6");
+  assert.equal(Sync.rruleOf(Sync.recOfRrule({ start: { date: "2026-10-19" }, recurrence: ["RRULE:FREQ=MONTHLY"] }), true), "RRULE:FREQ=MONTHLY;BYMONTHDAY=19");
+  assert.equal(Sync.recOfRrule({ start: { date: "2026-10-19" }, recurrence: ["RRULE:FREQ=MONTHLY;BYMONTHDAY=1,15"] }), null);
+});
+
+check("[fork] series: paired as they are, Office 365 leads, new, gone", () => {
+  const n = (title, start, end) => ({ title, start, end, allDay: false, place: "" });
+  const rec = (until) => ({ freq: "monthly", interval: 1, days: ["TU"], nth: 2, monthday: 0, month: 0, until, count: 0 });
+  const ser = (rid, title, start, end, until) => ({ rid, n: n(title, start, end), rec: rec(until), modified: 1 });
+  const O = { o1: ser("o1", "BR", "2026-05-12T10:00", "2026-05-12T11:00", "2027-05-12") };
+  const G = { g1: ser("g1", "BR", "2026-04-14T10:00", "2026-04-14T11:00", "2027-05-11") };
+  // The same series with other first day and end: linked, nothing sent.
+  let p = Sync.planBridge({ o365: {}, google: {}, o365Series: O, googleSeries: G, links: [], now });
+  assert.deepEqual(plain(p.actions), []);
+  assert.deepEqual(plain(p.links).map((l) => l.o + ">" + l.g + " " + l.series), ["o1>g1 true"]);
+  // Nothing changed since: nothing. Office 365 changed: Google gets its time, on Google's first day.
+  const link = p.links[0];
+  assert.deepEqual(plain(Sync.planBridge({ o365: {}, google: {}, o365Series: O, googleSeries: G, links: [link], now }).actions), []);
+  O.o1 = ser("o1", "BR", "2026-05-12T09:00", "2026-05-12T10:00", "2027-05-12");
+  p = Sync.planBridge({ o365: {}, google: {}, o365Series: O, googleSeries: G, links: [link], now });
+  assert.equal(p.actions.length, 1);
+  assert.equal(p.actions[0].op, "updateG");
+  assert.deepEqual(plain(p.actions[0].n), n("BR", "2026-04-14T09:00", "2026-04-14T10:00"));
+  // Only in Google it stays there; only in Office 365 it's made in Google (unless it has run out).
+  p = Sync.planBridge({ o365: {}, google: {}, o365Series: {}, googleSeries: G, links: [], now });
+  assert.deepEqual(plain(p.actions), []);
+  p = Sync.planBridge({ o365: {}, google: {}, o365Series: O, googleSeries: {}, links: [], now });
+  assert.deepEqual(plain(p.actions).map((a) => a.op + " " + a.rid), ["createG o1"]);
+  const counted = { o2: { rid: "o2", n: n("Old", "2023-08-29T08:00", "2023-08-29T16:00"), rec: Object.assign(rec(""), { freq: "daily", days: [], nth: 0, count: 3 }), modified: 1 } };
+  p = Sync.planBridge({ o365: {}, google: {}, o365Series: counted, googleSeries: {}, links: [], now });
+  assert.deepEqual(plain(p.actions), []);
+  // Gone on one side:
+  p = Sync.planBridge({ o365: {}, google: {}, o365Series: {}, googleSeries: G, links: [Object.assign({}, link, { until: "2027-05-12" })], now });
+  assert.deepEqual(plain(p.actions).map((a) => a.op + " " + a.rid), ["deleteG g1"]);
+  p = Sync.planBridge({ o365: {}, google: {}, o365Series: O, googleSeries: {}, links: [Object.assign({}, link, { until: "2027-05-12" })], now });
+  assert.deepEqual(plain(p.actions), []);
+  assert.equal(p.links.length, 1);
+  // (Ended there: kept, not deleted.)
+  p = Sync.planBridge({ o365: {}, google: {}, o365Series: {}, googleSeries: G, links: [Object.assign({}, link, { until: "2026-09-01" })], now });
+  assert.deepEqual(plain(p.actions), []);
+  // The bodies.
+  const body = plain(Sync.googleSeriesBody(n("BR", "2026-05-12T10:00", "2026-05-12T11:00"), rec("2027-05-12"), "Europe/Berlin"));
+  assert.deepEqual(body.recurrence, ["RRULE:FREQ=MONTHLY;BYDAY=2TU;UNTIL=20270512T235959Z"]);
+  const gb = plain(Sync.graphSeriesBody(n("BR", "2026-05-12T10:00", "2026-05-12T11:00"), rec(""), "Europe/Berlin"));
+  assert.equal(gb.recurrence.range.type, "noEnd");
+  assert.equal(gb.recurrence.range.startDate, "2026-05-12");
+});
+
 check("an event goes to the calendar it's given, else the default; given elsewhere, out of this one", () => {
   const local = [ev("a", "A", "2026-10-20T09:00", "2026-10-20T10:00"), ev("b", "B", "2026-10-20T11:00", "2026-10-20T12:00"), ev("c", "C", "2026-10-20T13:00", "2026-10-20T14:00")];
   let p = Sync.plan(base({ local, assigned: { b: "google:primary", c: "local" } }));
