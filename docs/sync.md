@@ -24,14 +24,36 @@ Notebook itself: no script, no service of its own.
 * Events from a calendar come in its color.
 * An event given another calendar moves there at the next sync. Given
   "Here only", it stays here alone.
-* A calendar turned off takes its events out of yours. They come back when
-  it's turned on again.
+* A calendar turned off takes its events out of yours (on this computer).
+  They come back when it's turned on again.
 * Safety: a calendar that has lost more than half of its linked events at
   once isn't synced (safety guard). Only the profile synced first is synced,
   never the demo. The window is 30 days back and 365 days ahead, and an
   event that only moved out of it isn't deleted.
 * It syncs at the interval (5 to 60 minutes), two minutes after the shell
   starts, and 20 seconds after you change the calendar.
+
+## Each computer its own copy
+
+The events of the calendars synced are **not** in `Pages/calendar.json`
+(which Nextcloud and the like carry to your other computers). Each computer
+keeps its own, as it got them from there, in `cache.json` beside its links,
+and syncs with Office 365 and Google itself. An event made on one goes there
+at its next sync and comes to the other at that one's. No computer leads.
+Only "Here only" events are in `calendar.json`, and it's written only when
+they change (so a computer's older copy doesn't go over the other's).
+`Sync.splitCalendar` parts the calendar as it's saved, `Workspace.qml`'s
+`calendarCache` ([fork]) is the hook.
+
+The first time (no `cache.json` yet): a computer whose sync is on moves the
+events it has linked from `calendar.json` into its cache; one whose sync is
+off starts afresh (its links dropped) and gets them from there at its first
+sync. What was before is kept in `before-cache.json`. So: turn the sync off
+on the other computers before the first one is updated, and back on once
+they are.
+
+The bridge's pairs (`bridge.json`) are a computer's own too: keep the bridge
+on one computer.
 
 ## Google ⇄ Office 365, unseen (bridge)
 
@@ -85,6 +107,8 @@ state of its own.
 | `assign.json` | the calendar each event was given here |
 | `tokens-o365.json`, `tokens-google.json` | the sign-ins |
 | `last.json` | how the last sync went |
+| `cache.json` | the synced calendars' events, this computer's (and the Pages folder they're for) |
+| `bridge.json` | the bridge's pairs |
 
 The first time, what `~/.local/bin/o365-calendar-sync` kept in
 `~/.local/state/o365-sync` (the sign-in and the links) is taken over, and
@@ -106,10 +130,13 @@ workspace's `calendar`, `calendarRevision` and `setCalendar`. Upstream files
 are touched only in places marked `[fork]`:
 
 * `Service.qml`: two lines after `property alias backups: backupsItem`.
+* `Workspace.qml`: `calendarCache` after `calendarPath()`, a line in
+  `loadCalendar` and the write in `writeCalendar`.
 * `app/SettingsPanel.qml`: the `sync` entry in `sections` (before
   `whatsnew`), and the `SyncSettings { … }` line before
   `// ======== About ========`.
 * `tests/run`: `node tests/sync.test.cjs` after the calendar's test.
+  (`tests/qml/tst_synccache.qml`: two computers, one Office 365.)
 
 To bring in an upstream release:
 

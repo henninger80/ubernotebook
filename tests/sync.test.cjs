@@ -317,4 +317,33 @@ check("the sign-in's answer", () => {
   assert.equal(Sync.form({ a: "x y", b: "ü&" }), "a=x%20y&b=%C3%BC%26");
 });
 
+check("[fork] the synced calendars' events kept on this computer, Here only in calendar.json", () => {
+  const cal = { version: 1, events: [ev("h", "Here", "2026-10-20T09:00", "2026-10-20T10:00"), ev("o", "Outlook", "2026-10-21T09:00", "2026-10-21T10:00"),
+    ev("n", "New", "2026-10-22T09:00", "2026-10-22T10:00"), ev("m", "Moved", "2026-10-23T09:00", "2026-10-23T10:00")] };
+  const where = { assigned: { m: "local" }, linked: { o: "o365:k", m: "o365:k" }, shared: { h: true }, fallback: "o365:k" };
+  const p = plain(Sync.splitCalendar(cal, where));
+  assert.deepEqual(p.shared.events.map((e) => e.id), ["h", "m"]);
+  assert.deepEqual(p.cached.map((e) => e.id), ["o", "n"]);
+  assert.equal(Sync.calendarOfEvent("h", where), "local");
+  assert.equal(Sync.calendarOfEvent("n", where), "o365:k");
+  assert.equal(Sync.calendarOfEvent("n", Object.assign({}, where, { fallback: "" })), "local");
+  // (Linked wins over calendar.json: an event given a calendar leaves it.)
+  assert.equal(Sync.calendarOfEvent("x", { linked: { x: "google:primary" }, shared: { x: true } }), "google:primary");
+  const back = plain(Sync.mergeCalendar(p.shared, p.cached));
+  assert.deepEqual(back.events.map((e) => e.id).sort(), ["h", "m", "n", "o"]);
+  assert.equal(plain(Sync.mergeCalendar(p.shared, p.shared.events.concat(p.cached))).events.length, 4);
+});
+
+check("[fork] the first time: moved (the computer that synced) or afresh (another)", () => {
+  const cal = { version: 1, events: [ev("h", "Here", "2026-10-20T09:00", "2026-10-20T10:00"), ev("o", "Outlook", "2026-10-21T09:00", "2026-10-21T10:00"),
+    ev("n", "Not yet sent", "2026-10-22T09:00", "2026-10-22T10:00"), ev("g", "Given", "2026-10-23T09:00", "2026-10-23T10:00")] };
+  const o = { assigned: { h: "local", g: "google:x" }, linked: { o: "o365:k" }, fallback: "o365:k" };
+  const moved = plain(Sync.firstSplit(cal, o, "move"));
+  assert.deepEqual(moved.shared.events.map((e) => e.id), ["h"]);
+  assert.deepEqual(moved.cached.map((e) => e.id), ["o", "n", "g"]);
+  const fresh = plain(Sync.firstSplit(cal, o, "fresh"));
+  assert.deepEqual(fresh.shared.events.map((e) => e.id), ["h", "n"]);
+  assert.deepEqual(fresh.cached, []);
+});
+
 console.log(`sync: ${passed} checks passed`);

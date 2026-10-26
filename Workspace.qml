@@ -734,6 +734,10 @@ Item {
   property var calendarUndo: []
   property var calendarRedo: []
   function calendarPath() { return folder + "/calendar.json" }
+  // [fork] The synced calendars' events, kept on this computer, not in
+  // calendar.json (Sync.qml): null, or one with mergedCalendar(as read) and
+  // sharedCalendar(as shown), what goes into the file (null: as it was).
+  property var calendarCache: null
 
   function loadCalendar() {
     if (!folder) return
@@ -745,6 +749,7 @@ Item {
       if (gen !== ws.generation) return
       ws.keepUnreadable(path, failed)
       ws.calendar = ws.cleaned(path, got[path], Calendar.clean)
+      if (ws.calendarCache) ws.calendar = ws.calendarCache.mergedCalendar(ws.calendar)  // [fork]
       ws.calendarUndo = []
       ws.calendarRedo = []
       ws.calendarLoaded = true
@@ -758,7 +763,9 @@ Item {
     if (!folder) return
     if (!calendarLoaded) { notYet(); return }
     if (unreadable[calendarPath()]) { notSaved(calendarPath()); return }
-    write(calendarPath(), JSON.stringify(calendar, null, 1) + "\n")
+    // [fork] (Through the cache: null when calendar.json's part is as it was, not written again.)
+    var keep = calendarCache ? calendarCache.sharedCalendar(calendar) : calendar
+    if (keep) write(calendarPath(), JSON.stringify(keep, null, 1) + "\n")
   }
 
   // The calendar changed (`next`, a new copy), kept, as a step Undo takes back.

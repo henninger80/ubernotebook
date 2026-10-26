@@ -688,6 +688,64 @@ function form(fields) {
 }
 function query(fields) { return form(fields) }
 
+// ---- [fork] the synced calendars' events, kept on this computer -------------------------------
+//
+// Pages/calendar.json goes to the other computers with the pages (Nextcloud
+// and the like); the events of the calendars synced don't: each computer
+// keeps its own, as it got them from there, beside its own links
+// (Sync.qml's cache.json). Only "Here only" events are in calendar.json.
+// Sync.qml shows both as one calendar and parts them again when it's saved.
+//
+// o: { assigned: { nb: key }, linked: { nb: key }, shared: { nb: true } (in
+// calendar.json), fallback (the default calendar) }
+
+// The calendar an event of ours is in, or goes to: a key, or LOCAL.
+function calendarOfEvent(id, o) {
+  if (o.assigned && o.assigned[id]) return o.assigned[id]
+  if (o.linked && o.linked[id]) return o.linked[id]
+  if (o.shared && o.shared[id]) return LOCAL
+  return o.fallback || LOCAL
+}
+
+// The calendar parted: { shared: calendar.json's, cached: [events kept here] }.
+function splitCalendar(cal, o) {
+  var shared = [], cached = []
+  ;((cal && cal.events) || []).forEach(function(e) {
+    if (calendarOfEvent(e.id, o) === LOCAL) shared.push(e)
+    else cached.push(e)
+  })
+  return { shared: { version: cal.version, events: shared }, cached: cached }
+}
+
+// Both as one calendar (calendar.json's first).
+function mergeCalendar(shared, cached) {
+  var seen = {}
+  var events = []
+  ;((shared && shared.events) || []).concat(cached || []).forEach(function(e) {
+    if (seen[e.id]) return
+    seen[e.id] = true
+    events.push(e)
+  })
+  return { version: shared ? shared.version : 1, events: events }
+}
+
+// The first time, from calendar.json that had them all. "move" (where the
+// links are this calendar's: the computer that synced): each event where it
+// belongs, as before (one not linked and not given a calendar goes to the
+// default one). "fresh" (a computer whose links aren't): what's linked or
+// given a calendar elsewhere goes (it comes again from there, at the first
+// sync), the rest stays in calendar.json, "Here only".
+function firstSplit(cal, o, mode) {
+  if (mode === "move") return splitCalendar(cal, { assigned: o.assigned, linked: o.linked, fallback: o.fallback })
+  var shared = []
+  ;((cal && cal.events) || []).forEach(function(e) {
+    var a = o.assigned && o.assigned[e.id]
+    if ((o.linked && o.linked[e.id]) || (a && a !== LOCAL)) return
+    shared.push(e)
+  })
+  return { shared: { version: cal.version, events: shared }, cached: [] }
+}
+
 // Random letters and digits (PKCE's verifier, a sign-in's state).
 function randomText(n, random) {
   var r = typeof random === "function" ? random : Math.random

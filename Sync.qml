@@ -14,7 +14,8 @@ import "Calendar.js" as Calendar
 // config.json (the settings and calendars), links.json (which event is
 // which), assign.json (the calendar each event made here was given),
 // tokens-<account>.json (the sign-ins) and last.json (how the last sync
-// went). The first time, what bin/o365-calendar-sync kept in
+// went), cache.json (the synced calendars' events, kept on this computer
+// alone: [fork], see Sync.js). The first time, what bin/o365-calendar-sync kept in
 // ~/.local/state/o365-sync is taken over (and left there).
 Item {
   id: sync
@@ -144,6 +145,9 @@ Item {
     bridgeLast = b && b.last ? b.last : 0
     tokens = t
     last = readJson(path("last.json"), null)
+    var ca = readJson(path("cache.json"), null)
+    cached = ca && Array.isArray(ca.events) ? Calendar.clean({ events: ca.events }).events : null
+    cacheFolder = ca && ca.folder ? String(ca.folder) : ""
     loaded = true
     files.exec(["/usr/bin/readlink", "-f", "/etc/localtime"], function(ok, out) {
       var m = /zoneinfo\/(.+)$/.exec(String(out || "").trim())
@@ -153,6 +157,97 @@ Item {
     saveLinks()
     if (t.o365) saveTokens("o365")
     revision++
+    attachCache()
+  }
+
+  // ---- [fork] the synced calendars' events, kept on this computer ----
+  // (Sync.js: calendar.json has the "Here only" ones; these are this
+  // computer's own, as it got them, beside its links. The workspace shows
+  // both as one calendar and parts them when it's saved.)
+
+  property var cached: null
+  property string cacheFolder: ""
+  property var sharedIds: ({})
+  // (calendar.json's part as last read or written: what's unchanged isn't
+  // written again, so a computer's older copy doesn't go over the other's.)
+  property string sharedText: ""
+  function saveCache() { writeJson("cache.json", { version: 1, folder: cacheFolder, events: cached || [] }) }
+  // Only the profile synced, in the folder it was first kept for.
+  function cacheOn() {
+    return loaded && !!workspace && !!workspace.folder && !!profile && !profile.demo && !!config.profile && config.profile === profile.id
+      && (!cacheFolder || cacheFolder === workspace.folder)
+  }
+  function linkedMap() {
+    var m = {}
+    links.forEach(function(l) { m[l.nb] = l.cal })
+    return m
+  }
+  function cacheWhere() { return { assigned: assigned, linked: linkedMap(), shared: sharedIds, fallback: config.defaultCal || Sync.LOCAL } }
+  // calendar.json as read, with this computer's events: what's shown.
+  function mergedCalendar(fromFile) {
+    if (!cacheOn()) return fromFile
+    var shared = fromFile
+    if (cached === null) shared = firstCache(fromFile).shared
+    var ids = {}
+    shared.events.forEach(function(e) { ids[e.id] = true })
+    sharedIds = ids
+    sharedText = shared === fromFile ? JSON.stringify(shared) : ""
+    return Sync.mergeCalendar(shared, cached)
+  }
+  // The calendar as it's saved: this computer's events kept here, the rest
+  // what goes into calendar.json (null: as it was).
+  function sharedCalendar(cal) {
+    if (!cacheOn() || cached === null) return cal
+    var p = Sync.splitCalendar(cal, cacheWhere())
+    cached = p.cached
+    saveCache()
+    var ids = {}
+    p.shared.events.forEach(function(e) { ids[e.id] = true })
+    sharedIds = ids
+    var t = JSON.stringify(p.shared)
+    if (t === sharedText) return null
+    sharedText = t
+    return p.shared
+  }
+  // The first time: calendar.json had them all (Sync.firstSplit). The
+  // computer that synced ("enabled") keeps its links and moves its events
+  // here; another starts afresh, and gets them from there at its first sync.
+  function firstCache(cal) {
+    var mode = config.enabled === true ? "move" : "fresh"
+    writeJson("before-cache.json", { at: Date.now(), mode: mode, folder: workspace.folder, calendar: cal, links: { links: links, last: lastSync }, assigned: assigned })
+    var f = Sync.firstSplit(cal, { assigned: assigned, linked: linkedMap(), fallback: config.defaultCal || Sync.LOCAL }, mode)
+    if (mode === "fresh") {
+      links = []
+      lastSync = {}
+      saveLinks()
+    }
+    cached = f.cached
+    cacheFolder = workspace.folder
+    saveCache()
+    firstWrite = true
+    return f
+  }
+  property bool firstWrite: false
+  // (The workspace's calendar's read before this is: shown again, with ours.)
+  function attachCache() {
+    if (!workspace || workspace.calendarCache === undefined) return
+    workspace.calendarCache = sync
+    if (!workspace.calendarLoaded || !cacheOn()) return
+    applying = true
+    workspace.calendar = mergedCalendar(workspace.calendar)
+    workspace.calendarRevision++
+    workspace.scheduleReminders()
+    applying = false
+    if (firstWrite) { firstWrite = false; workspace.writeCalendar() }
+  }
+  // What the plan's told each event is given: those in calendar.json, "Here only".
+  function effectiveAssigned() {
+    if (!cacheOn()) return assigned
+    var a = {}
+    var linked = linkedMap()
+    for (var k in sharedIds) if (!linked[k]) a[k] = Sync.LOCAL
+    for (var j in assigned) a[j] = assigned[j]
+    return a
   }
 
   // ---- HTTPS ----
@@ -448,9 +543,7 @@ Item {
   // The calendar an event of ours is in, or goes to: a key, or "local".
   function calendarOf(nb) {
     var r = revision
-    if (assigned[nb]) return assigned[nb]
-    for (var i = 0; i < links.length; i++) if (links[i].nb === nb) return links[i].cal
-    return config.defaultCal || Sync.LOCAL
+    return Sync.calendarOfEvent(nb, cacheWhere())
   }
   // An event given to a calendar (or kept here: "local"): moved at the next sync.
   function setCalendarOf(nb, key) {
@@ -459,6 +552,8 @@ Item {
     a[nb] = key
     assigned = a
     saveAssigned()
+    // [fork] (Kept where it now belongs: here, or in calendar.json.)
+    if (workspace && workspace.calendarLoaded) workspace.writeCalendar()
     syncSoon()
   }
 
@@ -547,7 +642,7 @@ Item {
       var elsewhere = {}
       sync.links.forEach(function(l) { if (l.cal !== c.key) elsewhere[l.nb] = true })
       var p = Sync.plan({ cal: c.key, remote: remote, links: mine, local: sync.workspace.calendar.events, linkedElsewhere: elsewhere,
-        assigned: sync.assigned, fallback: sync.config.defaultCal || Sync.LOCAL, last: sync.lastSync[c.key] || 0, now: new Date() })
+        assigned: sync.effectiveAssigned(), fallback: sync.config.defaultCal || Sync.LOCAL, last: sync.lastSync[c.key] || 0, now: new Date() })
       if (p.refused) { sync.problems = sync.problems.concat([c.name + ": stopped, " + (p.reason || (p.deletions + " of " + mine.length + " events gone at once (safety guard)"))]); done(); return }
       var kept = p.links
       // Ours first, as one change.
@@ -572,14 +667,15 @@ Item {
           changed = true
         }
       })
+      // (The links first: what's new is then kept with this computer's events.)
+      var others = sync.links.filter(function(l) { return l.cal !== c.key })
+      sync.links = others.concat(kept, made)
+      sync.saveLinks()
       if (changed) {
         sync.applying = true
         sync.workspace.setCalendar(cal)
         sync.applying = false
       }
-      var others = sync.links.filter(function(l) { return l.cal !== c.key })
-      sync.links = others.concat(kept, made)
-      sync.saveLinks()
       // Then theirs, one at a time (each new link kept as it's made).
       var remoteOps = p.actions.filter(function(a) { return a.op.indexOf("remote") === 0 })
       if (!c.writable) remoteOps = []
