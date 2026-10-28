@@ -374,5 +374,51 @@ Item {
         mirror.notesRoot = Qt.binding(function() { return files.rootPath })
       }
     }
+
+    // [fork] Held while you're at the computer: nothing written, what
+    // changed copied once you're away; a copy begun stops when you're back.
+    function test_7_held_till_idle() {
+      fresh()
+      mirror.held = true
+      try {
+        mirror.on = true
+        wait(100)
+        compare(copied(), [], "nothing written while held")
+        compare(mirror.status, "Waiting till you're away")
+        mirror.held = false
+        tryVerify(function() { return mirror.status === "Up to date" }, 2000, "copied once away")
+        verify(copied().indexOf("Pages/Getting started.md") >= 0)
+        mirror.held = true
+        var id = page("Getting started")
+        var p = ws.readPageNow(id)
+        p.title = "Start here"
+        p.modified = new Date(Date.now() + 1000).toISOString()
+        ws.savePage(p)
+        wait(150)
+        verify(copied().indexOf("Pages/Start here.md") < 0, "a change waits while held")
+        mirror.held = false
+        tryVerify(function() { return copied().indexOf("Pages/Start here.md") >= 0 }, 2000, "and is copied once away")
+        tryVerify(function() { return !mirror.busy }, 2000)
+        // A copy begun, then you're back: it stops before writing.
+        fresh()
+        files.holdReads = true
+        mirror.held = false
+        mirror.on = true
+        tryVerify(function() { return mirror.busy }, 2000, "a copy begun")
+        mirror.held = true
+        tryVerify(function() { files.answerReads(); return !mirror.busy }, 3000, "and over")
+        compare(copied(), [], "nothing written once you're back")
+        verify(mirror.pending, "still to do")
+        files.holdReads = false
+        mirror.held = false
+        tryVerify(function() { return mirror.status === "Up to date" }, 2000, "done once away again")
+      } finally {
+        files.holdReads = false
+        files.answerReads()
+        mirror.held = false
+        mirror.pending = false
+        mirror.on = false
+      }
+    }
   }
 }

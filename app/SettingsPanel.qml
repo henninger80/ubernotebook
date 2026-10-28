@@ -1006,6 +1006,18 @@ Popup {
               IconButton { theme: panel.theme; icon: panel.theme.icons.folder; tip: "Open the copy"; onClicked: panel.service.openMirror() }
             }
           }
+          // [fork] Only once you're away (Service.qml, mirrorIdle).
+          Line {
+            visible: panel.s.mirror === true
+            label: "Copy when"
+            note: "Only after the computer's been idle this long, never while you're writing."
+            Choice {
+              prefix: "mirrorIdle_"
+              options: [{ label: "Right away", value: 0 }, { label: "2 min", value: 2 }, { label: "5 min", value: 5 }, { label: "10 min", value: 10 }, { label: "30 min", value: 30 }]
+              value: panel.s.mirrorIdle === undefined ? 5 : panel.s.mirrorIdle
+              onPicked: function(v) { panel.set("mirrorIdle", v) }
+            }
+          }
         }
 
         // ======== AI ========

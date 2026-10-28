@@ -244,14 +244,15 @@ check("links between pages, backlinks and reminders", () => {
       [q]: { title: "Q", links: [] },
       [r]: { title: "R", links: [q], trashed: true },
     },
-    fired: { [p + "|" + c + "|2026-10-01T09:30"]: true, "junk": true },
+    fired: { [p + "|" + c + "|2026-10-01T09:30"]: true, ["cal|" + c + "|2026-10-01|10"]: true, "junk": true },
   });
   assert.deepEqual(plain(W.backlinks(ix, q)), [p], "who links to it, not from the trash");
   assert.deepEqual(plain(W.backlinks(ix, p)), []);
   const due = plain(W.pendingReminders(ix));
   assert.equal(due.length, 1, "the one that came already doesn't again");
   assert.equal(due[0].page, p);
-  assert.equal(Object.keys(plain(ix.fired)).length, 1, "nothing odd in the list of what came");
+  assert.equal(Object.keys(plain(ix.fired)).length, 2, "nothing odd in the list of what came");
+  assert.equal(ix.fired["cal|" + c + "|2026-10-01|10"], true, "[fork] a calendar alert that came is kept");
   assert.equal(W.cleanIndex({ pages: { [q]: { title: "Q" } } }).pages[q].links, null, "not worked out yet");
   assert.match(W.indexJson(ix), /"fired"/);
 });

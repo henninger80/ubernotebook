@@ -63,6 +63,10 @@ var DEFAULTS = {
   // ("" is a Markdown folder in the notes folder).
   mirror: false,
   mirrorFolder: "",
+  // [fork] Copied only once nothing's been typed or clicked for this many
+  // minutes (the whole computer idle), never while you're writing; 0: a few
+  // seconds after each change, as before.
+  mirrorIdle: 5,
   // How the sidebar lists tags: by name ("name") or by color ("color").
   tagSort: "name",
   // The calendar's view, as it was last: month, week, agenda or compact (a
@@ -192,6 +196,7 @@ var SCHEMA = {
     quickTo: "string",
     mirror: "bool",
     mirrorFolder: "folder",
+    mirrorIdle: "int",  // [fork]
     tagSort: "string",
     calendarView: "string",
     dailyParent: "string",  // [fork]
@@ -245,7 +250,8 @@ var SCHEMA = {
     peopleGroup: ["letter", "company"],
     scrollSpeed: ["slower", "normal", "faster"],
     backupEvery: ["off", "daily", "weekly"],
-    backupKeep: [3, 5, 10, 20, 50]
+    backupKeep: [3, 5, 10, 20, 50],
+    mirrorIdle: [0, 2, 5, 10, 30]  // [fork]
   },
   ranges: {
     width: [640, 5000],

@@ -696,7 +696,11 @@ function cleanIndex(raw) {
   // Reminders that have come already (so they don't again).
   var fired = {}
   var src2 = r.fired && typeof r.fired === "object" && !Array.isArray(r.fired) ? r.fired : {}
-  Object.keys(src2).slice(0, 5000).forEach(function(key) { if (/^[0-9a-f-]{36}\|[0-9a-f-]{36}\|[0-9T:-]{16}$/.test(key)) fired[key] = true })
+  // [fork] The calendar's alerts too ("cal|<event>|<day>|<minutes>",
+  // Calendar.alerts): dropped as it loaded, each of today's came again with
+  // every start, and the tree was written at once (a sync conflict, with
+  // another computer's tree not downloaded yet).
+  Object.keys(src2).slice(0, 5000).forEach(function(key) { if (/^[0-9a-f-]{36}\|[0-9a-f-]{36}\|[0-9T:-]{16}$/.test(key) || /^cal\|[0-9a-f-]{36}\|\d{4}-\d{2}-\d{2}\|\d{1,6}$/.test(key)) fired[key] = true })
   // Tags' colors: { name: "blue" | "#ff8800" | "blue_background"... }.
   var tagColors = {}
   var src3 = r.tagColors && typeof r.tagColors === "object" && !Array.isArray(r.tagColors) ? r.tagColors : {}

@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import Quickshell.Wayland  // [fork] IdleMonitor, for the Markdown copy
 import qs.Commons
 import "Defaults.js" as Defaults
 import "Settings.js" as Settings
@@ -293,6 +294,18 @@ Item {
     folder: root.mirrorPath
     notesRoot: storeItem.rootPath
     home: root.home
+    held: mirrorIdle.enabled && !mirrorIdle.isIdle  // [fork]
+  }
+
+  // [fork] The Markdown copy made only once the computer's been idle for
+  // `mirrorIdle` minutes (no key, click or move: Wayland's idle-notify, as
+  // hypridle has it); 0 copies after each change, as upstream does. A video
+  // keeping the screen on doesn't count as you being there.
+  IdleMonitor {
+    id: mirrorIdle
+    enabled: mirrorItem.on && (root.settings.mirrorIdle || 0) > 0
+    timeout: Math.max(1, root.settings.mirrorIdle || 5) * 60
+    respectInhibitors: false
   }
 
   property alias mirror: mirrorItem

@@ -51,7 +51,22 @@ Item {
     onTriggered: mirror.sync()
   }
 
-  function schedule() { if (on) timer.restart() }
+  // [fork] Held while you're at the computer (Service.qml: not idle long
+  // enough): nothing read or written, what changed copied once you're away.
+  // A copy that's begun stops before it writes anything when you come back
+  // (once it's writing, it's finished: its list must match the files).
+  property bool held: false
+  property bool pending: false
+  onHeldChanged: {
+    if (held) { if (busy) pending = true; timer.stop(); if (on && pending) status = "Waiting till you're away" }
+    else if (pending) { pending = false; schedule() }
+  }
+
+  function schedule() {
+    if (!on) return
+    if (held) { pending = true; status = "Waiting till you're away"; return }  // [fork]
+    timer.restart()
+  }
 
   onOnChanged: {
     if (on) { status = "Copying soon"; Qt.callLater(mirror.sync) }
@@ -80,6 +95,7 @@ Item {
   function sync() {
     if (!on) { status = ""; return }
     if (busy) { again = true; return }
+    if (held) { pending = true; status = "Waiting till you're away"; return }  // [fork]
     if (!workspace || !workspace.ready || !store || !store.ready || !folder) { timer.restart(); return }
     var why = Mirror.folderProblem(folder, notesRoot, home, store.notebookList().map(function(n) { return n.id }))
     if (why) {
@@ -95,7 +111,7 @@ Item {
     // (Where it copies from, as it was when it started: a copy that's begun
     // and another profile's open meanwhile, it stops.)
     var from = { root: notesRoot, pages: workspace.folder }
-    function stale() { return gen !== mirror.generation || mirror.movedOn(dir, from) }
+    function stale() { return gen !== mirror.generation || mirror.movedOn(dir, from) || mirror.held }  // [fork] held
     // (Its own from before made yours alone, and the folder checked, before
     // anything's written: a drive that can't keep files private gets none
     // of your notes, and it's said, outside Settings too. One that couldn't
