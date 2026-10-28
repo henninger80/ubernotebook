@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Pdf
+import "../Lang.js" as Lang  // [fork] German
 
 // A PDF's pages, one under another, with the page you're on: what fills a
 // PDF's frame in FileBlock. Loaded only there, so without QtQuick.Pdf (it
@@ -73,7 +74,7 @@ Item {
     wrapMode: Text.Wrap
     horizontalAlignment: Text.AlignHCenter
     textFormat: Text.PlainText
-    text: pp.refused ? "Too big to show here (over 200 MB, or not a plain file): Open opens it in its app" : "The PDF couldn't be read"
+    text: pp.refused ? Lang.t("Too big to show here (over 200 MB, or not a plain file): Open opens it in its app") : Lang.t("The PDF couldn't be read")
     font.family: pp.family
     font.pixelSize: 13
     color: pp.faint

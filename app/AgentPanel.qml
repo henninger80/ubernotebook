@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Effects
 import "../MarkdownView.js" as MarkdownView
 import "../Permissions.js" as Permissions
+import "../Lang.js" as Lang  // [fork] German
 
 // Your agent at work, in a panel on the page (Claude Code, Grok or Codex,
 // without a terminal): what you asked, each step as it takes it (reading the page,
@@ -291,7 +292,7 @@ Item {
         objectName: "agentPanelStop"
         visible: panel.working
         theme: panel.theme
-        text: "Stop"
+        text: Lang.t("Stop")
         onClicked: panel.stopRequested()
       }
       IconButton {
@@ -301,7 +302,7 @@ Item {
         icon: panel.theme.icons.edit
         size: 30
         iconSize: 15
-        tip: "New chat"
+        tip: Lang.t("New chat")
         onClicked: panel.newChatRequested()
       }
       IconButton {
@@ -311,7 +312,7 @@ Item {
         icon: panel.theme.icons.close
         size: 30
         iconSize: 14
-        tip: "Close  (Ctrl+J brings it back)"
+        tip: Lang.t("Close  (Ctrl+J brings it back)")
         onClicked: panel.close()
       }
     }
@@ -354,7 +355,7 @@ Item {
             elide: Text.ElideRight
             wrapMode: Text.Wrap
             textFormat: Text.PlainText
-            text: "\u201c" + turn.modelData.request + "\u201d"
+            text: "\u201c" + turn.modelData.request + Lang.t("\u201d")
             font.family: panel.theme.uiFont
             font.pixelSize: 12
             color: panel.theme.muted
@@ -362,7 +363,7 @@ Item {
           Text {
             visible: turn.modelData.steps.length > 0
             textFormat: Text.PlainText
-            text: turn.modelData.steps.length + (turn.modelData.steps.length === 1 ? " step" : " steps")
+            text: turn.modelData.steps.length + (turn.modelData.steps.length === 1 ? Lang.t(" step") : Lang.t(" steps"))
             font.family: panel.theme.uiFont
             font.pixelSize: 11
             color: panel.theme.faint
@@ -383,7 +384,7 @@ Item {
             width: parent.width
             wrapMode: Text.Wrap
             textFormat: Text.PlainText
-            text: turn.modelData.status === "failed" ? turn.modelData.failure : turn.modelData.status === "stopped" ? "Stopped." : ""
+            text: turn.modelData.status === "failed" ? turn.modelData.failure : turn.modelData.status === "stopped" ? Lang.t("Stopped.") : ""
             font.family: panel.theme.uiFont
             font.pixelSize: 12
             color: turn.modelData.status === "failed" ? panel.theme.urgent : panel.theme.muted
@@ -401,7 +402,7 @@ Item {
         elide: Text.ElideRight
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: "“" + panel.request + "”"
+        text: "“" + panel.request + Lang.t("”")
         font.family: panel.theme.uiFont
         font.pixelSize: 12
         color: panel.theme.muted
@@ -412,7 +413,7 @@ Item {
       Text {
         visible: panel.working && panel.steps.length === 0 && panel.live === "" && panel.answer === ""
         textFormat: Text.PlainText
-        text: "Starting " + panel.agentLabel + "…"
+        text: Lang.t("Starting ") + panel.agentLabel + "…"
         font.family: panel.theme.uiFont
         font.pixelSize: 12
         color: panel.theme.faint
@@ -470,7 +471,7 @@ Item {
         width: parent.width
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: "It wasn't allowed to use: " + panel.denied.join(", ") + "."
+        text: Lang.t("It wasn't allowed to use: ") + panel.denied.join(", ") + "."
         font.family: panel.theme.uiFont
         font.pixelSize: 11
         color: panel.theme.faint
@@ -495,7 +496,7 @@ Item {
         objectName: "agentPanelTerminal"
         visible: panel.status !== ""
         theme: panel.theme
-        text: panel.working ? "Stop, and open in a terminal" : "Open in a terminal instead"
+        text: panel.working ? Lang.t("Stop, and open in a terminal") : Lang.t("Open in a terminal instead")
         onClicked: { panel.visible = false; panel.terminalRequested() }
       }
 
@@ -504,7 +505,7 @@ Item {
         width: parent.width
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: "Stopped. What it already changed stays: undo it like anything else."
+        text: Lang.t("Stopped. What it already changed stays: undo it like anything else.")
         font.family: panel.theme.uiFont
         font.pixelSize: 12
         color: panel.theme.muted
@@ -539,7 +540,7 @@ Item {
             width: parent.width
             wrapMode: Text.Wrap
             textFormat: Text.PlainText
-            text: Permissions.agentName(askItem.modelData.agent) + " wants to " + askItem.modelData.text + (askItem.modelData.detail ? ":" : ".")
+            text: Permissions.agentName(askItem.modelData.agent) + Lang.t(" wants to ") + askItem.modelData.text + (askItem.modelData.detail ? ":" : ".")
             font.family: panel.theme.uiFont
             font.pixelSize: 12
             color: panel.theme.text
@@ -554,7 +555,7 @@ Item {
             visible: (askItem.modelData.lines || 0) > 1 || over
             width: parent.width
             textFormat: Text.PlainText
-            text: ((askItem.modelData.lines || 0) > 1 ? (askItem.modelData.lines || 0) + " lines" : "Long") + (over ? ": scroll to see all of it" : "")
+            text: ((askItem.modelData.lines || 0) > 1 ? (askItem.modelData.lines || 0) + Lang.t(" lines") : Lang.t("Long")) + (over ? Lang.t(": scroll to see all of it") : "")
             font.family: panel.theme.uiFont
             font.pixelSize: 11
             color: panel.theme.muted
@@ -602,17 +603,17 @@ Item {
           Flow {
             width: parent.width
             spacing: 6
-            TextButton { objectName: "agentAskOnce"; theme: panel.theme; text: askItem.modelData.grant === "shell" ? "Allow this command" : "Allow once"; onClicked: panel.asked(askItem.modelData.key, "once") }
+            TextButton { objectName: "agentAskOnce"; theme: panel.theme; text: askItem.modelData.grant === "shell" ? Lang.t("Allow this command") : Lang.t("Allow once"); onClicked: panel.asked(askItem.modelData.key, "once") }
             TextButton { objectName: "agentAskConversation"; visible: (askItem.modelData.conversation || "") !== ""; theme: panel.theme; text: askItem.modelData.conversation || ""; onClicked: panel.asked(askItem.modelData.key, "conversation") }
             TextButton { objectName: "agentAskAlways"; visible: askItem.modelData.always !== ""; theme: panel.theme; text: askItem.modelData.always; onClicked: panel.asked(askItem.modelData.key, "always") }
-            TextButton { objectName: "agentAskNo"; theme: panel.theme; text: "No"; onClicked: panel.asked(askItem.modelData.key, "no") }
+            TextButton { objectName: "agentAskNo"; theme: panel.theme; text: Lang.t("No"); onClicked: panel.asked(askItem.modelData.key, "no") }
           }
           Text {
             visible: askItem.modelData.grant === "shell"
             width: parent.width
             wrapMode: Text.Wrap
             textFormat: Text.PlainText
-            text: "A command runs programs that can read and change any file you can (your notes and Uber Notebook's settings too) and use the network. Allowed for this conversation, no command is asked about again until it ends."
+            text: Lang.t("A command runs programs that can read and change any file you can (your notes and Uber Notebook's settings too) and use the network. Allowed for this conversation, no command is asked about again until it ends.")
             font.family: panel.theme.uiFont
             font.pixelSize: 11
             color: panel.theme.faint
@@ -659,7 +660,7 @@ Item {
       maximumLength: 4000
       enabled: !panel.working
       opacity: enabled ? 1 : 0.55
-      placeholder: panel.working ? panel.agentLabel + " is working\u2026" : "Reply to " + panel.agentLabel + "\u2026"
+      placeholder: panel.working ? panel.agentLabel + Lang.t(" is working\u2026") : Lang.t("Reply to ") + panel.agentLabel + "\u2026"
       onAccepted: panel.sendReply()
       onEscaped: text = ""
     }
@@ -673,7 +674,7 @@ Item {
       icon: panel.theme.icons.send
       size: 32
       iconSize: 16
-      tip: "Send  Enter"
+      tip: Lang.t("Send  Enter")
       active: !panel.working && replyField.text.trim() !== ""
       onClicked: panel.sendReply()
     }

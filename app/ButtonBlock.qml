@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Templates.js" as Templates
+import "../Lang.js" as Lang  // [fork] German
 
 // A button on a page in Pages: a click puts in a template (yours, or one of
 // Uber Notebook's) after it, or makes a new page from it inside this page. Not set
@@ -52,7 +53,7 @@ DataCard {
         width: Math.min(implicitWidth, bb.width - 120)
         elide: Text.ElideRight
         textFormat: Text.PlainText
-        text: bb.ready ? (bb.info.label || (bb.info.action === "page" ? "New " + bb.what : bb.what)) : (bb.readOnly ? "A button, not set up" : "Set up the button: a click puts in a template")
+        text: bb.ready ? (Lang.t(bb.info.label) || (bb.info.action === "page" ? Lang.t("New ") + bb.what : bb.what)) : (bb.readOnly ? Lang.t("A button, not set up") : Lang.t("Set up the button: a click puts in a template"))
         font.family: bb.editor ? bb.editor.uiFamily : ""
         font.pixelSize: 14
         font.weight: bb.ready ? Font.DemiBold : Font.Normal
@@ -70,7 +71,7 @@ DataCard {
     }
     ToolTip.visible: pillHover.hovered && bb.ready
     ToolTip.delay: 700
-    ToolTip.text: (bb.info.action === "page" ? "A new page inside this one, from " : "Puts in ") + "\u201c" + bb.what + "\u201d"
+    ToolTip.text: (bb.info.action === "page" ? Lang.t("A new page inside this one, from ") : Lang.t("Puts in ")) + "\u201c" + bb.what + Lang.t("\u201d")
   }
 
   Row {
@@ -83,14 +84,14 @@ DataCard {
     IconButton {
       objectName: "buttonSetup"
       theme: bb.theme; icon: bb.theme ? bb.theme.icons.cog : ""; size: 28; iconSize: 14; tint: bb.ink
-      tip: "Set it up"
+      tip: Lang.t("Set it up")
       onClicked: bb.act("setup", pill)
     }
     IconButton {
       id: colorButton
       objectName: "buttonColors"
       theme: bb.theme; icon: bb.theme ? bb.theme.icons.palette : ""; size: 28; iconSize: 14; tint: bb.ink
-      tip: "Its colors"
+      tip: Lang.t("Its colors")
       onClicked: bb.askColors(colorButton)
     }
   }

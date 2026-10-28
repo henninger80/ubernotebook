@@ -7,6 +7,7 @@ import "../Blocks.js" as Blocks
 import "../Library.js" as Library
 import "../Markdown.js" as Markdown
 import "../Templates.js" as Templates
+import "../Lang.js" as Lang  // [fork] German
 
 // An open notebook on the desk: its back cover, the stack of pages, the page
 // you're on with the binding down its left edge and index tabs on its right,
@@ -384,7 +385,7 @@ Item {
     nb.pages.splice(index, 1)
     revision++
     loadPage(Math.min(index, nb.pages.length - 1))
-    toast("Page moved to the trash")
+    toast(Lang.t("Page moved to the trash"))
   }
 
   function movePage(from, to) {
@@ -456,7 +457,7 @@ Item {
     commit()
     if (!page) return
     store.copyText(Markdown.fromPage(page, ""))
-    toast("Copied the page as Markdown")
+    toast(Lang.t("Copied the page as Markdown"))
   }
 
   function insertDate() {
@@ -815,7 +816,7 @@ Item {
               rotation: 90
               width: parent.height - 10
               horizontalAlignment: Text.AlignHCenter
-              text: modelData.label
+              text: Lang.t(modelData.label)
               elide: Text.ElideRight
               font.family: view.theme.printFont
               font.pixelSize: 13
@@ -887,15 +888,15 @@ Item {
       IconButton {
         theme: view.theme
         icon: view.theme.icons.shelf
-        label: "Notebooks"
-        tip: "Back to the shelf  Ctrl+W"
+        label: Lang.t("Notebooks")
+        tip: Lang.t("Back to the shelf  Ctrl+W")
         onClicked: view.closed()
       }
       Rectangle { width: 1; height: 22; color: view.theme.line; anchors.verticalCenter: parent.verticalCenter }
       IconButton {
         theme: view.theme
         label: view.nb ? view.nb.title : ""
-        tip: "Cover, paper and pen"
+        tip: Lang.t("Cover, paper and pen")
         onClicked: view.editRequested()
       }
     }
@@ -904,15 +905,15 @@ Item {
       anchors.centerIn: parent
       spacing: 4
       IconButton {
-        theme: view.theme; icon: view.theme.icons.left; tip: "Previous page  Ctrl+PgUp"
+        theme: view.theme; icon: view.theme.icons.left; tip: Lang.t("Previous page  Ctrl+PgUp")
         active: view.pageIndex > 0
         onClicked: view.previous()
       }
       IconButton {
         id: pageButton
         theme: view.theme
-        label: "Page " + (view.pageIndex + 1) + " of " + view.pageCount
-        tip: "All pages  Ctrl+G"
+        label: Lang.t("Page ") + (view.pageIndex + 1) + Lang.t(" of ") + view.pageCount
+        tip: Lang.t("All pages  Ctrl+G")
         onClicked: pagesPop.open()
         PagesPop {
           id: pagesPop
@@ -923,7 +924,7 @@ Item {
         }
       }
       IconButton {
-        theme: view.theme; icon: view.theme.icons.right; tip: view.pageIndex < view.pageCount - 1 ? "Next page  Ctrl+PgDown" : "New page  Ctrl+PgDown"
+        theme: view.theme; icon: view.theme.icons.right; tip: view.pageIndex < view.pageCount - 1 ? Lang.t("Next page  Ctrl+PgDown") : Lang.t("New page  Ctrl+PgDown")
         onClicked: view.next()
       }
     }
@@ -933,16 +934,16 @@ Item {
       anchors.rightMargin: 14
       anchors.verticalCenter: parent.verticalCenter
       spacing: 2
-      IconButton { theme: view.theme; icon: view.theme.icons.search; tip: "Find on this page  Ctrl+F"; checked: findBar.shown; onClicked: findBar.toggle() }
+      IconButton { theme: view.theme; icon: view.theme.icons.search; tip: Lang.t("Find on this page  Ctrl+F"); checked: findBar.shown; onClicked: findBar.toggle() }
       IconButton {
         id: plusButton
-        theme: view.theme; icon: view.theme.icons.plus; tip: "New page, from a template  Ctrl+T"
+        theme: view.theme; icon: view.theme.icons.plus; tip: Lang.t("New page, from a template  Ctrl+T")
         checked: templatePop.opened
         onClicked: view.openTemplates()
       }
       IconButton {
         id: moreButton
-        theme: view.theme; icon: view.theme.icons.more; tip: "More"
+        theme: view.theme; icon: view.theme.icons.more; tip: Lang.t("More")
         onClicked: moreMenu.open()
         Pop {
           id: moreMenu
@@ -952,13 +953,13 @@ Item {
           y: moreButton.height + 8
           contentItem: Column {
             spacing: 2
-            MenuRow { theme: view.theme; icon: view.theme.icons.paper; text: "Paper\u2026"; onClicked: { moreMenu.close(); paperPop.openAt(moreButton) } }
-            MenuRow { theme: view.theme; icon: view.theme.icons.tag; text: view.page && view.page.tab ? "Change tab\u2026" : "Add a tab\u2026"; onClicked: { moreMenu.close(); tabPop.open() } }
-            MenuRow { theme: view.theme; icon: view.theme.icons.copy; text: "Copy page as Markdown"; onClicked: { moreMenu.close(); view.copyMarkdown() } }
-            MenuRow { theme: view.theme; icon: view.theme.icons.export; text: "Export notebook\u2026"; onClicked: { moreMenu.close(); view.commit(); view.store.exportNotebook(view.nb.id) } }
-            MenuRow { theme: view.theme; icon: view.theme.icons.cog; text: "Cover, paper and pen\u2026"; onClicked: { moreMenu.close(); view.editRequested() } }
+            MenuRow { theme: view.theme; icon: view.theme.icons.paper; text: Lang.t("Paper\u2026"); onClicked: { moreMenu.close(); paperPop.openAt(moreButton) } }
+            MenuRow { theme: view.theme; icon: view.theme.icons.tag; text: view.page && view.page.tab ? Lang.t("Change tab\u2026") : Lang.t("Add a tab\u2026"); onClicked: { moreMenu.close(); tabPop.open() } }
+            MenuRow { theme: view.theme; icon: view.theme.icons.copy; text: Lang.t("Copy page as Markdown"); onClicked: { moreMenu.close(); view.copyMarkdown() } }
+            MenuRow { theme: view.theme; icon: view.theme.icons.export; text: Lang.t("Export notebook\u2026"); onClicked: { moreMenu.close(); view.commit(); view.store.exportNotebook(view.nb.id) } }
+            MenuRow { theme: view.theme; icon: view.theme.icons.cog; text: Lang.t("Cover, paper and pen\u2026"); onClicked: { moreMenu.close(); view.editRequested() } }
             Rectangle { width: parent.width; height: 1; color: view.theme.line }
-            MenuRow { theme: view.theme; icon: view.theme.icons.trash; text: view.pageCount > 1 ? "Tear out this page" : "Clear this page"; danger: true; onClicked: { moreMenu.close(); view.deletePage(view.pageIndex) } }
+            MenuRow { theme: view.theme; icon: view.theme.icons.trash; text: view.pageCount > 1 ? Lang.t("Tear out this page") : Lang.t("Clear this page"); danger: true; onClicked: { moreMenu.close(); view.deletePage(view.pageIndex) } }
           }
         }
       }
@@ -1077,7 +1078,7 @@ Item {
   function copyPicture(src) {
     var path = nb ? store.assetPath(nb.id, src) : ""
     if (!path) return
-    store.copyPicture(path, function(ok) { view.toast(ok ? "Copied: paste it anywhere" : "The picture couldn't be copied") })
+    store.copyPicture(path, function(ok) { view.toast(ok ? Lang.t("Copied: paste it anywhere") : Lang.t("The picture couldn't be copied")) })
   }
 
   // ---- keys that belong to the notebook -----------------------------------------------------

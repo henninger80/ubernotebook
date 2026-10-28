@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import "../Contacts.js" as Contacts
 import "../Workspace.js" as Workspace
+import "../Lang.js" as Lang  // [fork] German
 
 // People (the sidebar's People): everyone in Pages/contacts.json, A to Z,
 // found by what's typed (a name, a company, an email, a number). As a list
@@ -161,7 +162,7 @@ Item {
     errors = ({})
     selected = d.id
     pv.forceActiveFocus()
-    if (made && workspace.contactById(d.id)) view.toast("Added " + Contacts.nameOf(workspace.contactById(d.id)))
+    if (made && workspace.contactById(d.id)) view.toast(Lang.t("Added ") + Contacts.nameOf(workspace.contactById(d.id)))
   }
 
   // The form's fields as they're typed (the copy's changed in place, so
@@ -192,7 +193,7 @@ Item {
     var name = Contacts.nameOf(person)
     workspace.setContacts(Contacts.without(workspace.contacts, person.id))
     show("")
-    view.toastUndo("Deleted " + name, function() { pv.workspace.undoContacts() })
+    view.toastUndo(Lang.t("Deleted ") + name, function() { pv.workspace.undoContacts() })
   }
 
   function importFile() { view.pickContacts(null) }
@@ -346,17 +347,17 @@ Item {
       IconButton {
         visible: row.mail
         objectName: "personMail"
-        theme: pv.theme; icon: pv.theme.icons.mail; size: 30; iconSize: 14; tip: "Email them"
+        theme: pv.theme; icon: pv.theme.icons.mail; size: 30; iconSize: 14; tip: Lang.t("Email them")
         onClicked: pv.view.mailTo(row.value)
       }
       IconButton {
         visible: row.link !== ""
-        theme: pv.theme; icon: pv.theme.icons.openExternal; size: 30; iconSize: 14; tip: "Open it"
+        theme: pv.theme; icon: pv.theme.icons.openExternal; size: 30; iconSize: 14; tip: Lang.t("Open it")
         onClicked: pv.workspace.files.openUrl(row.link)
       }
       IconButton {
         objectName: "personCopy"
-        theme: pv.theme; icon: pv.theme.icons.copy; size: 30; iconSize: 14; tip: "Copy it"
+        theme: pv.theme; icon: pv.theme.icons.copy; size: 30; iconSize: 14; tip: Lang.t("Copy it")
         onClicked: pv.view.copyText(row.value)
       }
     }
@@ -383,7 +384,7 @@ Item {
     Text {
       visible: ff.label !== ""
       textFormat: Text.PlainText
-      text: ff.label
+      text: Lang.t(ff.label)
       font.family: pv.theme.uiFont
       font.pixelSize: 12
       font.weight: Font.Medium
@@ -450,7 +451,7 @@ Item {
       Text {
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: "People"
+        text: Lang.t("People")
         font.family: pv.theme.uiFont
         font.pixelSize: 24
         font.weight: Font.DemiBold
@@ -462,7 +463,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         anchors.verticalCenterOffset: 3
         textFormat: Text.PlainText
-        text: pv.all.length === 0 ? "" : pv.query ? pv.shown.length + " of " + pv.all.length : String(pv.all.length)
+        text: pv.all.length === 0 ? "" : pv.query ? pv.shown.length + Lang.t(" of ") + pv.all.length : String(pv.all.length)
         font.family: pv.theme.uiFont
         font.pixelSize: 14
         color: pv.theme.muted
@@ -516,14 +517,14 @@ Item {
       Button_ {
         objectName: "peopleImport"
         anchors.verticalCenter: parent.verticalCenter
-        text: "Import"
+        text: Lang.t("Import")
         onClicked: pv.importFile()
       }
       Button_ {
         objectName: "peopleNew"
         anchors.verticalCenter: parent.verticalCenter
         icon: pv.theme.icons.plus
-        text: "New person"
+        text: Lang.t("New person")
         onClicked: pv.newPerson()
       }
       IconButton {
@@ -531,7 +532,7 @@ Item {
         objectName: "peopleMore"
         anchors.verticalCenter: parent.verticalCenter
         theme: pv.theme; icon: pv.theme.icons.more; size: 32; iconSize: 15
-        tip: "Export, undo"
+        tip: Lang.t("Export, undo")
         onClicked: peopleMenu.open()
         Pop {
           id: peopleMenu
@@ -542,9 +543,9 @@ Item {
           y: moreButton.height + 6
           contentItem: Column {
             spacing: 2
-            MenuRow { width: parent.width; theme: pv.theme; icon: pv.theme.icons.export; text: "Import contacts\u2026"; hint: ".vcf or .csv"; onClicked: { peopleMenu.close(); pv.importFile() } }
-            MenuRow { objectName: "peopleExport"; width: parent.width; theme: pv.theme; icon: pv.theme.icons.export; text: "Export everyone\u2026"; hint: "as a .vcf"; active: pv.all.length > 0; onClicked: { peopleMenu.close(); pv.view.exportContacts() } }
-            MenuRow { width: parent.width; theme: pv.theme; icon: pv.theme.icons.undo; text: "Undo"; active: pv.workspace && pv.workspace.contactsUndo.length > 0; onClicked: { peopleMenu.close(); pv.workspace.undoContacts() } }
+            MenuRow { width: parent.width; theme: pv.theme; icon: pv.theme.icons.export; text: Lang.t("Import contacts\u2026"); hint: Lang.t(".vcf or .csv"); onClicked: { peopleMenu.close(); pv.importFile() } }
+            MenuRow { objectName: "peopleExport"; width: parent.width; theme: pv.theme; icon: pv.theme.icons.export; text: Lang.t("Export everyone\u2026"); hint: Lang.t("as a .vcf"); active: pv.all.length > 0; onClicked: { peopleMenu.close(); pv.view.exportContacts() } }
+            MenuRow { width: parent.width; theme: pv.theme; icon: pv.theme.icons.undo; text: Lang.t("Undo"); active: pv.workspace && pv.workspace.contactsUndo.length > 0; onClicked: { peopleMenu.close(); pv.workspace.undoContacts() } }
           }
         }
       }
@@ -563,7 +564,7 @@ Item {
       width: parent.width
       horizontalAlignment: Text.AlignHCenter
       textFormat: Text.PlainText
-      text: "No one here yet"
+      text: Lang.t("No one here yet")
       font.family: pv.theme.uiFont
       font.pixelSize: 17
       font.weight: Font.DemiBold
@@ -574,7 +575,7 @@ Item {
       horizontalAlignment: Text.AlignHCenter
       wrapMode: Text.Wrap
       textFormat: Text.PlainText
-      text: "Import contacts from your phone, Google, iCloud or Outlook (a .vcf or .csv, or drop the file here), or add someone. Then type @ and their name on any page."
+      text: Lang.t("Import contacts from your phone, Google, iCloud or Outlook (a .vcf or .csv, or drop the file here), or add someone. Then type @ and their name on any page.")
       font.family: pv.theme.uiFont
       font.pixelSize: 13
       lineHeight: 1.25
@@ -584,8 +585,8 @@ Item {
     Row {
       anchors.horizontalCenter: parent.horizontalCenter
       spacing: 8
-      Button_ { text: "Import contacts"; onClicked: pv.importFile() }
-      Button_ { primary: true; icon: pv.theme.icons.plus; text: "New person"; onClicked: pv.newPerson() }
+      Button_ { text: Lang.t("Import contacts"); onClicked: pv.importFile() }
+      Button_ { primary: true; icon: pv.theme.icons.plus; text: Lang.t("New person"); onClicked: pv.newPerson() }
     }
   }
 
@@ -606,7 +607,7 @@ Item {
       width: parent.width
       height: 36
       icon: pv.theme.icons.search
-      placeholder: "Search people"
+      placeholder: Lang.t("Search people")
       onEdited: function(text) { pv.query = text }
       onEscaped: { text = ""; pv.query = "" }
       onAccepted: if (pv.shown.length) pv.show(pv.shown[0].id)
@@ -668,7 +669,7 @@ Item {
         leftPadding: 8
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: "No one matches \u201c" + pv.query + "\u201d."
+        text: Lang.t("No one matches \u201c") + pv.query + "\u201d."
         font.family: pv.theme.uiFont
         font.pixelSize: 13
         color: pv.theme.muted
@@ -864,7 +865,7 @@ Item {
       anchors.right: parent.right
       anchors.verticalCenter: parent.verticalCenter
       textFormat: Text.PlainText
-      text: reach.label
+      text: Lang.t(reach.label)
       font.family: pv.theme.uiFont
       font.pixelSize: 11
       color: pv.theme.faint
@@ -878,12 +879,12 @@ Item {
       IconButton {
         visible: reach.mail
         objectName: "cardMail"
-        theme: pv.theme; icon: pv.theme.icons.mail; size: 26; iconSize: 13; tip: "Write to them"
+        theme: pv.theme; icon: pv.theme.icons.mail; size: 26; iconSize: 13; tip: Lang.t("Write to them")
         onClicked: pv.view.mailTo(reach.value)
       }
       IconButton {
         objectName: "cardCopy"
-        theme: pv.theme; icon: pv.theme.icons.copy; size: 26; iconSize: 13; tip: "Copy it"
+        theme: pv.theme; icon: pv.theme.icons.copy; size: 26; iconSize: 13; tip: Lang.t("Copy it")
         onClicked: pv.view.copyText(reach.value)
       }
     }
@@ -972,12 +973,12 @@ Item {
         IconButton {
           visible: pc.p.emails.length > 0
           objectName: "cardWrite"
-          theme: pv.theme; icon: pv.theme.icons.mail; size: 28; iconSize: 14; tip: "Write to them"
+          theme: pv.theme; icon: pv.theme.icons.mail; size: 28; iconSize: 14; tip: Lang.t("Write to them")
           onClicked: pv.view.mailTo(pc.p.emails[0].value)
         }
         IconButton {
           objectName: "cardEdit"
-          theme: pv.theme; icon: pv.theme.icons.edit; size: 28; iconSize: 14; tip: "Edit"
+          theme: pv.theme; icon: pv.theme.icons.edit; size: 28; iconSize: 14; tip: Lang.t("Edit")
           onClicked: { pv.show(pc.p.id); pv.startEdit() }
         }
       }
@@ -1014,7 +1015,7 @@ Item {
           objectName: "cardAddReach"
           anchors.verticalCenter: parent.verticalCenter
           textFormat: Text.PlainText
-          text: "No number or email yet"
+          text: Lang.t("No number or email yet")
           font.family: pv.theme.uiFont
           font.pixelSize: 13
           font.italic: true
@@ -1100,7 +1101,7 @@ Item {
       width: Math.min(420, parent.width - groupRow.width - 16)
       height: 36
       icon: pv.theme.icons.search
-      placeholder: "Search people, companies, numbers"
+      placeholder: Lang.t("Search people, companies, numbers")
       text: pv.query
       onEdited: function(text) { pv.query = text; pv.cardFocus = "" }
       // (Its text follows the query: never set here, so a new profile's
@@ -1119,7 +1120,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         rightPadding: 4
         textFormat: Text.PlainText
-        text: "Group by"
+        text: Lang.t("Group by")
         font.family: pv.theme.uiFont
         font.pixelSize: 12
         color: pv.theme.muted
@@ -1130,7 +1131,7 @@ Item {
           required property var modelData
           objectName: "peopleGroup_" + modelData.id
           theme: pv.theme
-          text: modelData.label
+          text: Lang.t(modelData.label)
           checked: pv.groupBy === modelData.id
           onClicked: pv.setGroup(modelData.id)
         }
@@ -1171,7 +1172,7 @@ Item {
           Text {
             id: groupLabel
             textFormat: Text.PlainText
-            text: cardRow.modelData.header ? cardRow.modelData.label : ""
+            text: cardRow.modelData.header ? Lang.t(cardRow.modelData.label) : ""
             font.family: pv.theme.uiFont
             font.pixelSize: 13
             font.weight: Font.DemiBold
@@ -1210,7 +1211,7 @@ Item {
         visible: grid.count === 0 && pv.query !== ""
         topPadding: 12
         textFormat: Text.PlainText
-        text: "No one matches “" + pv.query + "”."
+        text: Lang.t("No one matches “") + pv.query + "”."
         font.family: pv.theme.uiFont
         font.pixelSize: 13
         color: pv.theme.muted
@@ -1270,7 +1271,7 @@ Item {
       x: 4
       y: 10
       textFormat: Text.PlainText
-      text: "Pick someone to see their card."
+      text: Lang.t("Pick someone to see their card.")
       font.family: pv.theme.uiFont
       font.pixelSize: 13
       color: pv.theme.faint
@@ -1290,7 +1291,7 @@ Item {
         visible: !pv.twoPane
         theme: pv.theme
         icon: pv.theme.icons.left
-        text: "People"
+        text: Lang.t("People")
         onClicked: pv.editing && !pv.isNew ? pv.cancelEdit() : pv.show("")
       }
 
@@ -1331,7 +1332,7 @@ Item {
                 width: parent.width
                 elide: Text.ElideRight
                 textFormat: Text.PlainText
-                text: pv.editing ? (pv.draftName.trim() || (pv.isNew ? "New person" : "No name")) : Contacts.nameOf(pv.person)
+                text: pv.editing ? (pv.draftName.trim() || (pv.isNew ? Lang.t("New person") : Lang.t("No name"))) : Contacts.nameOf(pv.person)
                 font.family: pv.theme.uiFont
                 font.pixelSize: 20
                 font.weight: Font.DemiBold
@@ -1342,7 +1343,7 @@ Item {
                 width: parent.width
                 elide: Text.ElideRight
                 textFormat: Text.PlainText
-                text: pv.editing ? (pv.isNew ? "Fill in what you know. Ctrl+S saves, Esc cancels." : "Ctrl+S saves, Esc cancels.")
+                text: pv.editing ? (pv.isNew ? Lang.t("Fill in what you know. Ctrl+S saves, Esc cancels.") : Lang.t("Ctrl+S saves, Esc cancels."))
                   : pv.person ? (pv.person.title && pv.person.company ? pv.person.title + " at " + pv.person.company : pv.person.company || pv.person.title) : ""
                 font.family: pv.theme.uiFont
                 font.pixelSize: 13
@@ -1354,14 +1355,14 @@ Item {
               anchors.right: parent.right
               anchors.verticalCenter: parent.verticalCenter
               spacing: 6
-              Button_ { objectName: "personEdit"; visible: !pv.editing; text: "Edit"; onClicked: pv.startEdit() }
+              Button_ { objectName: "personEdit"; visible: !pv.editing; text: Lang.t("Edit"); onClicked: pv.startEdit() }
               IconButton {
                 id: personMore
                 objectName: "personMore"
                 visible: !pv.editing
                 anchors.verticalCenter: parent.verticalCenter
                 theme: pv.theme; icon: pv.theme.icons.more; size: 32; iconSize: 15
-                tip: "Delete"
+                tip: Lang.t("Delete")
                 onClicked: personMenu.open()
                 Pop {
                   id: personMenu
@@ -1371,12 +1372,12 @@ Item {
                   x: personMore.width - width
                   y: personMore.height + 6
                   contentItem: Column {
-                    MenuRow { objectName: "personDelete"; width: parent.width; theme: pv.theme; icon: pv.theme.icons.trash; text: "Delete " + (pv.person ? Contacts.nameOf(pv.person) : ""); hint: "Undo puts them back"; danger: true; onClicked: { personMenu.close(); pv.remove() } }
+                    MenuRow { objectName: "personDelete"; width: parent.width; theme: pv.theme; icon: pv.theme.icons.trash; text: Lang.t("Delete ") + (pv.person ? Contacts.nameOf(pv.person) : ""); hint: Lang.t("Undo puts them back"); danger: true; onClicked: { personMenu.close(); pv.remove() } }
                   }
                 }
               }
-              Button_ { objectName: "personCancel"; visible: pv.editing; text: "Cancel"; onClicked: pv.cancelEdit() }
-              Button_ { objectName: "personSave"; visible: pv.editing; primary: true; text: pv.isNew ? "Add person" : "Save"; onClicked: pv.save() }
+              Button_ { objectName: "personCancel"; visible: pv.editing; text: Lang.t("Cancel"); onClicked: pv.cancelEdit() }
+              Button_ { objectName: "personSave"; visible: pv.editing; primary: true; text: pv.isNew ? Lang.t("Add person") : Lang.t("Save"); onClicked: pv.save() }
             }
           }
 
@@ -1391,7 +1392,7 @@ Item {
             Item { width: 1; height: 16 }
             Rule { width: parent.width }
 
-            GroupTitle { text: "Contact" }
+            GroupTitle { text: Lang.t("Contact") }
             Repeater {
               model: reading.c ? reading.c.phones : []
               delegate: InfoRow { required property var modelData; objectName: "personPhone"; key: modelData.label; value: modelData.value }
@@ -1405,7 +1406,7 @@ Item {
               leftPadding: 10
               bottomPadding: 6
               textFormat: Text.PlainText
-              text: "No number or email yet."
+              text: Lang.t("No number or email yet.")
               font.family: pv.theme.uiFont
               font.pixelSize: 13
               color: pv.theme.faint
@@ -1415,7 +1416,7 @@ Item {
               visible: reading.c !== null && (reading.c.birthday !== "" || reading.c.address !== "" || reading.c.website !== "")
               width: parent.width
               Rule { width: parent.width }
-              GroupTitle { text: "Details" }
+              GroupTitle { text: Lang.t("Details") }
               InfoRow {
                 visible: pv.bday !== null
                 key: "birthday"
@@ -1430,7 +1431,7 @@ Item {
               visible: reading.c !== null && reading.c.notes !== ""
               width: parent.width
               Rule { width: parent.width }
-              GroupTitle { text: "Notes" }
+              GroupTitle { text: Lang.t("Notes") }
               Text {
                 objectName: "personNotes"
                 width: parent.width
@@ -1448,12 +1449,12 @@ Item {
             }
 
             Rule { width: parent.width }
-            GroupTitle { text: "On your pages" }
+            GroupTitle { text: Lang.t("On your pages") }
             Text {
               visible: pv.namedOn.length === 0
               leftPadding: 10
               textFormat: Text.PlainText
-              text: "Not named on a page yet. Type @ and their name on one."
+              text: Lang.t("Not named on a page yet. Type @ and their name on one.")
               font.family: pv.theme.uiFont
               font.pixelSize: 13
               color: pv.theme.faint
@@ -1474,7 +1475,7 @@ Item {
                   width: parent.width - 40
                   elide: Text.ElideRight
                   textFormat: Text.PlainText
-                  text: (on.modelData.pageIcon ? on.modelData.pageIcon + "  " : "") + (on.modelData.pageTitle || "Untitled")
+                  text: (on.modelData.pageIcon ? on.modelData.pageIcon + "  " : "") + (on.modelData.pageTitle || Lang.t("Untitled"))
                   font.family: pv.theme.uiFont
                   font.pixelSize: 14
                   color: pv.theme.text
@@ -1512,8 +1513,8 @@ Item {
               id: formName
               objectName: "formName"
               width: parent.width
-              label: "Name"
-              placeholder: "e.g. Sam Rivera"
+              label: Lang.t("Name")
+              placeholder: Lang.t("e.g. Sam Rivera")
               text: pv.draft ? pv.draft.name : ""
               error: pv.errors.name || ""
               onEdited: function(v) { pv.setField("name", v) }
@@ -1523,16 +1524,16 @@ Item {
               FormField {
                 objectName: "formTitle"
                 width: form.half
-                label: "Job title"
-                placeholder: "e.g. Designer"
+                label: Lang.t("Job title")
+                placeholder: Lang.t("e.g. Designer")
                 text: pv.draft ? pv.draft.title : ""
                 onEdited: function(v) { pv.setField("title", v) }
               }
               FormField {
                 objectName: "formCompany"
                 width: form.half
-                label: "Company"
-                placeholder: "e.g. Acme"
+                label: Lang.t("Company")
+                placeholder: Lang.t("e.g. Acme")
                 text: pv.draft ? pv.draft.company : ""
                 onEdited: function(v) { pv.setField("company", v) }
               }
@@ -1580,7 +1581,7 @@ Item {
                         x: 11
                         anchors.verticalCenter: parent.verticalCenter
                         textFormat: Text.PlainText
-                        text: entry.modelData.label
+                        text: Lang.t(entry.modelData.label)
                         font.family: pv.theme.uiFont
                         font.pixelSize: 13
                         color: pv.theme.text
@@ -1622,7 +1623,7 @@ Item {
                       id: valueField
                       objectName: grp.modelData.list === "phones" ? "formPhoneValue" : "formEmailValue"
                       width: form.width - 100 - 8 - 38 - 8
-                      placeholder: grp.modelData.hint
+                      placeholder: Lang.t(grp.modelData.hint)
                       text: entry.modelData.value
                       error: pv.errors[grp.modelData.err + entry.index] || ""
                       onEdited: function(v) { pv.setRow(grp.modelData.list, entry.index, v) }
@@ -1630,7 +1631,7 @@ Item {
                     IconButton {
                       objectName: "formRemove"
                       theme: pv.theme; icon: pv.theme.icons.close; size: 38; iconSize: 13
-                      tip: "Take it off"
+                      tip: Lang.t("Take it off")
                       onClicked: pv.removeRow(grp.modelData.list, entry.index)
                     }
                   }
@@ -1655,8 +1656,8 @@ Item {
               FormField {
                 objectName: "formBirthday"
                 width: form.half
-                label: "Birthday"
-                placeholder: "1990-04-12, or --04-12"
+                label: Lang.t("Birthday")
+                placeholder: Lang.t("1990-04-12, or --04-12")
                 text: pv.draft ? pv.draft.birthday : ""
                 error: pv.errors.birthday || ""
                 onEdited: function(v) { pv.setField("birthday", v) }
@@ -1664,7 +1665,7 @@ Item {
               FormField {
                 objectName: "formWebsite"
                 width: form.half
-                label: "Website"
+                label: Lang.t("Website")
                 placeholder: "https://..."
                 text: pv.draft ? pv.draft.website : ""
                 error: pv.errors.website || ""
@@ -1674,8 +1675,8 @@ Item {
             FormField {
               objectName: "formAddress"
               width: parent.width
-              label: "Address"
-              placeholder: "Street, city"
+              label: Lang.t("Address")
+              placeholder: Lang.t("Street, city")
               text: pv.draft ? pv.draft.address : ""
               onEdited: function(v) { pv.setField("address", v) }
             }
@@ -1684,7 +1685,7 @@ Item {
               spacing: 6
               Text {
                 textFormat: Text.PlainText
-                text: "Notes"
+                text: Lang.t("Notes")
                 font.family: pv.theme.uiFont
                 font.pixelSize: 12
                 font.weight: Font.Medium
@@ -1718,7 +1719,7 @@ Item {
                   Text {
                     visible: notesEdit.text === ""
                     textFormat: Text.PlainText
-                    text: "How you know them, what to remember\u2026"
+                    text: Lang.t("How you know them, what to remember\u2026")
                     font: notesEdit.font
                     color: pv.theme.faint
                   }

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
+import "../Lang.js" as Lang  // [fork] German
 
 // What to turn on: the Uber Notebook skill, and reminder details in
 // notifications. Both off till you turn them on, here or in Settings (AI,
@@ -53,8 +54,8 @@ Popup {
       anchors.rightMargin: 16
       anchors.verticalCenter: parent.verticalCenter
       spacing: 3
-      Text { textFormat: Text.PlainText; width: parent.width; text: line.label; wrapMode: Text.WordWrap; font.family: panel.theme.uiFont; font.pixelSize: 14; color: panel.theme.text }
-      Text { textFormat: Text.PlainText; visible: line.note !== ""; width: parent.width; text: line.note; wrapMode: Text.WordWrap; font.family: panel.theme.uiFont; font.pixelSize: 12; color: panel.theme.muted }
+      Text { textFormat: Text.PlainText; width: parent.width; text: Lang.t(line.label); wrapMode: Text.WordWrap; font.family: panel.theme.uiFont; font.pixelSize: 14; color: panel.theme.text }
+      Text { textFormat: Text.PlainText; visible: line.note !== ""; width: parent.width; text: Lang.t(line.note); wrapMode: Text.WordWrap; font.family: panel.theme.uiFont; font.pixelSize: 12; color: panel.theme.muted }
     }
     Item {
       id: slot
@@ -84,7 +85,7 @@ Popup {
         width: parent.width
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: "Choose what to turn on"
+        text: Lang.t("Choose what to turn on")
         font.family: panel.theme.uiFont
         font.pixelSize: 19
         font.weight: Font.DemiBold
@@ -102,12 +103,12 @@ Popup {
           id: rows
           width: parent.width
           Line {
-            label: "Enable Uber Notebook skill"
-            note: "For Claude Code, Codex and other agents."
+            label: Lang.t("Enable Uber Notebook skill")
+            note: Lang.t("For Claude Code, Codex and other agents.")
             Toggle { objectName: "setupSkill"; theme: panel.theme; checked: panel.s.agentSkill === true; onToggled: function(on) { panel.set("agentSkill", on) } }
           }
           Line {
-            label: "Show reminder details in notifications"
+            label: Lang.t("Show reminder details in notifications")
             Toggle { objectName: "setupReminders"; theme: panel.theme; checked: panel.s.reminderWords === true; onToggled: function(on) { panel.set("reminderWords", on) } }
           }
         }
@@ -122,7 +123,7 @@ Popup {
           anchors.right: parent.right
           theme: panel.theme
           primary: true
-          text: "Done"
+          text: Lang.t("Done")
           onClicked: panel.close()
         }
       }

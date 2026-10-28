@@ -1,5 +1,6 @@
 import QtQuick
 import "../Profiles.js" as Profiles
+import "../Lang.js" as Lang  // [fork] German
 
 // A new profile: its name, and the folder its notes go in (suggested from
 // the name until you change it, typed, or picked). Create makes it, and
@@ -40,7 +41,7 @@ Column {
 
   Text {
     textFormat: Text.PlainText
-    text: "Name"
+    text: Lang.t("Name")
     font.family: form.theme.uiFont
     font.pixelSize: 12
     color: form.theme.muted
@@ -50,7 +51,7 @@ Column {
     objectName: "profileName"
     theme: form.theme
     width: form.width
-    placeholder: "Personal, Work, Studio…"
+    placeholder: Lang.t("Personal, Work, Studio…")
     maximumLength: 60
     onEdited: function(text) { if (!form.folderTouched) folderField.text = form.suggest(text); form.error = "" }
     onAccepted: form.create()
@@ -59,7 +60,7 @@ Column {
   Item { width: 1; height: 4 }
   Text {
     textFormat: Text.PlainText
-    text: "Where its notes go"
+    text: Lang.t("Where its notes go")
     font.family: form.theme.uiFont
     font.pixelSize: 12
     color: form.theme.muted
@@ -82,9 +83,9 @@ Column {
       id: choose
       objectName: "profileChoose"
       theme: form.theme
-      text: "Choose…"
+      text: Lang.t("Choose…")
       anchors.verticalCenter: parent.verticalCenter
-      onClicked: form.service.pickFolder("Where its notes go", function(path) {
+      onClicked: form.service.pickFolder(Lang.t("Where its notes go"), function(path) {
         if (!path) return
         folderField.text = form.tilde(path)
         form.folderTouched = true
@@ -107,7 +108,7 @@ Column {
     width: form.width
     wrapMode: Text.Wrap
     textFormat: Text.PlainText
-    text: "An empty folder starts fresh; one with Uber Notebook's notes in it opens them."
+    text: Lang.t("An empty folder starts fresh; one with Uber Notebook's notes in it opens them.")
     font.family: form.theme.uiFont
     font.pixelSize: 11
     color: form.theme.faint
@@ -125,7 +126,7 @@ Column {
     TextButton {
       visible: form.cancellable
       theme: form.theme
-      text: "Cancel"
+      text: Lang.t("Cancel")
       onClicked: form.cancelled()
     }
   }

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import "../Calendar.js" as Calendar
 import "../Dates.js" as Dates
+import "../Lang.js" as Lang  // [fork] German
 
 // A new event, typed: "Lunch with Sam fri 12:30", "Dentist oct 12 3pm for
 // 30 min", "Standup 9:30-9:45", "Holiday dec 24". With no day or time in
@@ -69,7 +70,7 @@ Pop {
     if (done) done(e.id)
     // In the calendar: where it went, shown.
     if (view && view.calendarView && view.calendarView.visible) view.calendarView.reveal(e.id)
-    if (e.title) view.toastUndo("\u201c" + e.title + "\u201d is on the calendar: " + when, function() { pop.workspace.undoCalendar() })
+    if (e.title) view.toastUndo("\u201c" + e.title + Lang.t("\u201d is on the calendar: ") + when, function() { pop.workspace.undoCalendar() })
     return e.id
   }
 
@@ -105,7 +106,7 @@ Pop {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         theme: pop.theme
-        text: "More\u2026"
+        text: Lang.t("More\u2026")
         onClicked: {
           var id = pop.add(true)
           if (id) { pop.view.justMade = pop.guess.title ? "" : id; pop.view.openEvent(id, "", null) }

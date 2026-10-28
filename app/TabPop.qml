@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "../Lang.js" as Lang  // [fork] German
 
 // An index tab on this page, sticking out of the notebook's edge: pick its
 // color and write a word on it.
@@ -29,7 +30,7 @@ Pop {
       id: label
       theme: pop.theme
       width: parent.width
-      placeholder: "A word for the tab"
+      placeholder: Lang.t("A word for the tab")
       maximumLength: 24
       onAccepted: { pop.apply(""); pop.close() }
       onEscaped: pop.close()
@@ -50,8 +51,8 @@ Pop {
     }
     Row {
       spacing: 6
-      Chip { theme: pop.theme; text: "Done"; checked: true; onClicked: { pop.apply(""); pop.close() } }
-      Chip { theme: pop.theme; text: "Remove tab"; visible: pop.view.page && pop.view.page.tab; onClicked: { pop.view.setTab(null); pop.close() } }
+      Chip { theme: pop.theme; text: Lang.t("Done"); checked: true; onClicked: { pop.apply(""); pop.close() } }
+      Chip { theme: pop.theme; text: Lang.t("Remove tab"); visible: pop.view.page && pop.view.page.tab; onClicked: { pop.view.setTab(null); pop.close() } }
     }
   }
 }

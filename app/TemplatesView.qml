@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import "../Workspace.js" as Workspace
 import "../Templates.js" as Templates
+import "../Lang.js" as Lang  // [fork] German
 
 // Templates (the sidebar's foot), in place of a page: yours, then
 // Uber Notebook's, each a card with its icon, its name and what it's for, found
@@ -69,7 +70,7 @@ Item {
           spacing: 4
           Text {
             textFormat: Text.PlainText
-            text: "Templates"
+            text: Lang.t("Templates")
             font.family: tv.theme.uiFont
             font.pixelSize: 28
             font.weight: Font.DemiBold
@@ -79,7 +80,7 @@ Item {
             width: parent.width
             wrapMode: Text.Wrap
             textFormat: Text.PlainText
-            text: "Pages that start laid out. Click one for a new page from it."
+            text: Lang.t("Pages that start laid out. Click one for a new page from it.")
             font.family: tv.theme.uiFont
             font.pixelSize: 13
             color: tv.theme.muted
@@ -91,7 +92,7 @@ Item {
           anchors.right: parent.right
           anchors.top: parent.top
           anchors.topMargin: 6
-          theme: tv.theme; icon: tv.theme.icons.plus; label: "New template"; size: 30; iconSize: 14
+          theme: tv.theme; icon: tv.theme.icons.plus; label: Lang.t("New template"); size: 30; iconSize: 14
           onClicked: tv.view.newTemplate()
         }
       }
@@ -102,7 +103,7 @@ Item {
         theme: tv.theme
         width: parent.width
         icon: tv.theme.icons.search
-        placeholder: "Find a template by its name or what it's for"
+        placeholder: Lang.t("Find a template by its name or what it's for")
         onEdited: function(text) { tv.query = text }
         onEscaped: { text = ""; tv.query = "" }
         // Enter: a new page from the one found first.
@@ -114,20 +115,20 @@ Item {
         width: parent.width
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: "No template has \u201c" + tv.query.trim() + "\u201d in its name or what it's for."
+        text: Lang.t("No template has \u201c") + tv.query.trim() + Lang.t("\u201d in its name or what it's for.")
         font.family: tv.theme.uiFont
         font.pixelSize: 13
         color: tv.theme.muted
       }
 
       Item { width: 1; height: 6; visible: mineLabel.visible }
-      SectionLabel { id: mineLabel; visible: tv.words.length === 0 || tv.mineShown.length > 0; text: "Yours" + (tv.mineShown.length ? "  " + tv.mineShown.length : "") }
+      SectionLabel { id: mineLabel; visible: tv.words.length === 0 || tv.mineShown.length > 0; text: Lang.t("Yours") + (tv.mineShown.length ? "  " + tv.mineShown.length : "") }
       Text {
         visible: tv.mine.length === 0 && tv.words.length === 0
         width: parent.width
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: "None yet. Make a page the way you want new ones to start, then Save as template in its ⋯ menu; or New template."
+        text: Lang.t("None yet. Make a page the way you want new ones to start, then Save as template in its ⋯ menu; or New template.")
         font.family: tv.theme.uiFont
         font.pixelSize: 13
         color: tv.theme.muted
@@ -163,7 +164,7 @@ Item {
             templateId: modelData.id
             yours: false
             icon: Templates.ICONS[modelData.id] || "\u{1f4c4}"
-            title: modelData.label
+            title: Lang.t(modelData.label)
             about: modelData.hint
           }
         }
@@ -174,7 +175,7 @@ Item {
         width: parent.width
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: "In a template, {{date}}, {{weekday}}, {{time}}, {{month}}, {{year}} and {{week}} are filled in when it's used."
+        text: Lang.t("In a template, {{date}}, {{weekday}}, {{time}}, {{month}}, {{year}} and {{week}} are filled in when it's used.")
         font.family: tv.theme.uiFont
         font.pixelSize: 12
         color: tv.theme.faint
@@ -233,7 +234,7 @@ Item {
       anchors.right: parent.right
       anchors.rightMargin: 8
       y: 8
-      theme: tv.theme; icon: tv.theme.icons.edit; label: "Edit"; size: 26; iconSize: 12
+      theme: tv.theme; icon: tv.theme.icons.edit; label: Lang.t("Edit"); size: 26; iconSize: 12
       onClicked: tv.view.open(card.templateId)
     }
     Column {

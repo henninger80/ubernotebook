@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtMultimedia
 import "../Files.js" as Files
 import "../Audio.js" as Audio
+import "../Lang.js" as Lang  // [fork] German
 
 // A video on a page in Pages (a file copied into Pages/assets): it plays
 // here, with play and pause, where it is (a click or a drag on the bar goes
@@ -78,7 +79,7 @@ DataCard {
         x: badge.x + badge.width + 12
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: vb.readOnly ? "A video, not added" : "Add a video (or drop one on the page)"
+        text: vb.readOnly ? Lang.t("A video, not added") : Lang.t("Add a video (or drop one on the page)")
         font.family: vb.editor ? vb.editor.uiFamily : ""
         font.pixelSize: 14
         color: vb.faint
@@ -198,7 +199,7 @@ DataCard {
         anchors.centerIn: parent
         anchors.verticalCenterOffset: 50
         textFormat: Text.PlainText
-        text: "The video couldn't be played"
+        text: Lang.t("The video couldn't be played")
         font.family: vb.editor ? vb.editor.uiFamily : ""
         font.pixelSize: 13
         color: "white"
@@ -233,13 +234,13 @@ DataCard {
           objectName: "videoColors"
           visible: !vb.readOnly && (vb.pointerIn || vb.trying !== null)
           theme: vb.theme; icon: vb.theme ? vb.theme.icons.palette : ""; size: 28; iconSize: 14; tint: vb.words
-          tip: "Its colors"
+          tip: Lang.t("Its colors")
           onClicked: vb.askColors(colorButton)
         }
         IconButton {
           objectName: "videoOpen"
           theme: vb.theme; icon: vb.theme ? vb.theme.icons.openExternal : ""; size: 28; iconSize: 14; tint: vb.words
-          tip: "Open it in your video player"
+          tip: Lang.t("Open it in your video player")
           onClicked: vb.act("open", null)
         }
       }

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import "../Tags.js" as Tags
 import "../Docs.js" as Docs
+import "../Lang.js" as Lang  // [fork] German
 
 // The "@" menu (dates, and reminders then), the "[[" menu (pages, and a
 // new page with the name typed), the ":" menu (emoji by name) and the "#"
@@ -37,7 +38,7 @@ Pop {
       leftPadding: 10
       topPadding: 4
       bottomPadding: 6
-      text: menu.kind === "page" ? "Link to a page" : menu.kind === "emoji" ? "Emoji" : menu.kind === "tag" ? "Tags" : "A person, a date, or a reminder"
+      text: menu.kind === "page" ? Lang.t("Link to a page") : menu.kind === "emoji" ? Lang.t("Emoji") : menu.kind === "tag" ? Lang.t("Tags") : Lang.t("A person, a date, or a reminder")
       font.family: menu.theme.uiFont
       font.pixelSize: 11
       font.weight: Font.DemiBold
@@ -119,7 +120,7 @@ Pop {
           textFormat: Text.PlainText
           width: parent.width
           elide: Text.ElideRight
-          text: entry.modelData.label
+          text: Lang.t(entry.modelData.label)
           font.family: menu.theme.uiFont
           font.pixelSize: 13
           color: menu.theme.text
@@ -129,7 +130,7 @@ Pop {
           visible: !!entry.modelData.hint
           width: parent.width
           elide: Text.ElideRight
-          text: entry.modelData.hint || ""
+          text: Lang.t(entry.modelData.hint) || ""
           font.family: menu.theme.uiFont
           font.pixelSize: 11
           color: menu.theme.muted

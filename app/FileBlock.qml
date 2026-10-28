@@ -1,5 +1,6 @@
 import QtQuick
 import "../Files.js" as Files
+import "../Lang.js" as Lang  // [fork] German
 
 // A file on a page in Pages: what it is, what it's called and how big, and
 // Open (in the app it opens in). A PDF shows its pages here too, one under
@@ -90,7 +91,7 @@ DataCard {
           width: parent.width
           elide: Text.ElideMiddle
           textFormat: Text.PlainText
-          text: fb.has ? fb.info.name || "File" : (fb.readOnly ? "A file, not added" : fb.info.kind === "pdf" ? "Add a PDF" : "Add a file")
+          text: fb.has ? fb.info.name || Lang.t("File") : (fb.readOnly ? Lang.t("A file, not added") : fb.info.kind === "pdf" ? Lang.t("Add a PDF") : Lang.t("Add a file"))
           font.family: fb.editor ? fb.editor.uiFamily : ""
           font.pixelSize: 14
           font.weight: fb.has ? Font.DemiBold : Font.Normal
@@ -100,7 +101,7 @@ DataCard {
           width: parent.width
           elide: Text.ElideRight
           textFormat: Text.PlainText
-          text: fb.has ? (fb.info.kind === "other" ? "" : fb.info.kind.toUpperCase() + "  \u00b7  ") + Files.sizeLabel(fb.info.size) + (fb.pageCount > 0 ? "  \u00b7  " + fb.pageCount + (fb.pageCount === 1 ? " page" : " pages") : "")
+          text: fb.has ? (fb.info.kind === "other" ? "" : fb.info.kind.toUpperCase() + "  \u00b7  ") + Files.sizeLabel(fb.info.size) + (fb.pageCount > 0 ? "  \u00b7  " + fb.pageCount + (fb.pageCount === 1 ? Lang.t(" page") : Lang.t(" pages")) : "")
             : "Click to pick one, or drop a file on the page"
           font.family: fb.editor ? fb.editor.uiFamily : ""
           font.pixelSize: 12
@@ -116,14 +117,14 @@ DataCard {
         IconButton {
           objectName: "filePages"
           visible: fb.pdfView
-          theme: fb.theme; icon: fb.theme ? fb.theme.icons.pdf : ""; label: fb.info.open ? "Hide pages" : "Show pages"; size: 30; iconSize: 14; tint: fb.words
+          theme: fb.theme; icon: fb.theme ? fb.theme.icons.pdf : ""; label: fb.info.open ? Lang.t("Hide pages") : Lang.t("Show pages"); size: 30; iconSize: 14; tint: fb.words
           onClicked: fb.change({ open: !fb.info.open })
         }
         IconButton {
           objectName: "fileOpen"
           visible: fb.has
-          theme: fb.theme; icon: fb.theme ? fb.theme.icons.openExternal : ""; label: "Open"; size: 30; iconSize: 14; tint: fb.words
-          tip: "Open it in its app"
+          theme: fb.theme; icon: fb.theme ? fb.theme.icons.openExternal : ""; label: Lang.t("Open"); size: 30; iconSize: 14; tint: fb.words
+          tip: Lang.t("Open it in its app")
           onClicked: fb.act("open", null)
         }
         IconButton {
@@ -131,7 +132,7 @@ DataCard {
           objectName: "fileColors"
           visible: !fb.readOnly && (fb.pointerIn || fb.trying !== null)
           theme: fb.theme; icon: fb.theme ? fb.theme.icons.palette : ""; size: 30; iconSize: 14; tint: fb.words
-          tip: "Its colors"
+          tip: Lang.t("Its colors")
           onClicked: fb.askColors(colorButton)
         }
       }

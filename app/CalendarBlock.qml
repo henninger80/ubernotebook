@@ -5,6 +5,7 @@ import "../Workspace.js" as Workspace
 import "../Dates.js" as Dates
 import "../Docs.js" as Docs
 import "../Colors.js" as Colors
+import "../Lang.js" as Lang  // [fork] German
 
 // The calendar on a page in Pages. An agenda ("/agenda"): a day's events
 // and the dates in your notes, today's (or a day's: ‹ and › go from day to
@@ -141,7 +142,7 @@ Item {
           width: parent.width
           elide: Text.ElideRight
           textFormat: Text.PlainText
-          text: cb.ev ? (cb.ev.title || "Untitled") : cb.ref.id ? "This event isn't on the calendar any more" : "An event"
+          text: cb.ev ? (cb.ev.title || Lang.t("Untitled")) : cb.ref.id ? Lang.t("This event isn't on the calendar any more") : Lang.t("An event")
           font.family: cb.editor ? cb.editor.uiFamily : ""
           font.pixelSize: 15
           font.weight: cb.ev ? Font.DemiBold : Font.Normal
@@ -168,7 +169,7 @@ Item {
           objectName: "calBlockColors"
           visible: !cb.readOnly && (cb.pointerIn || cb.trying !== null)
           theme: cb.theme; icon: cb.theme ? cb.theme.icons.palette : ""; size: 28; iconSize: 14; tint: cb.words
-          tip: "Its colors"
+          tip: Lang.t("Its colors")
           onClicked: cb.askColors(evColors)
         }
       }
@@ -216,7 +217,7 @@ Item {
             elide: Text.ElideRight
             textFormat: Text.PlainText
             readonly property int form: agendaHead.narrow ? Locale.ShortFormat : Locale.LongFormat
-            text: (cb.isToday ? "Today  \u00b7  " : "") + Qt.locale().dayName(cb.shownDay.getDay(), form) + " " + cb.shownDay.getDate() + " " + Qt.locale().monthName(cb.shownDay.getMonth(), form)
+            text: (cb.isToday ? Lang.t("Today  \u00b7  ") : "") + Qt.locale().dayName(cb.shownDay.getDay(), form) + " " + cb.shownDay.getDate() + " " + Qt.locale().monthName(cb.shownDay.getMonth(), form)
             font.family: cb.editor ? cb.editor.uiFamily : ""
             font.pixelSize: 14
             font.weight: Font.DemiBold
@@ -237,18 +238,18 @@ Item {
             objectName: "calBlockColors"
             visible: !cb.readOnly && (cb.pointerIn || cb.trying !== null)
             theme: cb.theme; icon: cb.theme ? cb.theme.icons.palette : ""; size: 28; iconSize: 14; tint: cb.words
-            tip: "Its colors"
+            tip: Lang.t("Its colors")
             onClicked: cb.askColors(agColors)
           }
-          IconButton { objectName: "agendaBack"; visible: !cb.readOnly; theme: cb.theme; icon: cb.theme ? cb.theme.icons.left : ""; size: 28; iconSize: 15; tint: cb.words; tip: "The day before"; onClicked: cb.step(-1) }
-          IconButton { objectName: "agendaToday"; visible: !cb.readOnly && !cb.isToday; theme: cb.theme; label: "Today"; size: 28; tint: cb.words; tip: "Today's, each day"; onClicked: cb.change({ day: "" }) }
-          IconButton { objectName: "agendaOn"; visible: !cb.readOnly; theme: cb.theme; icon: cb.theme ? cb.theme.icons.right : ""; size: 28; iconSize: 15; tint: cb.words; tip: "The day after"; onClicked: cb.step(1) }
+          IconButton { objectName: "agendaBack"; visible: !cb.readOnly; theme: cb.theme; icon: cb.theme ? cb.theme.icons.left : ""; size: 28; iconSize: 15; tint: cb.words; tip: Lang.t("The day before"); onClicked: cb.step(-1) }
+          IconButton { objectName: "agendaToday"; visible: !cb.readOnly && !cb.isToday; theme: cb.theme; label: Lang.t("Today"); size: 28; tint: cb.words; tip: Lang.t("Today's, each day"); onClicked: cb.change({ day: "" }) }
+          IconButton { objectName: "agendaOn"; visible: !cb.readOnly; theme: cb.theme; icon: cb.theme ? cb.theme.icons.right : ""; size: 28; iconSize: 15; tint: cb.words; tip: Lang.t("The day after"); onClicked: cb.step(1) }
           IconButton {
             id: agAdd
             objectName: "agendaAdd"
             visible: !cb.readOnly
             theme: cb.theme; icon: cb.theme ? cb.theme.icons.plus : ""; size: 28; iconSize: 15; tint: cb.words
-            tip: "An event that day"
+            tip: Lang.t("An event that day")
             onClicked: cb.editor.calendarAction(cb.uid, "add", { day: cb.shownDay, anchor: agAdd })
           }
         }
@@ -283,7 +284,7 @@ Item {
             width: parent.width - x - 8
             elide: Text.ElideRight
             textFormat: Text.PlainText
-            text: (row.modelData.title || "Untitled") + (row.modelData.place ? "  \u00b7  " + row.modelData.place : "")
+            text: (row.modelData.title || Lang.t("Untitled")) + (row.modelData.place ? "  \u00b7  " + row.modelData.place : "")
             font.family: cb.editor ? cb.editor.family : ""
             font.pixelSize: 15
             color: cb.words
@@ -308,7 +309,7 @@ Item {
             width: cb.twoLines ? parent.width - 12 : cb.spanW
             elide: Text.ElideRight
             textFormat: Text.PlainText
-            text: (cb.theme && cb.theme.twelveHour, nrow.modelData.time) ? Calendar.timeLabel(nrow.modelData.at) : nrow.modelData.kind === "due" ? "Due" : "All day"
+            text: (cb.theme && cb.theme.twelveHour, nrow.modelData.time) ? Calendar.timeLabel(nrow.modelData.at) : nrow.modelData.kind === "due" ? Lang.t("Due") : Lang.t("All day")
             font.family: cb.editor ? cb.editor.uiFamily : ""
             font.pixelSize: 12
             color: cb.faint
@@ -336,7 +337,7 @@ Item {
         wrapMode: Text.Wrap
         leftPadding: 6
         textFormat: Text.PlainText
-        text: "Nothing on the calendar" + (cb.isToday ? " today" : " that day")
+        text: Lang.t("Nothing on the calendar") + (cb.isToday ? Lang.t(" today") : Lang.t(" that day"))
         font.family: cb.editor ? cb.editor.uiFamily : ""
         font.pixelSize: 13
         font.italic: true

@@ -4,6 +4,7 @@ import QtQuick.Effects
 import "../Papers.js" as Papers
 import "../Covers.js" as Covers
 import "../Templates.js" as Templates
+import "../Lang.js" as Lang  // [fork] German
 
 // Choosing a notebook: its title, the kind of page it makes (blank, or a
 // planner's day, week or month, a journal, ...), cover (color, material, an
@@ -153,7 +154,7 @@ Popup {
           closed: true
           pages: 40
           look: Covers.resolve({ color: dialog.coverColor, material: dialog.material, band: dialog.band }, String(dialog.theme.accent))
-          title: titleField.text.trim() || "Untitled notebook"
+          title: titleField.text.trim() || Lang.t("Untitled notebook")
           binding: dialog.binding
           fonts: dialog.theme.coverFonts
         }
@@ -183,7 +184,7 @@ Popup {
           textFormat: Text.PlainText
           x: 22
           y: 4 + (parent.look.pitch || 30) * 0.8 - baselineOffset
-          text: "The quick brown fox"
+          text: Lang.t("The quick brown fox")
           font.family: dialog.theme.penFamily(Papers.pen(dialog.pen).families)
           font.pixelSize: Papers.typeStyle("p", dialog.pen, dialog.lineSpacing).size
           color: parent.look.ink
@@ -209,7 +210,7 @@ Popup {
 
         Text {
           textFormat: Text.PlainText
-          text: dialog.target ? "This notebook" : "A new notebook"
+          text: dialog.target ? Lang.t("This notebook") : Lang.t("A new notebook")
           font.family: dialog.theme.uiFont
           font.pixelSize: 19
           font.weight: Font.DemiBold
@@ -220,13 +221,13 @@ Popup {
           theme: dialog.theme
           width: parent.width
           height: 38
-          placeholder: "What's it for?"
+          placeholder: Lang.t("What's it for?")
           maximumLength: 120
           onAccepted: dialog.finish()
           onEscaped: dialog.close()
         }
 
-        Heading { text: "Pages" }
+        Heading { text: Lang.t("Pages") }
         Flow {
           width: parent.width
           spacing: 6
@@ -235,7 +236,7 @@ Popup {
             delegate: Chip {
               required property var modelData
               theme: dialog.theme
-              text: modelData === "blank" ? "Blank" : Templates.byId(modelData).label
+              text: modelData === "blank" ? Lang.t("Blank") : Templates.byId(modelData).label
               icon: dialog.theme.icons[Templates.byId(modelData).icon] || ""
               checked: (dialog.kind || "blank") === modelData
               onClicked: dialog.pickKind(modelData)
@@ -253,7 +254,7 @@ Popup {
           color: dialog.theme.muted
         }
 
-        Heading { text: "Cover" }
+        Heading { text: Lang.t("Cover") }
         Flow {
           width: parent.width
           spacing: 2
@@ -264,7 +265,7 @@ Popup {
               theme: dialog.theme
               size: 26
               color: modelData.id === "accent" ? dialog.theme.accent : modelData.color
-              tip: modelData.label
+              tip: Lang.t(modelData.label)
               checked: dialog.coverColor === modelData.id
               onClicked: dialog.coverColor = modelData.id
             }
@@ -278,7 +279,7 @@ Popup {
             delegate: Chip {
               required property var modelData
               theme: dialog.theme
-              text: modelData.label
+              text: Lang.t(modelData.label)
               checked: dialog.material === modelData.id
               onClicked: {
                 dialog.material = modelData.id
@@ -290,10 +291,10 @@ Popup {
         Row {
           spacing: 10
           Toggle { theme: dialog.theme; checked: dialog.band; onToggled: function(on) { dialog.band = on }; anchors.verticalCenter: parent.verticalCenter }
-          Text { textFormat: Text.PlainText; text: "Elastic band"; font.family: dialog.theme.uiFont; font.pixelSize: 13; color: dialog.theme.text; anchors.verticalCenter: parent.verticalCenter }
+          Text { textFormat: Text.PlainText; text: Lang.t("Elastic band"); font.family: dialog.theme.uiFont; font.pixelSize: 13; color: dialog.theme.text; anchors.verticalCenter: parent.verticalCenter }
         }
 
-        Heading { text: "Binding" }
+        Heading { text: Lang.t("Binding") }
         Row {
           spacing: 6
           Repeater {
@@ -301,14 +302,14 @@ Popup {
             delegate: Chip {
               required property var modelData
               theme: dialog.theme
-              text: modelData.label
+              text: Lang.t(modelData.label)
               checked: dialog.binding === modelData.id
               onClicked: dialog.binding = modelData.id
             }
           }
         }
 
-        Heading { text: "Paper" }
+        Heading { text: Lang.t("Paper") }
         Flow {
           width: parent.width
           spacing: 6
@@ -317,7 +318,7 @@ Popup {
             delegate: Chip {
               required property var modelData
               theme: dialog.theme
-              text: modelData.label
+              text: Lang.t(modelData.label)
               checked: dialog.pattern === modelData.id
               onClicked: dialog.pattern = modelData.id
             }
@@ -333,7 +334,7 @@ Popup {
               theme: dialog.theme
               size: 24
               color: Papers.resolve({ color: modelData.id }, dialog.themeColors).paper
-              tip: modelData.label
+              tip: Lang.t(modelData.label)
               checked: dialog.paperColor === modelData.id
               onClicked: dialog.paperColor = modelData.id
             }
@@ -346,14 +347,14 @@ Popup {
             delegate: Chip {
               required property var modelData
               theme: dialog.theme
-              text: modelData.label
+              text: Lang.t(modelData.label)
               checked: dialog.lineSpacing === modelData.id
               onClicked: dialog.lineSpacing = modelData.id
             }
           }
         }
 
-        Heading { text: "Pen" }
+        Heading { text: Lang.t("Pen") }
         Flow {
           width: parent.width
           spacing: 6
@@ -372,7 +373,7 @@ Popup {
                 anchors.centerIn: parent
                 spacing: 1
                 Text { textFormat: Text.PlainText; anchors.horizontalCenter: parent.horizontalCenter; text: "Aa"; font.family: dialog.theme.penFamily(modelData.families); font.pixelSize: 21 * modelData.scale; color: dialog.theme.text }
-                Text { textFormat: Text.PlainText; anchors.horizontalCenter: parent.horizontalCenter; text: modelData.label; font.family: dialog.theme.uiFont; font.pixelSize: 11; color: dialog.theme.muted }
+                Text { textFormat: Text.PlainText; anchors.horizontalCenter: parent.horizontalCenter; text: Lang.t(modelData.label); font.family: dialog.theme.uiFont; font.pixelSize: 11; color: dialog.theme.muted }
               }
               HoverHandler { id: penHover; cursorShape: Qt.PointingHandCursor }
               TapHandler { gesturePolicy: TapHandler.ReleaseWithinBounds; onTapped: dialog.pen = modelData.id }
@@ -389,7 +390,7 @@ Popup {
       anchors.bottom: parent.bottom
       anchors.bottomMargin: 20
       spacing: 8
-      IconButton { theme: dialog.theme; label: "Cancel"; onClicked: dialog.close() }
+      IconButton { theme: dialog.theme; label: Lang.t("Cancel"); onClicked: dialog.close() }
       Rectangle {
         width: createLabel.implicitWidth + 32
         height: 34
@@ -399,7 +400,7 @@ Popup {
           textFormat: Text.PlainText
           id: createLabel
           anchors.centerIn: parent
-          text: dialog.target ? "Save" : "Create notebook"
+          text: dialog.target ? Lang.t("Save") : Lang.t("Create notebook")
           font.family: dialog.theme.uiFont
           font.pixelSize: 13
           font.weight: Font.DemiBold
@@ -416,7 +417,7 @@ Popup {
       anchors.bottomMargin: 20
       theme: dialog.theme
       icon: dialog.theme.icons.trash
-      label: "Put in the trash"
+      label: Lang.t("Put in the trash")
       tint: dialog.theme.urgent
       onClicked: { var t = dialog.target; dialog.close(); dialog.deleteRequested(t) }
     }

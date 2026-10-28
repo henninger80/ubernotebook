@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Docs.js" as Docs
+import "../Lang.js" as Lang  // [fork] German
 
 // The "/" menu: every kind of block, found by what's typed after the "/"
 // (the editor keeps the keyboard: ↑ ↓ pick, Enter takes it, Esc closes).
@@ -42,7 +43,7 @@ Pop {
         leftPadding: 10
         topPadding: entry.index === 0 ? 4 : 10
         bottomPadding: 4
-        text: entry.modelData.group
+        text: Lang.t(entry.modelData.group)
         font.family: menu.theme.uiFont
         font.pixelSize: 11
         font.weight: Font.DemiBold
@@ -90,7 +91,7 @@ Pop {
             textFormat: Text.PlainText
             width: parent.width
             elide: Text.ElideRight
-            text: entry.modelData.label
+            text: Lang.t(entry.modelData.label)
             font.family: menu.theme.uiFont
             font.pixelSize: 13
             color: menu.theme.text
@@ -99,7 +100,7 @@ Pop {
             textFormat: Text.PlainText
             width: parent.width
             elide: Text.ElideRight
-            text: entry.modelData.hint
+            text: Lang.t(entry.modelData.hint)
             font.family: menu.theme.uiFont
             font.pixelSize: 11
             color: menu.theme.muted
@@ -118,7 +119,7 @@ Pop {
       visible: list.count === 0
       x: 12
       y: 10
-      text: "Nothing like that. Esc to keep the \u201c/\u201d as it is."
+      text: Lang.t("Nothing like that. Esc to keep the \u201c/\u201d as it is.")
       font.family: menu.theme.uiFont
       font.pixelSize: 12
       color: menu.theme.muted

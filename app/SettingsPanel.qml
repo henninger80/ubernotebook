@@ -9,6 +9,7 @@ import "../Colors.js" as Colors
 import "../Dates.js" as Dates
 import "../Sidebar.js" as Sidebar
 import "../MarkdownView.js" as MarkdownView
+import "../Lang.js" as Lang  // [fork] German
 
 // Uber Notebook's settings, in sections (the list at the left): General,
 // Appearance, Writing, AI, Audio, Profiles, Backups, Notifications and About.
@@ -307,7 +308,7 @@ Popup {
       leftPadding: 2
       wrapMode: Text.Wrap
       textFormat: Text.PlainText
-      text: grp.note
+      text: Lang.t(grp.note)
       font.family: panel.theme.uiFont
       font.pixelSize: 12
       lineHeight: 1.15
@@ -335,8 +336,8 @@ Popup {
       anchors.rightMargin: 16
       anchors.verticalCenter: parent.verticalCenter
       spacing: 3
-      Text { textFormat: Text.PlainText; width: parent.width; text: line.label; wrapMode: Text.WordWrap; font.family: panel.theme.uiFont; font.pixelSize: 14; color: panel.theme.text }
-      Text { textFormat: Text.PlainText; visible: line.note !== ""; width: parent.width; text: line.note; wrapMode: Text.WordWrap; font.family: panel.theme.uiFont; font.pixelSize: 12; lineHeight: 1.1; color: line.noteColor }
+      Text { textFormat: Text.PlainText; width: parent.width; text: Lang.t(line.label); wrapMode: Text.WordWrap; font.family: panel.theme.uiFont; font.pixelSize: 14; color: panel.theme.text }
+      Text { textFormat: Text.PlainText; visible: line.note !== ""; width: parent.width; text: Lang.t(line.note); wrapMode: Text.WordWrap; font.family: panel.theme.uiFont; font.pixelSize: 12; lineHeight: 1.1; color: line.noteColor }
     }
     Item {
       id: slot
@@ -407,7 +408,7 @@ Popup {
         required property var modelData
         objectName: choice.prefix ? choice.prefix + modelData.value : ""
         theme: panel.theme
-        text: modelData.label
+        text: Lang.t(modelData.label)
         checked: choice.value === modelData.value
         onClicked: choice.picked(modelData.value)
       }
@@ -464,7 +465,7 @@ Popup {
             id: badge
             anchors.centerIn: parent
             textFormat: Text.PlainText
-            text: prow.open ? (prow.modelData.demo ? "Open · demo" : "Open") : "Demo"
+            text: prow.open ? (prow.modelData.demo ? Lang.t("Open · demo") : Lang.t("Open")) : Lang.t("Demo")
             font.family: panel.theme.uiFont
             font.pixelSize: 11
             color: panel.theme.muted
@@ -488,7 +489,7 @@ Popup {
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
         leftPadding: 2
-        text: prow.error || (prow.asking === "remove" ? "Take “" + prow.modelData.name + "” off the list? Its notes stay in their folder, to add again." : "Start the demo over? What you changed in it goes to the trash.")
+        text: prow.error || (prow.asking === "remove" ? Lang.t("Take “") + prow.modelData.name + Lang.t("” off the list? Its notes stay in their folder, to add again.") : Lang.t("Start the demo over? What you changed in it goes to the trash."))
         font.family: panel.theme.uiFont
         font.pixelSize: 12
         color: prow.error ? panel.theme.urgent : panel.theme.text
@@ -506,7 +507,7 @@ Popup {
         objectName: "settingsProfileYes"
         theme: panel.theme
         primary: true
-        text: prow.asking === "remove" ? "Remove" : "Start over"
+        text: prow.asking === "remove" ? Lang.t("Remove") : Lang.t("Start over")
         onClicked: {
           var what = prow.asking
           prow.asking = ""
@@ -514,20 +515,20 @@ Popup {
           else { panel.close(); panel.profiles.restartDemo() }
         }
       }
-      TextButton { visible: prow.asking !== ""; theme: panel.theme; text: "Cancel"; onClicked: prow.asking = "" }
+      TextButton { visible: prow.asking !== ""; theme: panel.theme; text: Lang.t("Cancel"); onClicked: prow.asking = "" }
       TextButton {
         visible: prow.asking === "" && !prow.open
         objectName: "settingsProfileOpen"
         theme: panel.theme
-        text: "Open"
+        text: Lang.t("Open")
         onClicked: { panel.close(); panel.profiles.use(prow.modelData.id) }
       }
       TextButton {
         visible: prow.asking === "" && !prow.modelData.demo
         objectName: "settingsProfileMove"
         theme: panel.theme
-        text: "Folder…"
-        onClicked: panel.service.pickFolder("Where " + prow.modelData.name + "'s notes are", function(path) {
+        text: Lang.t("Folder…")
+        onClicked: panel.service.pickFolder(Lang.t("Where ") + prow.modelData.name + Lang.t("'s notes are"), function(path) {
           if (!path) return
           var home = panel.service.home || ""
           prow.error = panel.profiles.setFolder(prow.modelData.id, home && path.indexOf(home + "/") === 0 ? "~" + path.slice(home.length) : path)
@@ -536,21 +537,21 @@ Popup {
       IconButton {
         visible: prow.asking === ""
         theme: panel.theme; icon: panel.theme.icons.folder; size: 30; iconSize: 14
-        tip: "Open the folder"
+        tip: Lang.t("Open the folder")
         onClicked: panel.service.store.openLocal(panel.profiles.pathOf(prow.modelData.folder))
       }
       IconButton {
         visible: prow.asking === "" && prow.modelData.demo
         objectName: "settingsDemoRestart"
         theme: panel.theme; icon: panel.theme.icons.undo || panel.theme.icons.back; size: 30; iconSize: 14
-        tip: "Start the demo over"
+        tip: Lang.t("Start the demo over")
         onClicked: { prow.error = ""; prow.asking = "restart" }
       }
       IconButton {
         visible: prow.asking === "" && !prow.open
         objectName: "settingsProfileRemove"
         theme: panel.theme; icon: panel.theme.icons.trash; size: 30; iconSize: 14
-        tip: "Take it off the list (its notes stay)"
+        tip: Lang.t("Take it off the list (its notes stay)")
         onClicked: { prow.error = ""; prow.asking = "remove" }
       }
     }
@@ -572,7 +573,7 @@ Popup {
         x: 22
         y: 22
         textFormat: Text.PlainText
-        text: "Settings"
+        text: Lang.t("Settings")
         font.family: panel.theme.uiFont
         font.pixelSize: 19
         font.weight: Font.DemiBold
@@ -606,7 +607,7 @@ Popup {
               x: 40
               anchors.verticalCenter: parent.verticalCenter
               textFormat: Text.PlainText
-              text: navRow.modelData.label
+              text: Lang.t(navRow.modelData.label)
               font.family: panel.theme.uiFont
               font.pixelSize: 13
               font.weight: navRow.chosen ? Font.DemiBold : Font.Normal
@@ -651,7 +652,7 @@ Popup {
       Text {
         objectName: "settingsTitle"
         textFormat: Text.PlainText
-        text: panel.current.label
+        text: Lang.t(panel.current.label)
         font.family: panel.theme.uiFont
         font.pixelSize: 20
         font.weight: Font.DemiBold
@@ -661,7 +662,7 @@ Popup {
         width: parent.width
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: panel.current.note
+        text: Lang.t(panel.current.note)
         font.family: panel.theme.uiFont
         font.pixelSize: 13
         color: panel.theme.muted
@@ -697,36 +698,36 @@ Popup {
 
         Group {
           visible: panel.section === "general"
-          title: "Shortcuts"
+          title: Lang.t("Shortcuts")
           Line {
-            label: "Open and close Uber Notebook"
+            label: Lang.t("Open and close Uber Notebook")
             note: panel.service ? panel.service.shortcutNote("toggle") : ""
             Field {
               id: toggleField
               theme: panel.theme
               width: 190
-              placeholder: "None"
+              placeholder: Lang.t("None")
               onAccepted: panel.set("shortcut", text)
               input.onActiveFocusChanged: if (!input.activeFocus) panel.set("shortcut", text)
             }
           }
           Line {
-            label: "Jot a quick note"
+            label: Lang.t("Jot a quick note")
             note: panel.service ? panel.service.shortcutNote("quick") : ""
             Field {
               id: quickField
               theme: panel.theme
               width: 190
-              placeholder: "None"
+              placeholder: Lang.t("None")
               onAccepted: panel.set("quickShortcut", text)
               input.onActiveFocusChanged: if (!input.activeFocus) panel.set("quickShortcut", text)
             }
           }
           Line {
-            label: "Quick notes go to"
-            note: panel.s.quickTo !== "notebook" ? "A page in your Pages Inbox: the first line is its title, the rest Markdown." : "A page in the Quick notes notebook."
+            label: Lang.t("Quick notes go to")
+            note: panel.s.quickTo !== "notebook" ? Lang.t("A page in your Pages Inbox: the first line is its title, the rest Markdown.") : Lang.t("A page in the Quick notes notebook.")
             Choice {
-              options: [{ label: "Pages Inbox", value: "pages" }, { label: "Quick notes", value: "notebook" }]
+              options: [{ label: Lang.t("Pages Inbox"), value: "pages" }, { label: "Quick notes", value: "notebook" }]
               value: panel.s.quickTo || "pages"
               onPicked: function(v) { panel.set("quickTo", v) }
             }
@@ -735,23 +736,23 @@ Popup {
 
         Group {
           visible: panel.section === "general"
-          title: "Window"
+          title: Lang.t("Window")
           Line {
-            label: "Float in the middle of the screen"
-            note: "Like a notebook on your desk. Off, it tiles like any other window."
+            label: Lang.t("Float in the middle of the screen")
+            note: Lang.t("Like a notebook on your desk. Off, it tiles like any other window.")
             Toggle { theme: panel.theme; checked: panel.s.floating !== false; onToggled: function(on) { panel.set("floating", on) } }
           }
           Line {
-            label: "Size"
-            note: "When it floats."
+            label: Lang.t("Size")
+            note: Lang.t("When it floats.")
             Row {
               spacing: 6
               Repeater {
-                model: [{ label: "Small", w: 1100, h: 760 }, { label: "Medium", w: 1320, h: 900 }, { label: "Large", w: 1560, h: 1040 }]
+                model: [{ label: Lang.t("Small"), w: 1100, h: 760 }, { label: "Medium", w: 1320, h: 900 }, { label: "Large", w: 1560, h: 1040 }]
                 delegate: Chip {
                   required property var modelData
                   theme: panel.theme
-                  text: modelData.label
+                  text: Lang.t(modelData.label)
                   checked: panel.s.width === modelData.w && panel.s.height === modelData.h
                   onClicked: { panel.set("width", modelData.w); panel.set("height", modelData.h) }
                 }
@@ -759,21 +760,21 @@ Popup {
             }
           }
           Line {
-            label: "Show Uber Notebook in the top bar"
-            note: "Off, the notebook icon takes no space; Uber Notebook stays on."
+            label: Lang.t("Show Uber Notebook in the top bar")
+            note: Lang.t("Off, the notebook icon takes no space; Uber Notebook stays on.")
             Toggle { theme: panel.theme; checked: panel.s.barIcon !== false; onToggled: function(on) { panel.set("barIcon", on) } }
           }
         }
 
         Group {
           visible: panel.section === "general"
-          title: "Scrolling"
+          title: Lang.t("Scrolling")
           Line {
-            label: "Scrolling speed"
-            note: "With a trackpad or a mouse wheel. A trackpad's quick strokes go further, as on a MacBook."
+            label: Lang.t("Scrolling speed")
+            note: Lang.t("With a trackpad or a mouse wheel. A trackpad's quick strokes go further, as on a MacBook.")
             Choice {
               prefix: "scrollSpeed_"
-              options: [{ label: "Slower", value: "slower" }, { label: "Normal", value: "normal" }, { label: "Faster", value: "faster" }]
+              options: [{ label: Lang.t("Slower"), value: "slower" }, { label: "Normal", value: "normal" }, { label: "Faster", value: "faster" }]
               value: panel.s.scrollSpeed || "normal"
               onPicked: function(v) { panel.set("scrollSpeed", v) }
             }
@@ -783,13 +784,13 @@ Popup {
         // [fork] The start page (DocView.openStart).
         Group {
           visible: panel.section === "general"
-          title: "Start"
+          title: Lang.t("Start")
           Line {
-            label: "Pages opens on"
-            note: "The first time after the shell starts. Or any page: set startPage \"<its title>\" from a terminal."
+            label: Lang.t("Pages opens on")
+            note: Lang.t("The first time after the shell starts. Or any page: set startPage \"<its title>\" from a terminal.")
             Choice {
               objectName: "startPage"
-              options: [{ label: "Where you were", value: "" }, { label: "Today's daily note", value: "daily" }, { label: "Calendar", value: "calendar" }, { label: "Tasks", value: "tasks" }]
+              options: [{ label: Lang.t("Where you were"), value: "" }, { label: "Today's daily note", value: "daily" }, { label: "Calendar", value: "calendar" }, { label: "Tasks", value: "tasks" }]
               value: panel.s.startPage || ""
               onPicked: function(v) { panel.set("startPage", v) }
             }
@@ -800,8 +801,8 @@ Popup {
 
         Group {
           visible: panel.section === "appearance"
-          title: "Colors"
-          note: "Each one follows the Omarchy theme until you pick a color of your own."
+          title: Lang.t("Colors")
+          note: Lang.t("Each one follows the Omarchy theme until you pick a color of your own.")
           Repeater {
             model: panel.colorRoles
             delegate: Line {
@@ -809,14 +810,14 @@ Popup {
               required property var modelData
               readonly property bool own: !!panel.s[modelData.key]
               readonly property real ratio: panel.contrastOf(modelData)
-              label: modelData.label
-              note: modelData.note + (ratio < 4.5 ? "  ·  Text is hard to read on it (" + ratio.toFixed(1) + ":1)" : "")
+              label: Lang.t(modelData.label)
+              note: Lang.t(modelData.note) + (ratio < 4.5 ? Lang.t("  ·  Text is hard to read on it (") + ratio.toFixed(1) + ":1)" : "")
               Row {
                 spacing: 10
                 Text {
                   anchors.verticalCenter: parent.verticalCenter
                   textFormat: Text.PlainText
-                  text: roleLine.own ? panel.s[roleLine.modelData.key] : "Theme"
+                  text: roleLine.own ? panel.s[roleLine.modelData.key] : Lang.t("Theme")
                   font.family: panel.theme.uiFont
                   font.pixelSize: 12
                   color: panel.theme.muted
@@ -846,14 +847,14 @@ Popup {
                   TapHandler { gesturePolicy: TapHandler.ReleaseWithinBounds; onTapped: panel.pickColor(roleLine.modelData, swatch) }
                   ToolTip.visible: swatchHover.hovered
                   ToolTip.delay: 500
-                  ToolTip.text: "Pick a color"
+                  ToolTip.text: Lang.t("Pick a color")
                 }
                 Text {
                   objectName: "appearanceReset_" + roleLine.modelData.key
                   visible: roleLine.own
                   anchors.verticalCenter: parent.verticalCenter
                   textFormat: Text.PlainText
-                  text: "Reset"
+                  text: Lang.t("Reset")
                   font.family: panel.theme.uiFont
                   font.pixelSize: 12
                   font.underline: resetHover.hovered
@@ -871,12 +872,12 @@ Popup {
           }
           Line {
             visible: panel.anyColor
-            label: "Back to the theme's colors"
-            note: "All four follow the Omarchy theme again."
+            label: Lang.t("Back to the theme's colors")
+            note: Lang.t("All four follow the Omarchy theme again.")
             TextButton {
               objectName: "appearanceResetAll"
               theme: panel.theme
-              text: "Reset all"
+              text: Lang.t("Reset all")
               onClicked: { panel.set("colorSidebar", ""); panel.set("colorPage", ""); panel.set("colorCards", ""); panel.set("colorText", "") }
             }
           }
@@ -885,14 +886,14 @@ Popup {
         Group {
           objectName: "sidebarChoices"
           visible: panel.section === "appearance"
-          title: "Sidebar"
-          note: "What Pages' sidebar shows. Pages and Settings are always there. A right-click in the sidebar hides what it's on, and a click on a section's name folds it."
+          title: Lang.t("Sidebar")
+          note: Lang.t("What Pages' sidebar shows. Pages and Settings are always there. A right-click in the sidebar hides what it's on, and a click on a section's name folds it.")
           Repeater {
             model: [{ place: "top", label: "At the top" }, { place: "sections", label: "Sections" }, { place: "foot", label: "At the foot" }]
             delegate: Line {
               id: placeLine
               required property var modelData
-              label: modelData.label
+              label: Lang.t(modelData.label)
               Row {
                 spacing: 2
                 Repeater {
@@ -900,7 +901,7 @@ Popup {
                   delegate: Pick {
                     required property var modelData
                     objectName: "sidebarItem_" + modelData.id
-                    text: modelData.label
+                    text: Lang.t(modelData.label)
                     checked: (panel.s.sidebarHidden || []).indexOf(modelData.id) < 0
                     onToggled: function(on) { panel.set("sidebarHidden", Sidebar.setIn(panel.s.sidebarHidden || [], modelData.id, !on)) }
                   }
@@ -910,12 +911,12 @@ Popup {
           }
           Line {
             visible: (panel.s.sidebarHidden || []).length > 0
-            label: "Everything back"
-            note: "All of it in the sidebar again."
+            label: Lang.t("Everything back")
+            note: Lang.t("All of it in the sidebar again.")
             TextButton {
               objectName: "sidebarShowAll"
               theme: panel.theme
-              text: "Show all"
+              text: Lang.t("Show all")
               onClicked: panel.set("sidebarHidden", [])
             }
           }
@@ -923,15 +924,15 @@ Popup {
 
         Group {
           visible: panel.section === "appearance"
-          title: "Motion and sound"
+          title: Lang.t("Motion and sound")
           Line {
-            label: "Reduce motion"
-            note: "Pages and covers fade instead of turning."
+            label: Lang.t("Reduce motion")
+            note: Lang.t("Pages and covers fade instead of turning.")
             Toggle { theme: panel.theme; checked: panel.s.reduceMotion === true; onToggled: function(on) { panel.set("reduceMotion", on) } }
           }
           Line {
-            label: "Paper sounds"
-            note: "A soft rustle when a page turns and a notebook opens."
+            label: Lang.t("Paper sounds")
+            note: Lang.t("A soft rustle when a page turns and a notebook opens.")
             Toggle { theme: panel.theme; checked: panel.s.sounds !== false; onToggled: function(on) { panel.set("sounds", on) } }
           }
         }
@@ -940,20 +941,20 @@ Popup {
 
         Group {
           visible: panel.section === "writing"
-          title: "Checklists"
+          title: Lang.t("Checklists")
           Line {
-            label: "Cross off checked items"
-            note: "A line through what's done, as on paper."
+            label: Lang.t("Cross off checked items")
+            note: Lang.t("A line through what's done, as on paper.")
             Toggle { theme: panel.theme; checked: panel.s.strikeDone !== false; onToggled: function(on) { panel.set("strikeDone", on) } }
           }
         }
 
         Group {
           visible: panel.section === "writing"
-          title: "Times"
+          title: Lang.t("Times")
           Line {
-            label: "Clock"
-            note: "How times are shown: in the calendar, on events and reminders, in what's dated. You can type either way."
+            label: Lang.t("Clock")
+            note: Lang.t("How times are shown: in the calendar, on events and reminders, in what's dated. You can type either way.")
             Choice {
               objectName: "clockChoice"
               prefix: "clock_"
@@ -966,12 +967,12 @@ Popup {
 
         Group {
           visible: panel.section === "writing"
-          title: "Exports"
+          title: Lang.t("Exports")
           Line {
-            label: "Exports go to"
-            note: panel.s.exportTo === "folder" ? (panel.service ? panel.service.rootPath + "/Exports" : "The Exports folder") : "A folder picker asks where, each time."
+            label: Lang.t("Exports go to")
+            note: panel.s.exportTo === "folder" ? (panel.service ? panel.service.rootPath + "/Exports" : Lang.t("The Exports folder")) : Lang.t("A folder picker asks where, each time.")
             Choice {
-              options: [{ label: "Ask where", value: "ask" }, { label: "Exports folder", value: "folder" }]
+              options: [{ label: Lang.t("Ask where"), value: "ask" }, { label: "Exports folder", value: "folder" }]
               value: panel.s.exportTo || "ask"
               onPicked: function(v) { panel.set("exportTo", v) }
             }
@@ -980,9 +981,9 @@ Popup {
 
         Group {
           visible: panel.section === "writing"
-          title: "Markdown copy"
+          title: Lang.t("Markdown copy")
           Line {
-            label: "Keep a Markdown copy"
+            label: Lang.t("Keep a Markdown copy")
             note: panel.s.mirror === true && panel.service
               ? panel.service.mirror.status + (panel.service.mirror.status === "Up to date" && panel.service.mirror.lastSync
                 ? " · " + panel.service.mirror.files + " files · " + (panel.theme.twelveHour, Dates.clockOf(new Date(panel.service.mirror.lastSync))) : "")
@@ -991,29 +992,29 @@ Popup {
           }
           Line {
             visible: panel.s.mirror === true
-            label: "Copy to"
-            note: panel.service ? panel.service.mirrorPath + (panel.service.mirror.notPrivate ? " · some of the copy couldn't be made yours alone: another account on this computer may read it" : "") : ""
+            label: Lang.t("Copy to")
+            note: panel.service ? panel.service.mirrorPath + (panel.service.mirror.notPrivate ? Lang.t(" · some of the copy couldn't be made yours alone: another account on this computer may read it") : "") : ""
             Row {
               spacing: 6
               Field {
                 id: mirrorField
                 theme: panel.theme
                 width: 200
-                placeholder: "Default (Markdown)"
+                placeholder: Lang.t("Default (Markdown)")
                 onAccepted: panel.setMirror(text)
                 input.onActiveFocusChanged: if (!input.activeFocus) panel.setMirror(text)
               }
-              IconButton { theme: panel.theme; icon: panel.theme.icons.folder; tip: "Open the copy"; onClicked: panel.service.openMirror() }
+              IconButton { theme: panel.theme; icon: panel.theme.icons.folder; tip: Lang.t("Open the copy"); onClicked: panel.service.openMirror() }
             }
           }
           // [fork] Only once you're away (Service.qml, mirrorIdle).
           Line {
             visible: panel.s.mirror === true
-            label: "Copy when"
-            note: "Only after the computer's been idle this long, never while you're writing."
+            label: Lang.t("Copy when")
+            note: Lang.t("Only after the computer's been idle this long, never while you're writing.")
             Choice {
               prefix: "mirrorIdle_"
-              options: [{ label: "Right away", value: 0 }, { label: "2 min", value: 2 }, { label: "5 min", value: 5 }, { label: "10 min", value: 10 }, { label: "30 min", value: 30 }]
+              options: [{ label: Lang.t("Right away"), value: 0 }, { label: "2 min", value: 2 }, { label: "5 min", value: 5 }, { label: "10 min", value: 10 }, { label: "30 min", value: 30 }]
               value: panel.s.mirrorIdle === undefined ? 5 : panel.s.mirrorIdle
               onPicked: function(v) { panel.set("mirrorIdle", v) }
             }
@@ -1028,19 +1029,19 @@ Popup {
         Group {
           visible: panel.section === "ai"
           Line {
-            label: "Enable Uber Notebook skill"
-            note: "For Claude Code, Codex and other agents."
+            label: Lang.t("Enable Uber Notebook skill")
+            note: Lang.t("For Claude Code, Codex and other agents.")
             Toggle { objectName: "agentSkillToggle"; theme: panel.theme; checked: panel.s.agentSkill === true; onToggled: function(on) { panel.set("agentSkill", on) } }
           }
         }
 
         Group {
           visible: panel.section === "ai"
-          title: "Your agent"
-          note: "Claude, Grok and Codex work right here, in a panel on the page. The others open in a terminal. It's Omarchy's default agent too."
+          title: Lang.t("Your agent")
+          note: Lang.t("Claude, Grok and Codex work right here, in a panel on the page. The others open in a terminal. It's Omarchy's default agent too.")
           Line {
-            label: "Agent"
-            note: panel.agentName ? Agent.name(panel.agentName) + (Agent.runsHere(panel.agentName) ? ": works here" : ": opens in a terminal") : "None chosen yet"
+            label: Lang.t("Agent")
+            note: panel.agentName ? Agent.name(panel.agentName) + (Agent.runsHere(panel.agentName) ? Lang.t(": works here") : Lang.t(": opens in a terminal")) : Lang.t("None chosen yet")
             // Claude, Grok and Codex first, side by side (they work here);
             // then the others, which open in a terminal.
             Column {
@@ -1059,7 +1060,7 @@ Popup {
                 visible: settingsTiles.others().length > 0
                 textFormat: Text.PlainText
                 topPadding: 4
-                text: "In a terminal"
+                text: Lang.t("In a terminal")
                 font.family: panel.theme.uiFont
                 font.pixelSize: 11
                 font.weight: Font.DemiBold
@@ -1074,7 +1075,7 @@ Popup {
                     required property var modelData
                     objectName: "aiAgent_" + modelData.name
                     theme: panel.theme
-                    text: modelData.label
+                    text: Lang.t(modelData.label)
                     checked: panel.agentName === modelData.name
                     onClicked: panel.chooseAgent(modelData.name)
                   }
@@ -1086,8 +1087,8 @@ Popup {
 
         Group {
           visible: panel.section === "ai"
-          title: "Model and effort"
-          note: panel.hereAgents.length ? "Default is as each agent is set up. A faster model, or less effort, answers sooner; more effort thinks longer." : "Install Claude Code, Grok or Codex to choose here (omarchy default agent claude)."
+          title: Lang.t("Model and effort")
+          note: panel.hereAgents.length ? Lang.t("Default is as each agent is set up. A faster model, or less effort, answers sooner; more effort thinks longer.") : Lang.t("Install Claude Code, Grok or Codex to choose here (omarchy default agent claude).")
           Repeater {
             model: panel.hereAgents
             delegate: Line {
@@ -1095,10 +1096,10 @@ Popup {
               required property var modelData
               readonly property string key: modelData.name
               objectName: "aiChoice_" + key
-              label: modelData.label
+              label: Lang.t(modelData.label)
               // What it works with: as it's set up, or the chosen model's description.
               readonly property var chosen: (panel.modelLists[key] || []).filter(function(m) { return m.id === (panel.s[aiLine.key + "Model"] || "") })[0] || null
-              note: !(panel.s[key + "Model"] || "") ? "As " + Agent.name(key) + " is set up" + ((panel.s[key + "Effort"] || "") ? ", " + Agent.effortLabel(panel.s[key + "Effort"]).toLowerCase() + " effort" : "")
+              note: !(panel.s[key + "Model"] || "") ? Lang.t("As ") + Agent.name(key) + Lang.t(" is set up") + ((panel.s[key + "Effort"] || "") ? ", " + Agent.effortLabel(panel.s[key + "Effort"]).toLowerCase() + Lang.t(" effort") : "")
                 : chosen && chosen.description ? chosen.description : Agent.choiceLabel(panel.modelLists[key] || [], panel.s[key + "Model"] || "", panel.s[key + "Effort"] || "")
               AgentChoice {
                 theme: panel.theme
@@ -1117,15 +1118,15 @@ Popup {
         // (Permissions.js): sites Uber Notebook may contact for each.
         Group {
           visible: panel.section === "ai"
-          title: "Commands"
-          note: "When an agent in the panel wants to run a command, you're asked: for that command, or for the rest of the conversation. Here you can let it run any command without asking. A command runs programs that can read and change any file you can (your notes and Uber Notebook's settings too) and use the network, so this is off unless you turn it on."
+          title: Lang.t("Commands")
+          note: Lang.t("When an agent in the panel wants to run a command, you're asked: for that command, or for the rest of the conversation. Here you can let it run any command without asking. A command runs programs that can read and change any file you can (your notes and Uber Notebook's settings too) and use the network, so this is off unless you turn it on.")
           Repeater {
             model: [{ id: "claude", name: "Claude Code" }, { id: "grok", name: "Grok" }]
             delegate: Line {
               required property var modelData
               objectName: "aiShell_" + modelData.id
-              label: modelData.name + " may run any command"
-              note: "Without asking you"
+              label: modelData.name + Lang.t(" may run any command")
+              note: Lang.t("Without asking you")
               Toggle {
                 theme: panel.theme
                 checked: Permissions.allowed(panel.s.agentPermissions, modelData.id, "shell", "any")
@@ -1143,25 +1144,25 @@ Popup {
         Group {
           id: skillGroup
           visible: panel.section === "ai"
-          title: "Use with any AI"
+          title: Lang.t("Use with any AI")
           note: "Uber Notebook's skill tells an AI how to find, read and change your notes with omarchy-shell uber-notebook commands. With Enable Uber Notebook skill on (at the top), Claude Code, Codex, pi and Hermes find it by themselves; give it to any other AI that can run commands on this computer (omarchy-shell uber-notebook skill prints it too)."
           property string said: ""
           Line {
             objectName: "aiSkill"
-            label: "The skill"
+            label: Lang.t("The skill")
             note: skillGroup.said || (panel.service && panel.service.skillPath ? String(panel.service.skillPath).replace(/^\/home\/[^\/]+/, "~") : "")
             Row {
               spacing: 6
               TextButton {
                 objectName: "aiSkillCopy"
                 theme: panel.theme
-                text: "Copy"
+                text: Lang.t("Copy")
                 onClicked: skillGroup.said = panel.service && panel.service.copySkill() ? "Copied: paste it where your AI takes instructions" : "It couldn't be read"
               }
               TextButton {
                 objectName: "aiSkillSave"
                 theme: panel.theme
-                text: "Save a copy\u2026"
+                text: Lang.t("Save a copy\u2026")
                 onClicked: if (panel.service) panel.service.saveSkillCopy(function(to, why) {
                   if (to) skillGroup.said = "Saved to " + to.replace(/^\/home\/[^\/]+/, "~")
                   else if (why) skillGroup.said = "Not saved: " + why
@@ -1170,7 +1171,7 @@ Popup {
               TextButton {
                 objectName: "aiSkillShow"
                 theme: panel.theme
-                text: "Show"
+                text: Lang.t("Show")
                 onClicked: if (panel.service) panel.service.showSkill()
               }
             }
@@ -1178,12 +1179,12 @@ Popup {
         }
         Group {
           visible: panel.section === "ai"
-          title: "What agents may do without asking"
-          note: "When an agent in the panel wants to contact a site, search the web, use one of your connectors or move a page to the trash, you're asked in the panel first. Always puts it here, for that agent only. Agents can't change this list."
+          title: Lang.t("What agents may do without asking")
+          note: Lang.t("When an agent in the panel wants to contact a site, search the web, use one of your connectors or move a page to the trash, you're asked in the panel first. Always puts it here, for that agent only. Agents can't change this list.")
           Line {
             visible: Permissions.clean(panel.s.agentPermissions).length === 0
-            label: "Nothing yet"
-            note: "Everything is asked about."
+            label: Lang.t("Nothing yet")
+            note: Lang.t("Everything is asked about.")
           }
           Repeater {
             model: Permissions.clean(panel.s.agentPermissions)
@@ -1195,7 +1196,7 @@ Popup {
               TextButton {
                 objectName: "aiPermissionRemove"
                 theme: panel.theme
-                text: "Remove"
+                text: Lang.t("Remove")
                 onClicked: panel.set("agentPermissions", Permissions.without(panel.s.agentPermissions, modelData.agent, modelData.action, modelData.target))
               }
             }
@@ -1206,10 +1207,10 @@ Popup {
 
         Group {
           visible: panel.section === "audio"
-          title: "Microphone"
+          title: Lang.t("Microphone")
           Line {
-            label: "Microphone"
-            note: "What audio notes and dictation record from."
+            label: Lang.t("Microphone")
+            note: Lang.t("What audio notes and dictation record from.")
             Rectangle {
               id: micButton
               objectName: "micPicker"
@@ -1258,7 +1259,7 @@ Popup {
                       width: parent.width
                       theme: panel.theme
                       icon: panel.theme.icons.mic
-                      text: modelData.label
+                      text: Lang.t(modelData.label)
                       checked: (panel.s.audioInput || "") === modelData.name
                       onClicked: { micMenu.close(); panel.set("audioInput", modelData.name); panel.heard = "" }
                     }
@@ -1268,12 +1269,12 @@ Popup {
             }
           }
           Line {
-            label: "Make my voice louder"
-            note: "Evens out your voice once it's recorded, so a quiet microphone (a laptop's) comes out loud and clear without turning up the hiss. Dictation too."
+            label: Lang.t("Make my voice louder")
+            note: Lang.t("Evens out your voice once it's recorded, so a quiet microphone (a laptop's) comes out loud and clear without turning up the hiss. Dictation too.")
             Toggle { theme: panel.theme; checked: panel.s.audioBoost !== false; onToggled: function(on) { panel.set("audioBoost", on); panel.heard = "" } }
           }
           Line {
-            label: "Test the microphone"
+            label: Lang.t("Test the microphone")
             note: panel.heardNote
             Row {
               spacing: 10
@@ -1312,7 +1313,7 @@ Popup {
                 anchors.verticalCenter: parent.verticalCenter
                 theme: panel.theme
                 icon: panel.testing ? panel.theme.icons.stop : panel.theme.icons.mic
-                text: panel.testing ? "Stop" : "Test"
+                text: panel.testing ? Lang.t("Stop") : Lang.t("Test")
                 checked: panel.testing
                 onClicked: panel.testMicrophone()
               }
@@ -1322,17 +1323,17 @@ Popup {
 
         Group {
           visible: panel.section === "audio"
-          title: "Voice"
+          title: Lang.t("Voice")
           Line {
-            label: "Write out audio notes"
+            label: Lang.t("Write out audio notes")
             note: panel.recorder && panel.recorder.checked && !panel.recorder.canTranscribe
               ? "Needs voxtype, Omarchy's dictation (omarchy voxtype install). Audio notes still record and play without it."
               : "What you say in an audio note, written out under it by voxtype as soon as it's recorded. Ctrl+Shift+D dictates into a page."
             Toggle { theme: panel.theme; checked: panel.s.audioTranscribe !== false; onToggled: function(on) { panel.set("audioTranscribe", on) } }
           }
           Line {
-            label: "Meetings"
-            note: !panel.meetings || (panel.meetings.checked && !panel.meetings.available) ? "Need voxtype, Omarchy's dictation (omarchy voxtype install)."
+            label: Lang.t("Meetings")
+            note: !panel.meetings || (panel.meetings.checked && !panel.meetings.available) ? Lang.t("Need voxtype, Omarchy's dictation (omarchy voxtype install).")
               : panel.meetings.enabled && panel.meetings.waiting ? panel.meetings.waitingText
               : panel.meetings.enabled ? "On: /meeting, or the people at the top of a page, records one. voxtype writes out who said what (you, and the other side of a call)."
               : "voxtype's meeting mode is off. Turning it on sets meeting.enabled in its settings; it takes effect when voxtype restarts."
@@ -1341,7 +1342,7 @@ Popup {
               visible: panel.meetings !== null && panel.meetings.available && !panel.meetings.enabled
               theme: panel.theme
               icon: panel.theme.icons.people
-              text: panel.meetings && panel.meetings.working === "enable" ? "Turning it on…" : "Turn on"
+              text: panel.meetings && panel.meetings.working === "enable" ? Lang.t("Turning it on…") : Lang.t("Turn on")
               onClicked: if (!panel.meetings.working) panel.meetings.enable(function() {})
             }
           }
@@ -1351,8 +1352,8 @@ Popup {
 
         Group {
           visible: panel.section === "profiles" && panel.profiles !== null
-          title: "Your profiles"
-          note: "Each profile has its own notebooks, pages, calendar, people and templates. Switch between them at the top of the sidebar or the shelf."
+          title: Lang.t("Your profiles")
+          note: Lang.t("Each profile has its own notebooks, pages, calendar, people and templates. Switch between them at the top of the sidebar or the shelf.")
           Repeater {
             model: panel.profiles ? panel.profiles.shown : []
             delegate: ProfileRow {}
@@ -1370,13 +1371,13 @@ Popup {
                 objectName: "settingsNewProfile"
                 theme: panel.theme
                 icon: panel.theme.icons.plus
-                text: "New profile"
+                text: Lang.t("New profile")
                 onClicked: { panel.addingProfile = true; addForm.reset(""); Qt.callLater(addForm.focusName) }
               }
               TextButton {
                 visible: panel.profiles !== null && panel.profiles.demo === null
                 theme: panel.theme
-                text: "Explore the demo"
+                text: Lang.t("Explore the demo")
                 onClicked: { panel.close(); panel.profiles.openDemo() }
               }
             }
@@ -1398,26 +1399,26 @@ Popup {
 
         Group {
           visible: panel.section === "backups" && panel.backups !== null
-          title: "Back up now"
-          note: panel.backups ? (panel.backups.working === "backup" ? "Backing up…" : panel.backups.working === "restore" ? "Putting a backup back…" : panel.backups.note) : ""
+          title: Lang.t("Back up now")
+          note: panel.backups ? (panel.backups.working === "backup" ? Lang.t("Backing up…") : panel.backups.working === "restore" ? Lang.t("Putting a backup back…") : Lang.t(panel.backups.note)) : ""
           Line {
-            label: panel.profiles && panel.profiles.current ? "“" + panel.profiles.current.name + "”" : "This profile"
-            note: "This profile's notebooks, pages, calendar, people and templates, in one .tar.gz."
+            label: panel.profiles && panel.profiles.current ? "“" + panel.profiles.current.name + Lang.t("”") : Lang.t("This profile")
+            note: Lang.t("This profile's notebooks, pages, calendar, people and templates, in one .tar.gz.")
             TextButton {
               objectName: "backupNow"
               theme: panel.theme
               primary: true
-              text: "Back up"
+              text: Lang.t("Back up")
               onClicked: panel.backUp("")
             }
           }
           Line {
-            label: "All profiles"
-            note: "Every profile in one file (the demo can start over, so it's left out)."
+            label: Lang.t("All profiles")
+            note: Lang.t("Every profile in one file (the demo can start over, so it's left out).")
             TextButton {
               objectName: "backupAll"
               theme: panel.theme
-              text: "Back up all"
+              text: Lang.t("Back up all")
               onClicked: panel.backUp("all")
             }
           }
@@ -1425,21 +1426,21 @@ Popup {
 
         Group {
           visible: panel.section === "backups" && panel.backups !== null
-          title: "Automatic backups"
-          note: panel.s.backupEvery === "daily" || panel.s.backupEvery === "weekly" ? "Every profile, while Uber Notebook runs. The oldest automatic ones go to the trash; the ones you make are never cleared out." : ""
+          title: Lang.t("Automatic backups")
+          note: panel.s.backupEvery === "daily" || panel.s.backupEvery === "weekly" ? Lang.t("Every profile, while Uber Notebook runs. The oldest automatic ones go to the trash; the ones you make are never cleared out.") : ""
           Line {
-            label: "Back up automatically"
+            label: Lang.t("Back up automatically")
             Choice {
               prefix: "backupEvery_"
-              options: [{ label: "Off", value: "off" }, { label: "Daily", value: "daily" }, { label: "Weekly", value: "weekly" }]
+              options: [{ label: Lang.t("Off"), value: "off" }, { label: "Daily", value: "daily" }, { label: "Weekly", value: "weekly" }]
               value: panel.s.backupEvery || "off"
               onPicked: function(v) { panel.set("backupEvery", v) }
             }
           }
           Line {
             visible: panel.s.backupEvery === "daily" || panel.s.backupEvery === "weekly"
-            label: "Keep"
-            note: "How many automatic backups."
+            label: Lang.t("Keep")
+            note: Lang.t("How many automatic backups.")
             Choice {
               prefix: "backupKeep_"
               options: Backups.KEEP.map(function(n) { return { label: String(n), value: n } })
@@ -1448,15 +1449,15 @@ Popup {
             }
           }
           Line {
-            label: "Folder"
-            note: panel.backups ? panel.backups.folderShown + (panel.backups.notPrivate ? " · can't be made yours alone: another account on this computer may read your backups" : "") : ""
+            label: Lang.t("Folder")
+            note: panel.backups ? panel.backups.folderShown + (panel.backups.notPrivate ? Lang.t(" · can't be made yours alone: another account on this computer may read your backups") : "") : ""
             Row {
               spacing: 4
               TextButton {
                 objectName: "backupFolderChange"
                 theme: panel.theme
-                text: "Change…"
-                onClicked: panel.service.pickFolder("Where backups go", function(path) {
+                text: Lang.t("Change…")
+                onClicked: panel.service.pickFolder(Lang.t("Where backups go"), function(path) {
                   if (!path) return
                   var home = panel.service.home || ""
                   panel.set("backupFolder", home && path.indexOf(home + "/") === 0 ? "~" + path.slice(home.length) : path)
@@ -1466,12 +1467,12 @@ Popup {
               TextButton {
                 visible: !!panel.s.backupFolder
                 theme: panel.theme
-                text: "Default"
+                text: Lang.t("Default")
                 onClicked: { panel.set("backupFolder", ""); Qt.callLater(function() { panel.backups.refresh() }) }
               }
               IconButton {
                 theme: panel.theme; icon: panel.theme.icons.folder; size: 30; iconSize: 14
-                tip: "Open the folder"
+                tip: Lang.t("Open the folder")
                 onClicked: panel.service.store.openLocal(panel.backups.folder)
               }
             }
@@ -1480,15 +1481,15 @@ Popup {
 
         Group {
           visible: panel.section === "backups" && panel.backups !== null
-          title: "Restore"
-          note: "A backup comes back as new profiles, each in a new folder. Nothing you have now is changed."
+          title: Lang.t("Restore")
+          note: Lang.t("A backup comes back as new profiles, each in a new folder. Nothing you have now is changed.")
           // Asked first: what's in it, and Restore.
           Line {
             visible: panel.restoring !== null
             objectName: "restoreAsk"
             label: panel.restoring ? panel.restoring.path.split("/").pop() : ""
             noteColor: panel.restoring && !panel.restoring.checking && !panel.restoring.ok ? panel.theme.urgent : panel.theme.muted
-            note: !panel.restoring ? "" : panel.restoring.checking ? "Looking inside…"
+            note: !panel.restoring ? "" : panel.restoring.checking ? Lang.t("Looking inside…")
               : !panel.restoring.ok ? panel.restoring.problem
               : "Puts back " + panel.restoring.manifest.profiles.map(function(p) { return "“" + p.name + "”" }).join(", ")
                 + (panel.restoring.manifest.created ? ", backed up " + panel.whenLabel(Date.parse(panel.restoring.manifest.created)) : "") + "."
@@ -1499,10 +1500,10 @@ Popup {
                 visible: panel.restoring !== null && panel.restoring.ok
                 theme: panel.theme
                 primary: true
-                text: "Restore"
+                text: Lang.t("Restore")
                 onClicked: panel.restoreNow()
               }
-              TextButton { theme: panel.theme; text: panel.restoring && panel.restoring.ok ? "Cancel" : "Close"; onClicked: panel.restoring = null }
+              TextButton { theme: panel.theme; text: panel.restoring && panel.restoring.ok ? Lang.t("Cancel") : Lang.t("Close"); onClicked: panel.restoring = null }
             }
           }
           // Just put back: open one.
@@ -1511,12 +1512,12 @@ Popup {
             delegate: Line {
               required property var modelData
               objectName: "restoredProfile"
-              label: "“" + modelData.name + "” is back"
+              label: "“" + modelData.name + Lang.t("” is back")
               note: modelData.folder
               TextButton {
                 objectName: "restoredOpen"
                 theme: panel.theme
-                text: "Open it"
+                text: Lang.t("Open it")
                 onClicked: { panel.close(); panel.profiles.use(modelData.id) }
               }
             }
@@ -1527,22 +1528,22 @@ Popup {
               required property var modelData
               objectName: "backupRow"
               label: modelData.name.replace(/\.tar\.gz$/, "")
-              note: (panel.theme.twelveHour, panel.whenLabel(modelData.time)) + " · " + Backups.sizeLabel(modelData.size) + (modelData.automatic ? " · automatic" : "")
+              note: (panel.theme.twelveHour, panel.whenLabel(modelData.time)) + " · " + Backups.sizeLabel(modelData.size) + (modelData.automatic ? Lang.t(" · automatic") : "")
               TextButton {
                 objectName: "backupRestore"
                 theme: panel.theme
-                text: "Restore…"
+                text: Lang.t("Restore…")
                 onClicked: panel.askRestore(modelData.path)
               }
             }
           }
           Line {
-            label: panel.backups && panel.backups.list.length ? "Another backup" : "No backups here yet"
-            note: "A backup from another folder or another computer."
+            label: panel.backups && panel.backups.list.length ? Lang.t("Another backup") : Lang.t("No backups here yet")
+            note: Lang.t("A backup from another folder or another computer.")
             TextButton {
               objectName: "restoreFromFile"
               theme: panel.theme
-              text: "Choose a file…"
+              text: Lang.t("Choose a file…")
               onClicked: panel.chooseBackup()
             }
           }
@@ -1555,7 +1556,7 @@ Popup {
         Group {
           visible: panel.section === "notifications"
           Line {
-            label: "Show reminder details in notifications"
+            label: Lang.t("Show reminder details in notifications")
             Toggle { objectName: "reminderWordsToggle"; theme: panel.theme; checked: panel.s.reminderWords === true; onToggled: function(on) { panel.set("reminderWords", on) } }
           }
         }
@@ -1615,7 +1616,7 @@ Popup {
                     anchors.verticalCenter: parent.verticalCenter
                     visible: panel.service !== null && release.modelData.version === panel.service.version
                     textFormat: Text.PlainText
-                    text: "Yours"
+                    text: Lang.t("Yours")
                     font.family: panel.theme.uiFont
                     font.pixelSize: 11
                     color: panel.theme.accent
@@ -1626,7 +1627,7 @@ Popup {
                   anchors.rightMargin: 16
                   anchors.verticalCenter: parent.verticalCenter
                   textFormat: Text.PlainText
-                  text: release.open ? "Hide" : "Show"
+                  text: release.open ? Lang.t("Hide") : Lang.t("Show")
                   font.family: panel.theme.uiFont
                   font.pixelSize: 12
                   color: panel.theme.muted
@@ -1658,7 +1659,7 @@ Popup {
           Text {
             visible: panel.releases.length === 0
             textFormat: Text.PlainText
-            text: "The notes aren't here."
+            text: Lang.t("The notes aren't here.")
             font.family: panel.theme.uiFont
             font.pixelSize: 13
             color: panel.theme.muted
@@ -1672,7 +1673,7 @@ Popup {
 
         Group {
           visible: panel.section === "about"
-          title: "Updates"
+          title: Lang.t("Updates")
           Line {
             objectName: "updateStatus"
             label: "Uber Notebook " + (panel.service ? panel.service.version : "")
@@ -1685,29 +1686,29 @@ Popup {
                 visible: panel.updates !== null && panel.updates.available
                 theme: panel.theme
                 primary: true
-                text: "What's new"
+                text: Lang.t("What's new")
                 onClicked: panel.releaseNotesRequested(false)
               }
               TextButton {
                 objectName: "updateCheck"
                 theme: panel.theme
-                text: panel.updates && panel.updates.status === "checking" ? "Checking…" : "Check now"
+                text: panel.updates && panel.updates.status === "checking" ? Lang.t("Checking…") : Lang.t("Check now")
                 onClicked: if (panel.updates) panel.updates.check()
               }
             }
           }
           Line {
-            label: "Check for updates automatically"
-            note: "Once a day, Uber Notebook asks GitHub for its newest version. Nothing of yours goes with it."
+            label: Lang.t("Check for updates automatically")
+            note: Lang.t("Once a day, Uber Notebook asks GitHub for its newest version. Nothing of yours goes with it.")
             Toggle { objectName: "updateAuto"; theme: panel.theme; checked: panel.s.checkUpdates !== false; onToggled: function(on) { panel.set("checkUpdates", on) } }
           }
           Line {
-            label: "Release notes"
-            note: "What's in the version you have."
+            label: Lang.t("Release notes")
+            note: Lang.t("What's in the version you have.")
             TextButton {
               objectName: "releaseNotesOpen"
               theme: panel.theme
-              text: "Read"
+              text: Lang.t("Read")
               onClicked: panel.releaseNotesRequested(true)
             }
           }
@@ -1715,10 +1716,10 @@ Popup {
 
         Group {
           visible: panel.section === "about"
-          title: "Contact"
+          title: Lang.t("Contact")
           Line {
-            label: "Follow me on X"
-            note: "@devsec_ai: news, what's next, and a place to say hello."
+            label: Lang.t("Follow me on X")
+            note: Lang.t("@devsec_ai: news, what's next, and a place to say hello.")
             TextButton {
               objectName: "aboutX"
               theme: panel.theme
@@ -1729,12 +1730,12 @@ Popup {
           }
           Line {
             visible: panel.updates !== null && panel.updates.homepage !== ""
-            label: "Project page"
+            label: Lang.t("Project page")
             note: panel.updates ? panel.updates.homepage.replace(/^https:\/\//, "") : ""
             TextButton {
               theme: panel.theme
               icon: panel.theme.icons.openExternal
-              text: "Open"
+              text: Lang.t("Open")
               onClicked: panel.service.store.openUrl(panel.updates.homepage)
             }
           }
@@ -1742,10 +1743,10 @@ Popup {
 
         Group {
           visible: panel.section === "about"
-          title: "Your notes"
+          title: Lang.t("Your notes")
           Line {
-            label: "On your computer"
-            note: "Your notes are plain files on your computer, yours alone: each page and notebook a JSON file, pictures copied in beside them. Uber Notebook goes online only to ask GitHub for a newer version and to read a link's page for a bookmark; an agent you ask works through its own account and is given what it needs of the page."
+            label: Lang.t("On your computer")
+            note: Lang.t("Your notes are plain files on your computer, yours alone: each page and notebook a JSON file, pictures copied in beside them. Uber Notebook goes online only to ask GitHub for a newer version and to read a link's page for a bookmark; an agent you ask works through its own account and is given what it needs of the page.")
           }
         }
       }

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Effects
 import "../Docs.js" as Docs
 import "../Colors.js" as Colors
+import "../Lang.js" as Lang  // [fork] German
 
 // Over words you select in Pages: turn the block into another kind, bold,
 // italic, underline, strikethrough, code, a link, and colors. It never takes
@@ -67,8 +68,8 @@ Item {
       theme: bubble.theme
       size: 30
       icon: bubble.theme.icons.agent
-      label: "Ask"
-      tip: "Ask your agent about these words  Ctrl+J"
+      label: Lang.t("Ask")
+      tip: Lang.t("Ask your agent about these words  Ctrl+J")
       onClicked: bubble.agentRequested()
     }
     Sep {}
@@ -77,7 +78,7 @@ Item {
       theme: bubble.theme
       size: 30
       label: Docs.kindLabel(bubble.st.type, bubble.st.toggle) + "  \u25be"
-      tip: "Turn into"
+      tip: Lang.t("Turn into")
       onClicked: turnPop.open()
       Pop {
         id: turnPop
@@ -92,7 +93,7 @@ Item {
               required property var modelData
               theme: bubble.theme
               icon: bubble.theme.icons[modelData.icon] || ""
-              text: modelData.label
+              text: Lang.t(modelData.label)
               checked: bubble.st.type === modelData.type && !!bubble.st.toggle === !!modelData.toggle
               onClicked: {
                 turnPop.close()
@@ -104,21 +105,21 @@ Item {
       }
     }
     Sep {}
-    IconButton { theme: bubble.theme; size: 30; icon: bubble.theme.icons.bold; tip: "Bold  Ctrl+B"; checked: bubble.words.bold === "all"; onClicked: bubble.editor.formatInline("bold") }
-    IconButton { theme: bubble.theme; size: 30; icon: bubble.theme.icons.italic; tip: "Italic  Ctrl+I"; checked: bubble.words.italic === "all"; onClicked: bubble.editor.formatInline("italic") }
-    IconButton { theme: bubble.theme; size: 30; icon: bubble.theme.icons.underline; tip: "Underline  Ctrl+U"; checked: bubble.words.underline === "all"; onClicked: bubble.editor.formatInline("underline") }
-    IconButton { theme: bubble.theme; size: 30; icon: bubble.theme.icons.strike; tip: "Strikethrough  Ctrl+Shift+X"; checked: bubble.words.strike === "all"; onClicked: bubble.editor.formatInline("strike") }
-    IconButton { theme: bubble.theme; size: 30; icon: bubble.theme.icons.code; tip: "Code  Ctrl+E"; checked: bubble.words.code === "all"; onClicked: bubble.editor.formatInline("code") }
+    IconButton { theme: bubble.theme; size: 30; icon: bubble.theme.icons.bold; tip: Lang.t("Bold  Ctrl+B"); checked: bubble.words.bold === "all"; onClicked: bubble.editor.formatInline("bold") }
+    IconButton { theme: bubble.theme; size: 30; icon: bubble.theme.icons.italic; tip: Lang.t("Italic  Ctrl+I"); checked: bubble.words.italic === "all"; onClicked: bubble.editor.formatInline("italic") }
+    IconButton { theme: bubble.theme; size: 30; icon: bubble.theme.icons.underline; tip: Lang.t("Underline  Ctrl+U"); checked: bubble.words.underline === "all"; onClicked: bubble.editor.formatInline("underline") }
+    IconButton { theme: bubble.theme; size: 30; icon: bubble.theme.icons.strike; tip: Lang.t("Strikethrough  Ctrl+Shift+X"); checked: bubble.words.strike === "all"; onClicked: bubble.editor.formatInline("strike") }
+    IconButton { theme: bubble.theme; size: 30; icon: bubble.theme.icons.code; tip: Lang.t("Code  Ctrl+E"); checked: bubble.words.code === "all"; onClicked: bubble.editor.formatInline("code") }
     Sep {}
     IconButton {
       id: linkButton
-      theme: bubble.theme; size: 30; icon: bubble.theme.icons.link; tip: "Link  Ctrl+K"
+      theme: bubble.theme; size: 30; icon: bubble.theme.icons.link; tip: Lang.t("Link  Ctrl+K")
       checked: !!bubble.words.link
       onClicked: bubble.linkRequested(linkButton)
     }
     IconButton {
       id: colorButton
-      theme: bubble.theme; size: 30; icon: bubble.theme.icons.textColor; tip: "Color"
+      theme: bubble.theme; size: 30; icon: bubble.theme.icons.textColor; tip: Lang.t("Color")
       swatch: bubble.words.color ? bubble.words.color : "transparent"
       onClicked: {
         colorPop.mode = "words"

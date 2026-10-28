@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
 import "../Covers.js" as Covers
+import "../Lang.js" as Lang  // [fork] German
 
 // The shelf: every notebook, lying on the desk cover up. Click one to open it;
 // right-click for its cover, exporting or putting it in the trash. The search
@@ -101,7 +102,7 @@ Item {
       }
       Text {
         textFormat: Text.PlainText
-        text: "Notebooks"
+        text: Lang.t("Notebooks")
         font.family: shelf.theme.markerFont
         font.pixelSize: 30
         color: shelf.theme.text
@@ -121,7 +122,7 @@ Item {
         Text {
           anchors.verticalCenter: parent.verticalCenter
           textFormat: Text.PlainText
-          text: shelf.notebooks.length === 1 ? "1 notebook" : shelf.notebooks.length + " notebooks"
+          text: shelf.notebooks.length === 1 ? Lang.t("1 notebook") : shelf.notebooks.length + Lang.t(" notebooks")
           font.family: shelf.theme.uiFont
           font.pixelSize: 12
           color: shelf.theme.muted
@@ -138,7 +139,7 @@ Item {
       height: 38
       radius: 19
       icon: shelf.theme.icons.search
-      placeholder: "Search every page"
+      placeholder: Lang.t("Search every page")
       onEdited: function(text) { shelf.query = text; searchTimer.restart() }
       onEscaped: { text = ""; shelf.query = ""; shelf.results = [] }
       onAccepted: if (shelf.results.length) shelf.resultOpened(shelf.results[0].notebookId, shelf.results[0].pageId, shelf.query)
@@ -156,8 +157,8 @@ Item {
         onPicked: function(space) { shelf.spaceRequested(space) }
       }
       Item { width: 8; height: 1 }
-      IconButton { theme: shelf.theme; icon: shelf.theme.icons.notebookPlus; label: "New notebook"; tip: "Ctrl+Shift+N"; onClicked: shelf.newRequested() }
-      IconButton { theme: shelf.theme; icon: shelf.theme.icons.cog; tip: "Settings  Ctrl+,"; onClicked: shelf.settingsRequested() }
+      IconButton { theme: shelf.theme; icon: shelf.theme.icons.notebookPlus; label: Lang.t("New notebook"); tip: Lang.t("Ctrl+Shift+N"); onClicked: shelf.newRequested() }
+      IconButton { theme: shelf.theme; icon: shelf.theme.icons.cog; tip: Lang.t("Settings  Ctrl+,"); onClicked: shelf.settingsRequested() }
     }
   }
 
@@ -238,7 +239,7 @@ Item {
             textFormat: Text.PlainText
             anchors.horizontalCenter: lift.horizontalCenter
             y: lift.y + lift.height + 16
-            text: (tile.modelData.pageCount === 1 ? "1 page" : tile.modelData.pageCount + " pages") + "  \u00b7  " + shelf.ago(tile.modelData.modified)
+            text: (tile.modelData.pageCount === 1 ? Lang.t("1 page") : tile.modelData.pageCount + Lang.t(" pages")) + "  \u00b7  " + shelf.ago(tile.modelData.modified)
             font.family: shelf.theme.uiFont
             font.pixelSize: 12
             color: shelf.theme.muted
@@ -280,7 +281,7 @@ Item {
             anchors.centerIn: parent
             spacing: 8
             Icon { theme: shelf.theme; text: shelf.theme.icons.plus; size: 34; color: newHover.hovered ? shelf.theme.accent : shelf.theme.muted; anchors.horizontalCenter: parent.horizontalCenter }
-            Text { textFormat: Text.PlainText; text: "New notebook"; font.family: shelf.theme.uiFont; font.pixelSize: 13; color: shelf.theme.muted; anchors.horizontalCenter: parent.horizontalCenter }
+            Text { textFormat: Text.PlainText; text: Lang.t("New notebook"); font.family: shelf.theme.uiFont; font.pixelSize: 13; color: shelf.theme.muted; anchors.horizontalCenter: parent.horizontalCenter }
           }
         }
         HoverHandler { id: newHover; cursorShape: Qt.PointingHandCursor }
@@ -296,12 +297,12 @@ Item {
     property var target: null
     contentItem: Column {
       spacing: 2
-      MenuRow { theme: shelf.theme; icon: shelf.theme.icons.open; text: "Open"; onClicked: { menu.close(); shelf.openRequested(menu.target, shelf.coverRect(menu.target.id, shelf)) } }
-      MenuRow { theme: shelf.theme; icon: shelf.theme.icons.cog; text: "Cover, paper and pen\u2026"; onClicked: { menu.close(); shelf.editRequested(menu.target) } }
-      MenuRow { theme: shelf.theme; icon: shelf.theme.icons.export; text: "Export as Markdown"; onClicked: { menu.close(); shelf.store.exportNotebook(menu.target.id) } }
-      MenuRow { objectName: "shelfMoveToPages"; theme: shelf.theme; icon: shelf.theme.icons.pages; text: "Move to Pages\u2026"; onClicked: { menu.close(); shelf.moveRequested(menu.target) } }
+      MenuRow { theme: shelf.theme; icon: shelf.theme.icons.open; text: Lang.t("Open"); onClicked: { menu.close(); shelf.openRequested(menu.target, shelf.coverRect(menu.target.id, shelf)) } }
+      MenuRow { theme: shelf.theme; icon: shelf.theme.icons.cog; text: Lang.t("Cover, paper and pen\u2026"); onClicked: { menu.close(); shelf.editRequested(menu.target) } }
+      MenuRow { theme: shelf.theme; icon: shelf.theme.icons.export; text: Lang.t("Export as Markdown"); onClicked: { menu.close(); shelf.store.exportNotebook(menu.target.id) } }
+      MenuRow { objectName: "shelfMoveToPages"; theme: shelf.theme; icon: shelf.theme.icons.pages; text: Lang.t("Move to Pages\u2026"); onClicked: { menu.close(); shelf.moveRequested(menu.target) } }
       Rectangle { width: parent.width; height: 1; color: shelf.theme.line }
-      MenuRow { theme: shelf.theme; icon: shelf.theme.icons.trash; text: "Put in the trash\u2026"; danger: true; onClicked: { menu.close(); shelf.deleteRequested(menu.target) } }
+      MenuRow { theme: shelf.theme; icon: shelf.theme.icons.trash; text: Lang.t("Put in the trash\u2026"); danger: true; onClicked: { menu.close(); shelf.deleteRequested(menu.target) } }
     }
   }
 
@@ -338,7 +339,7 @@ Item {
       textFormat: Text.PlainText
       width: resultsList.width
       height: 30
-      text: shelf.searching && shelf.results.length === 0 ? "Looking\u2026"
+      text: shelf.searching && shelf.results.length === 0 ? Lang.t("Looking\u2026")
         : shelf.results.length === 0 ? "Nothing on any page says \u201c" + shelf.query.trim() + "\u201d"
         : shelf.results.length === 1 ? "1 page" : shelf.results.length + " pages"
       font.family: shelf.theme.uiFont
@@ -373,7 +374,7 @@ Item {
         spacing: 3
         Text {
           width: parent.width
-          text: shelf.escapeHtml(result.modelData.pageTitle) + "   <font color=\"" + shelf.theme.muted + "\">" + result.modelData.notebookTitle.replace(/&/g, "&amp;").replace(/</g, "&lt;") + ", page " + (result.modelData.pageNumber) + "</font>"
+          text: shelf.escapeHtml(result.modelData.pageTitle) + "   <font color=\"" + shelf.theme.muted + "\">" + result.modelData.notebookTitle.replace(/&/g, "&amp;").replace(/</g, "&lt;") + Lang.t(", page ") + (result.modelData.pageNumber) + "</font>"
           textFormat: Text.StyledText
           elide: Text.ElideRight
           font.family: shelf.theme.uiFont
@@ -403,7 +404,7 @@ Item {
     visible: shelf.notebooks.length === 0 && shelf.store && shelf.store.ready
     anchors.horizontalCenter: parent.horizontalCenter
     y: header.height + shelf.tileH + 130
-    text: "Your first notebook is waiting. Pick a cover."
+    text: Lang.t("Your first notebook is waiting. Pick a cover.")
     font.family: shelf.theme.handFont
     font.pixelSize: 26
     color: shelf.theme.muted

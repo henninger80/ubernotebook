@@ -1,5 +1,6 @@
 import QtQuick
 import "../Notes.js" as Notes
+import "../Lang.js" as Lang  // [fork] German
 
 // A footnote, written or changed: its words. Enter (or Done) keeps them,
 // Esc leaves it as it was, Remove takes it out of the line.
@@ -33,7 +34,7 @@ Pop {
 
     Text {
       textFormat: Text.PlainText
-      text: pop.number > 0 ? "Footnote " + pop.number : "A footnote"
+      text: pop.number > 0 ? Lang.t("Footnote ") + pop.number : Lang.t("A footnote")
       font.family: pop.theme.uiFont
       font.pixelSize: 12
       font.weight: Font.DemiBold
@@ -47,7 +48,7 @@ Pop {
       height: 36
       fontSize: 14
       maximumLength: Notes.MAX_NOTE
-      placeholder: "Where it's from, or a word more about it"
+      placeholder: Lang.t("Where it's from, or a word more about it")
       onAccepted: pop.done()
       onEscaped: pop.close()
     }
@@ -58,13 +59,13 @@ Pop {
         objectName: "noteRemove"
         visible: pop.number > 0
         theme: pop.theme
-        text: "Remove"
+        text: Lang.t("Remove")
         onClicked: { pop.close(); pop.removed() }
       }
       TextButton {
         objectName: "noteDone"
         theme: pop.theme
-        text: "Done"
+        text: Lang.t("Done")
         onClicked: pop.done()
       }
     }

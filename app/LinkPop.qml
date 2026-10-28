@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Html.js" as Html
+import "../Lang.js" as Lang  // [fork] German
 
 // A link on the selected words (or the word at the cursor): type or paste
 // where it goes. Ctrl+click a link on the page to open it.
@@ -53,12 +54,12 @@ Pop {
       spacing: 6
       layoutDirection: Qt.RightToLeft
       width: parent.width
-      Chip { theme: pop.theme; text: "Link"; checked: true; onClicked: pop.apply() }
-      Chip { theme: pop.theme; text: "Remove link"; visible: pop.editor && pop.editor.currentLink() !== ""; onClicked: { pop.close(); pop.editor.setLink("") } }
+      Chip { theme: pop.theme; text: Lang.t("Link"); checked: true; onClicked: pop.apply() }
+      Chip { theme: pop.theme; text: Lang.t("Remove link"); visible: pop.editor && pop.editor.currentLink() !== ""; onClicked: { pop.close(); pop.editor.setLink("") } }
       Text {
         textFormat: Text.PlainText
         visible: field.text.trim() !== "" && Html.cleanUrl(field.text) === ""
-        text: "That doesn't look like a web address"
+        text: Lang.t("That doesn't look like a web address")
         font.family: pop.theme.uiFont
         font.pixelSize: 12
         color: pop.theme.urgent

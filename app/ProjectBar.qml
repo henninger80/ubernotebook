@@ -3,6 +3,7 @@ import QtQuick.Controls
 import "../Workspace.js" as Workspace
 import "../Docs.js" as Docs
 import "../Dates.js" as Dates
+import "../Lang.js" as Lang  // [fork] German
 
 // A project's line under its title: its status (a click changes it), when
 // it's due (late in red; a click picks a date), and how far along it is (the
@@ -64,7 +65,7 @@ Item {
       Text {
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: chip.label
+        text: Lang.t(chip.label)
         font.family: bar.theme.uiFont
         font.pixelSize: 13
         font.weight: Font.Medium
@@ -82,7 +83,7 @@ Item {
     Chip2 {
       id: statusChip
       objectName: "projectStatus"
-      label: bar.status.label
+      label: Lang.t(bar.status.label)
       dot: bar.shade(bar.status.color, false)
       ink: bar.theme.text
       fill: bar.shade(bar.status.color, true)
@@ -103,14 +104,14 @@ Item {
               width: parent.width
               theme: bar.theme
               icon: ""
-              text: modelData.label
+              text: Lang.t(modelData.label)
               checked: bar.status.id === modelData.id
               onClicked: { statusMenu.close(); bar.view.setProjectStatus(modelData.id) }
               Rectangle { x: 14; anchors.verticalCenter: parent.verticalCenter; width: 9; height: 9; radius: 4.5; color: bar.shade(modelData.color, false); visible: !parent.checked }
             }
           }
           Rectangle { width: parent.width; height: 1; color: bar.theme.line }
-          MenuRow { width: parent.width; theme: bar.theme; icon: bar.theme.icons.close; text: "Not a project"; onClicked: { statusMenu.close(); bar.view.setProject(null) } }
+          MenuRow { width: parent.width; theme: bar.theme; icon: bar.theme.icons.close; text: Lang.t("Not a project"); onClicked: { statusMenu.close(); bar.view.setProject(null) } }
         }
       }
     }
@@ -119,7 +120,7 @@ Item {
       id: dueChip
       objectName: "projectDue"
       glyph: bar.theme.icons.calendar
-      label: bar.due ? (bar.due.overdue && bar.status.id !== "done" ? bar.due.label : "Due " + bar.due.label) : "Add a due date"
+      label: bar.due ? (bar.due.overdue && bar.status.id !== "done" ? Lang.t(bar.due.label) : Lang.t("Due ") + Lang.t(bar.due.label)) : Lang.t("Add a due date")
       ink: bar.due && bar.due.overdue && bar.status.id !== "done" ? bar.shade("red", false) : bar.due ? bar.theme.text : bar.theme.muted
       fill: bar.due && bar.due.overdue && bar.status.id !== "done" ? bar.shade("red", true) : "transparent"
       onClicked: duePop.start()
@@ -148,7 +149,7 @@ Item {
             theme: bar.theme
             width: parent.width
             height: 34
-            placeholder: "A date: fri, oct 20, in 2 weeks"
+            placeholder: Lang.t("A date: fri, oct 20, in 2 weeks")
             onEdited: function(text) { var d = Dates.parse(text, new Date()); duePop.parsed = d ? Dates.iso(d.at, false) : null }
             onAccepted: if (duePop.parsed) duePop.take(duePop.parsed)
             onEscaped: duePop.close()
@@ -159,19 +160,19 @@ Item {
             theme: bar.theme
             icon: bar.theme.icons.calendar
             text: duePop.parsed ? Dates.label(Dates.fromIso(duePop.parsed).at, false, new Date()) : ""
-            hint: "Enter"
+            hint: Lang.t("Enter")
             onClicked: duePop.take(duePop.parsed)
           }
           Repeater {
             model: dueField.text.trim() ? [] : [
-              { label: "Today", days: 0 }, { label: "Tomorrow", days: 1 }, { label: "Next week", days: -1 }, { label: "In 2 weeks", days: 14 }, { label: "In a month", days: 30 }
+              { label: Lang.t("Today"), days: 0 }, { label: "Tomorrow", days: 1 }, { label: "Next week", days: -1 }, { label: "In 2 weeks", days: 14 }, { label: "In a month", days: 30 }
             ]
             delegate: MenuRow {
               required property var modelData
               width: parent.width
               theme: bar.theme
               icon: bar.theme.icons.calendar
-              text: modelData.label
+              text: Lang.t(modelData.label)
               readonly property string iso: {
                 var n = new Date()
                 var d = modelData.days >= 0 ? new Date(n.getFullYear(), n.getMonth(), n.getDate() + modelData.days) : Dates.parse("next monday", n).at
@@ -187,7 +188,7 @@ Item {
             width: parent.width
             theme: bar.theme
             icon: bar.theme.icons.close
-            text: "No due date"
+            text: Lang.t("No due date")
             onClicked: duePop.take("")
           }
         }
@@ -218,7 +219,7 @@ Item {
       Text {
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: bar.progress.total ? bar.progress.done + " of " + bar.progress.total + " to-dos" : "No to-dos yet"
+        text: bar.progress.total ? bar.progress.done + Lang.t(" of ") + bar.progress.total + Lang.t(" to-dos") : Lang.t("No to-dos yet")
         font.family: bar.theme.uiFont
         font.pixelSize: 12
         color: bar.theme.muted
@@ -230,7 +231,7 @@ Item {
       objectName: "projectArchive"
       visible: bar.status.id === "done" && !bar.archived
       glyph: bar.theme.icons.archive
-      label: "Archive it"
+      label: Lang.t("Archive it")
       ink: bar.theme.muted
       fill: "transparent"
       onClicked: bar.view.archivePage(bar.view.page.id, true)

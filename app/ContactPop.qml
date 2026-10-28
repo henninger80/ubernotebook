@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Contacts.js" as Contacts
+import "../Lang.js" as Lang  // [fork] German
 
 // A person named on a page ("@Sam Rivera"), clicked: their card. A number
 // or an email copies with a click; Email opens your mail app; Open in People
@@ -68,7 +69,7 @@ Pop {
       anchors.verticalCenter: parent.verticalCenter
       visible: !wayHover.hovered
       textFormat: Text.PlainText
-      text: way.label
+      text: Lang.t(way.label)
       font.family: pop.theme.uiFont
       font.pixelSize: 11
       color: pop.theme.muted
@@ -80,12 +81,12 @@ Pop {
       IconButton {
         objectName: "contactPopEmail"
         visible: way.email
-        theme: pop.theme; icon: pop.theme.icons.mail; size: 28; iconSize: 14; tip: "Email them"
+        theme: pop.theme; icon: pop.theme.icons.mail; size: 28; iconSize: 14; tip: Lang.t("Email them")
         onClicked: { pop.emailRequested(way.value); pop.close() }
       }
       IconButton {
         objectName: "contactPopCopy"
-        theme: pop.theme; icon: pop.theme.icons.copy; size: 28; iconSize: 14; tip: "Copy it"
+        theme: pop.theme; icon: pop.theme.icons.copy; size: 28; iconSize: 14; tip: Lang.t("Copy it")
         onClicked: pop.copied(way.value)
       }
     }
@@ -109,7 +110,7 @@ Pop {
           width: parent.width
           elide: Text.ElideRight
           textFormat: Text.PlainText
-          text: pop.person ? Contacts.nameOf(pop.person) : "Not in People any more"
+          text: pop.person ? Contacts.nameOf(pop.person) : Lang.t("Not in People any more")
           font.family: pop.theme.uiFont
           font.pixelSize: 16
           font.weight: Font.DemiBold
@@ -132,11 +133,11 @@ Pop {
       spacing: 0
       Repeater {
         model: pop.person ? pop.person.phones : []
-        delegate: Way { required property var modelData; objectName: "contactPopPhone"; icon: pop.theme.icons.phone; value: modelData.value; label: modelData.label }
+        delegate: Way { required property var modelData; objectName: "contactPopPhone"; icon: pop.theme.icons.phone; value: modelData.value; label: Lang.t(modelData.label) }
       }
       Repeater {
         model: pop.person ? pop.person.emails : []
-        delegate: Way { required property var modelData; objectName: "contactPopMail"; icon: pop.theme.icons.mail; value: modelData.value; label: modelData.label; email: true }
+        delegate: Way { required property var modelData; objectName: "contactPopMail"; icon: pop.theme.icons.mail; value: modelData.value; label: Lang.t(modelData.label); email: true }
       }
     }
     Rectangle { width: parent.width; height: 1; color: pop.theme.line }
@@ -145,7 +146,7 @@ Pop {
       width: parent.width
       theme: pop.theme
       icon: pop.theme.icons.contacts
-      text: pop.person ? "Open in People" : "Open People"
+      text: pop.person ? Lang.t("Open in People") : Lang.t("Open People")
       onClicked: { pop.close(); pop.peopleRequested(pop.person ? pop.personId : "") }
     }
   }

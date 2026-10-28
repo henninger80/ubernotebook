@@ -24,6 +24,7 @@ import "../Overlays.js" as Overlays
 import "../Daily.js" as Daily  // [fork]
 import "../Tabs.js" as Tabs  // [fork]
 import "../PageSort.js" as PageSort  // [fork]
+import "../Lang.js" as Lang  // [fork] German
 
 // Pages: the other way to write in Uber Notebook, the way Notion does it. The
 // sidebar has every page as a tree; the page you're on has its cover, icon
@@ -179,7 +180,7 @@ FocusScope {
     if (id === "templates") { openTemplates(fromHistory); return }
     commit()
     workspace.readPage(id, function(p) {
-      if (!p) { view.toast("That page isn't there any more"); return }
+      if (!p) { view.toast(Lang.t("That page isn't there any more")); return }
       var e = view.workspace.index.pages[id]
       if (e) p.parent = e.parent
       view.tagShown = ""
@@ -373,7 +374,7 @@ FocusScope {
       if (what === "new") Qt.callLater(function() { var it = editor.items[uid]; if (it && it.dataView) it.dataView.focusLink() })
       else if (what === "fetch") fetchBookmark(uid, arg.url)
       else if (what === "open" && d.url) workspace.files.openUrl(d.url)
-      else if (what === "copy" && d.url) { workspace.files.copyText(d.url); toast("Copied the link") }
+      else if (what === "copy" && d.url) { workspace.files.copyText(d.url); toast(Lang.t("Copied the link")) }
     } else if (type === "board") {
       if (what === "openCard") openCard(uid, arg)
       else if (what === "deleteCard") deleteCard(uid, arg)
@@ -415,7 +416,7 @@ FocusScope {
 
   // An email (.eml) picked or dropped, copied in and read, for a block.
   function pickEmail(uid) {
-    if (!service || typeof service.pickFile !== "function") { toast("Files can't be picked here"); return }
+    if (!service || typeof service.pickFile !== "function") { toast(Lang.t("Files can't be picked here")); return }
     var pageId = page ? page.id : ""
     service.pickFile("email", function(path) { if (path) view.addEmailTo(pageId, uid, path) })
   }
@@ -455,8 +456,8 @@ FocusScope {
   readonly property string switchingText: "Another profile is opening: try again in a moment"
   function addEmailTo(pageId, uid, path) {
     workspace.importEmail(path, inThisFolder(function(s, why) {
-      if (!s) { view.toast(why || "That email couldn't be read"); return }
-      if (!view.page || view.page.id !== pageId || editor.indexOf(uid) < 0) { view.toast("Its page isn't open any more: the email's in Pages/assets"); return }
+      if (!s) { view.toast(why || Lang.t("That email couldn't be read")); return }
+      if (!view.page || view.page.id !== pageId || editor.indexOf(uid) < 0) { view.toast(Lang.t("Its page isn't open any more: the email's in Pages/assets")); return }
       var d = editor.dataOf(uid)
       for (var k in s) d[k] = s[k]
       editor.setData(uid, d)
@@ -475,7 +476,7 @@ FocusScope {
       workspace.readEmail(d.src, inThisFolder(function(m) {
         if (view.switching) return
         var att = m ? m.attachments[at] : null
-        if (!att) { view.toast("That attachment couldn't be read"); return }
+        if (!att) { view.toast(Lang.t("That attachment couldn't be read")); return }
         var text = Email.attachmentText(m, att.index)
         if (view.isCalendarFile(a.name)) view.showIcs(text, a.name)
         else view.addPeopleFrom(a.name, text)
@@ -485,7 +486,7 @@ FocusScope {
     if (a.src) { openAsset(a.src, a.name); return }
     var pageId = page ? page.id : ""
     workspace.emailAttachment(d.src, at, a.name, inThisFolder(function(src) {
-      if (!src) { view.toast("That attachment couldn't be opened"); return }
+      if (!src) { view.toast(Lang.t("That attachment couldn't be opened")); return }
       view.openAsset(src, a.name)
       if (view.page && view.page.id === pageId && editor.indexOf(uid) >= 0) {
         var now = editor.dataOf(uid)
@@ -516,7 +517,7 @@ FocusScope {
   // Pictures copied into Pages/assets, then at the gallery's end (one step to undo).
   function addToGallery(pageId, uid, paths) {
     var list = (paths || []).filter(function(p) { return Files.kindOf(p) === "image" }).slice(0, 100)
-    if (!list.length) { toast("Those aren't pictures"); return }
+    if (!list.length) { toast(Lang.t("Those aren't pictures")); return }
     var got = []
     var left = list.length
     list.forEach(function(path, i) {
@@ -524,8 +525,8 @@ FocusScope {
         got[i] = src
         if (--left > 0) return
         var srcs = got.filter(function(s) { return !!s })
-        if (!view.page || view.page.id !== pageId || editor.indexOf(uid) < 0) { if (srcs.length) view.toast("Its page isn't open any more: the pictures are in Pages/assets"); return }
-        if (!srcs.length) { view.toast("Those pictures couldn't be copied in"); return }
+        if (!view.page || view.page.id !== pageId || editor.indexOf(uid) < 0) { if (srcs.length) view.toast(Lang.t("Its page isn't open any more: the pictures are in Pages/assets")); return }
+        if (!srcs.length) { view.toast(Lang.t("Those pictures couldn't be copied in")); return }
         var d = editor.dataOf(uid)
         d.images = (d.images || []).concat(srcs.map(function(s) { return { src: s, caption: "" } }))
         editor.setData(uid, d)
@@ -561,17 +562,17 @@ FocusScope {
   function copyPicture(src) {
     var path = workspace ? workspace.assetPath(src) : ""
     if (!path) return
-    workspace.files.copyPicture(path, function(ok) { view.toast(ok ? "Copied: paste it anywhere" : "The picture couldn't be copied") })
+    workspace.files.copyPicture(path, function(ok) { view.toast(ok ? Lang.t("Copied: paste it anywhere") : Lang.t("The picture couldn't be copied")) })
   }
   // A copy saved where you say, named for its caption (or the page).
   function savePicture(src, caption) {
     var path = workspace ? workspace.assetPath(src) : ""
     if (!path) return
-    if (!service || typeof service.pickSavePath !== "function") { toast("A copy can't be saved from here"); return }
+    if (!service || typeof service.pickSavePath !== "function") { toast(Lang.t("A copy can't be saved from here")); return }
     service.pickSavePath(Library.saveName(caption || (page ? page.title : ""), src), function(to) {
       if (!to) return
       workspace.files.copyFileTo(path, to, function(ok, why) {
-        view.toast(ok ? "Saved to " + view.tilde(to) : "The picture couldn't be saved" + (why ? ": " + why : ""))
+        view.toast(ok ? Lang.t("Saved to ") + view.tilde(to) : Lang.t("The picture couldn't be saved") + (why ? ": " + why : ""))
       })
     })
   }
@@ -634,7 +635,7 @@ FocusScope {
     workspace.openAsset(src, function(ok, why) {
       if (ok) return
       var ext = (/\.([A-Za-z0-9]{1,8})$/.exec(String(name || src)) || [])[1]
-      view.toast((ext ? "No app here opens ." + ext.toLowerCase() + " files" : "No app here opens it") + (why === "browser" ? " but your web browser" : "") + ": it's kept in Pages/assets")
+      view.toast((ext ? Lang.t("No app here opens .") + ext.toLowerCase() + Lang.t(" files") : Lang.t("No app here opens it")) + (why === "browser" ? Lang.t(" but your web browser") : "") + Lang.t(": it's kept in Pages/assets"))
     })
   }
   // A file block's file: a calendar's events, a contact card's people, here; else in its app.
@@ -644,7 +645,7 @@ FocusScope {
       // there, nor its people added to that one's.)
       workspace.readAsset(src, inThisFolder(function(text) {
         if (view.switching) return
-        if (text === null) { view.toast("That file couldn't be read"); return }
+        if (text === null) { view.toast(Lang.t("That file couldn't be read")); return }
         if (view.isCalendarFile(name)) view.showIcs(text, name)
         else view.addPeopleFrom(name, text)
       }))
@@ -655,8 +656,8 @@ FocusScope {
   // A contact card's people, into People (said how many; Undo takes them out).
   function addPeopleFrom(name, text) {
     workspace.addPeopleFrom(name, text, function(r) {
-      if (!r) { view.toast("There's no one in " + name); return }
-      view.toastUndo((r.added ? r.added + (r.added === 1 ? " person" : " people") + " added to People" : "No one new") + (r.updated ? ", " + r.updated + " filled in" : ""), function() { view.workspace.undoContacts() })
+      if (!r) { view.toast(Lang.t("There's no one in ") + name); return }
+      view.toastUndo((r.added ? r.added + (r.added === 1 ? Lang.t(" person") : Lang.t(" people")) + Lang.t(" added to People") : Lang.t("No one new")) + (r.updated ? ", " + r.updated + Lang.t(" filled in") : ""), function() { view.workspace.undoContacts() })
     })
   }
 
@@ -664,7 +665,7 @@ FocusScope {
   // picked), shown, to put on your calendar.
   function showIcs(text, name) {
     var events = Calendar.fromIcs(text)
-    if (!events.length) { toast("There are no events in " + (name || "it")); return }
+    if (!events.length) { toast(Lang.t("There are no events in ") + (name || "it")); return }
     icsPop.events = events
     icsPop.fileName = name || ""
     icsPop.generation = workspace ? workspace.generation : -1
@@ -678,21 +679,21 @@ FocusScope {
     icsPop.close()
     if (!fresh.length) return
     // (Shown in the profile before: never put on this one's calendar.)
-    if (switching || !workspace || icsPop.generation !== workspace.generation || icsPop.folder !== workspace.folder) { toast("Not added: another profile was opened. Open the file again in its own"); return }
+    if (switching || !workspace || icsPop.generation !== workspace.generation || icsPop.folder !== workspace.folder) { toast(Lang.t("Not added: another profile was opened. Open the file again in its own")); return }
     var cal = workspace.calendar
     fresh.forEach(function(e) { cal = Calendar.withEvent(cal, e) })
     workspace.setCalendar(cal)
-    toastUndo(fresh.length + (fresh.length === 1 ? " event" : " events") + " on your calendar", function() { view.workspace.undoCalendar() })
+    toastUndo(fresh.length + (fresh.length === 1 ? Lang.t(" event") : Lang.t(" events")) + Lang.t(" on your calendar"), function() { view.workspace.undoCalendar() })
   }
   // Calendar's Import .ics: a file picked, its events shown.
   function importIcs() {
-    if (!service || typeof service.pickFile !== "function") { toast("Files can't be picked here"); return }
+    if (!service || typeof service.pickFile !== "function") { toast(Lang.t("Files can't be picked here")); return }
     service.pickFile("calendar", function(path) {
       if (!path) return
       // (Another profile opened before it's read: its events not shown there.)
       view.workspace.files.readFiles([path], view.inThisFolder(function(got) {
         if (view.switching) return
-        if (got[path] === undefined) { view.toast("That file couldn't be read"); return }
+        if (got[path] === undefined) { view.toast(Lang.t("That file couldn't be read")); return }
         view.showIcs(got[path], path.slice(path.lastIndexOf("/") + 1))
       }), 16 * 1024 * 1024)
     })
@@ -708,7 +709,7 @@ FocusScope {
 
   // A file (or a video) picked and copied in, for a block.
   function pickData(uid, kind) {
-    if (!service || typeof service.pickFile !== "function") { toast("Files can't be picked here"); return }
+    if (!service || typeof service.pickFile !== "function") { toast(Lang.t("Files can't be picked here")); return }
     var pageId = page ? page.id : ""
     service.pickFile(kind, function(path) {
       if (!path) return
@@ -717,8 +718,8 @@ FocusScope {
   }
   function addFileTo(pageId, uid, path) {
     workspace.importFile(path, inThisFolder(function(f) {
-      if (!f) { view.toast("The file couldn't be copied in"); return }
-      if (!view.page || view.page.id !== pageId || editor.indexOf(uid) < 0) { view.toast("Its page isn't open any more: the file's in Pages/assets"); return }
+      if (!f) { view.toast(Lang.t("The file couldn't be copied in")); return }
+      if (!view.page || view.page.id !== pageId || editor.indexOf(uid) < 0) { view.toast(Lang.t("Its page isn't open any more: the file's in Pages/assets")); return }
       var d = editor.dataOf(uid)
       d.src = f.src
       d.name = f.name
@@ -814,7 +815,7 @@ FocusScope {
         return c
       })
       editor.swapBlocks([uid], list.length ? list : [{ type: "p", html: "", indent: base }])
-      view.toast("Unsynced: its blocks are this page's own, here")
+      view.toast(Lang.t("Unsynced: its blocks are this page's own, here"))
     })
   }
 
@@ -825,7 +826,7 @@ FocusScope {
     var ranges = editor.subtreeRanges(uids)
     var list = []
     ranges.forEach(function(r) { for (var k = r[0]; k <= r[1]; k++) list.push(editor.blockAt(k)) })
-    if (list.some(function(b) { return b.type === "page" || b.type === "synced" })) { toast("A page or a synced block is among them: move it out first"); return }
+    if (list.some(function(b) { return b.type === "page" || b.type === "synced" })) { toast(Lang.t("A page or a synced block is among them: move it out first")); return }
     var base = Math.min.apply(null, list.map(function(b) { return b.indent || 0 }))
     var blocks = list.map(function(b) { var c = JSON.parse(JSON.stringify(b)); delete c.uid; c.indent = (c.indent || 0) - base; return c })
     var id = workspace.newSyncedPage(blocks)
@@ -833,7 +834,7 @@ FocusScope {
     editor.swapBlocks(list.map(function(b) { return b.uid }), [{ type: "synced", indent: base, data: { page: id } }])
     markDirty()
     commit()
-    toast("A synced block: copy it (\u22ee\u22ee, Ctrl+C) and paste it anywhere; changed in one, changed in all")
+    toast(Lang.t("A synced block: copy it (\u22ee\u22ee, Ctrl+C) and paste it anywhere; changed in one, changed in all"))
   }
 
   // "/synced": a new one, or one there is.
@@ -876,7 +877,7 @@ FocusScope {
     commit()
     var id = Daily.open(workspace, settings, day || "", function(d, pattern) { return Qt.formatDate(Templates.parse(d), pattern) })
     if (id) open(id)
-    else toast("The daily note couldn't be made")
+    else toast(Lang.t("The daily note couldn't be made"))
   }
 
   // ---- the calendar -------------------------------------------------------------------------
@@ -984,7 +985,7 @@ FocusScope {
 
   function exportCalendar() {
     if (!workspace) return
-    workspace.exportCalendar(function(path) { if (path) view.toast("The calendar is in " + path.replace(/^.*\/Uber Notebook\//, "Uber Notebook/")) })
+    workspace.exportCalendar(function(path) { if (path) view.toast(Lang.t("The calendar is in ") + path.replace(/^.*\/Uber Notebook\//, "Uber Notebook/")) })
   }
 
   // ---- people -------------------------------------------------------------------------------
@@ -1042,27 +1043,27 @@ FocusScope {
   function copyText(text) {
     if (!workspace || !text) return
     workspace.files.copyText(text)
-    toast("Copied " + (String(text).length > 40 ? "it" : text))
+    toast(Lang.t("Copied ") + (String(text).length > 40 ? "it" : text))
   }
   function mailTo(email) { if (workspace && email) workspace.files.openUrl("mailto:" + email) }
 
   // Contacts from a file (.vcf or .csv) picked: put in, then said how many;
   // done({ added, updated, first }) or done(null).
   function pickContacts(done) {
-    if (!service || typeof service.pickFile !== "function") { toast("Files can't be picked here"); return }
+    if (!service || typeof service.pickFile !== "function") { toast(Lang.t("Files can't be picked here")); return }
     service.pickFile("contacts", function(path) { if (path) view.importContactsFrom(path, done) })
   }
   function importContactsFrom(path, done) {
     var before = workspace.contacts.contacts.map(function(c) { return c.id })
     workspace.importContacts(path, function(r, why) {
-      if (!r) { view.toast(why || "No contacts were read"); if (done) done(null); return }
+      if (!r) { view.toast(why || Lang.t("No contacts were read")); if (done) done(null); return }
       var first = view.workspace.contacts.contacts.filter(function(c) { return before.indexOf(c.id) < 0 })[0]
-      view.toast(r.added + (r.added === 1 ? " person" : " people") + " added" + (r.updated ? ", " + r.updated + " filled in" : ""))
+      view.toast(r.added + (r.added === 1 ? Lang.t(" person") : Lang.t(" people")) + Lang.t(" added") + (r.updated ? ", " + r.updated + Lang.t(" filled in") : ""))
       if (done) done({ added: r.added, updated: r.updated, first: first ? first.id : "" })
     })
   }
   function exportContacts() {
-    workspace.exportContacts(function(path) { view.toast(path ? "Everyone's in " + path.replace(/^.*\/Uber Notebook\//, "Uber Notebook/") : "They couldn't be exported") })
+    workspace.exportContacts(function(path) { view.toast(path ? Lang.t("Everyone's in ") + path.replace(/^.*\/Uber Notebook\//, "Uber Notebook/") : "They couldn't be exported") })
   }
 
   // People for the "@" menu: [{ id, name, sub, initials, tint }].
@@ -1190,7 +1191,7 @@ FocusScope {
     // (The page open is written first, so what's being written in it is renamed too.)
     commit()
     workspace.changeTag(from, to, function(n) {
-      view.toast(n ? "Renamed on " + n + (n === 1 ? " page" : " pages") : "Renamed")
+      view.toast(n ? Lang.t("Renamed on ") + n + (n === 1 ? Lang.t(" page") : Lang.t(" pages")) : Lang.t("Renamed"))
       // The history says the new name.
       var h = view.history.slice()
       for (var i = 0; i < h.length; i++) if (h[i] === "tag:" + from) h[i] = "tag:" + into
@@ -1210,13 +1211,13 @@ FocusScope {
     var name = which || tagShown
     var info = Workspace.tagList(index).filter(function(t) { return t.name === name })[0]
     if (!info) return
-    confirmRequested("Take " + info.label + " off every page?",
+    confirmRequested(Lang.t("Take ") + info.label + Lang.t(" off every page?"),
       "It comes off " + info.blocks + (info.blocks === 1 ? " block" : " blocks") + " on " + info.pages + (info.pages === 1 ? " page" : " pages")
         + ". Each page keeps the version before in its Page history.",
       "Take it off", function() {
         view.commit()
         view.workspace.changeTag(name, "", function(n) {
-          view.toast(info.label + " is off " + n + (n === 1 ? " page" : " pages"))
+          view.toast(info.label + Lang.t(" is off ") + n + (n === 1 ? Lang.t(" page") : Lang.t(" pages")))
           if (view.tagShown) view.tagView.load()
           else if (view.page) view.workspace.readPage(view.page.id, function(p) { if (p && view.page && view.page.id === p.id && !view.pageDirty) view.show(p) })
         })
@@ -1502,7 +1503,7 @@ FocusScope {
       commit()
       workspace.trashPage(id, false)
     }
-    toast("\u201c" + (e.title || "Untitled") + "\u201d is in the trash")
+    toast("\u201c" + (e.title || Lang.t("Untitled")) + Lang.t("\u201d is in the trash"))
     if (wasOpen) {
       pageDirty = false
       page = null
@@ -1522,14 +1523,14 @@ FocusScope {
       markDirty()
       commit()
     }
-    toast("\u201c" + (e.title || "Untitled") + "\u201d is back")
+    toast("\u201c" + (e.title || Lang.t("Untitled")) + Lang.t("\u201d is back"))
     if (!page) activate()
   }
 
   function deletePage(id) {
     var e = workspace.index.pages[id]
     if (!e) return
-    confirmRequested("Delete \u201c" + (e.title || "Untitled") + "\u201d from Pages?",
+    confirmRequested(Lang.t("Delete \u201c") + (e.title || Lang.t("Untitled")) + Lang.t("\u201d from Pages?"),
       "It and the pages inside it leave Pages. Their files go to the .trash folder in your notebooks folder, where you can still get them back.",
       "Delete", function() { view.workspace.deleteForever(id) })
   }
@@ -1545,7 +1546,7 @@ FocusScope {
     if (page && (from === page.id || target === page.id)) { markDirty(); commit() }
     if (page && page.id === id) { page.parent = target; markDirty(); commit() }
     var where = target ? (workspace.index.pages[target].title || "Untitled") : "the top of Pages"
-    toast("Moved to " + where)
+    toast(Lang.t("Moved to ") + where)
   }
 
   // A page dragged in the sidebar and dropped before, after or inside
@@ -1579,17 +1580,17 @@ FocusScope {
     }
     if (unproject) {
       projectOf(id, null, inThisFolder(function(ok) {
-        if (!ok) { view.toast("\u201c" + title + "\u201d is locked: unlock it to make it a page again"); return }
+        if (!ok) { view.toast("\u201c" + title + Lang.t("\u201d is locked: unlock it to make it a page again")); return }
         move(function() {
           view.expandTo(id)
-          view.toastUndo("\u201c" + title + "\u201d is a page again" + (was.parent === place.parent ? "" : ", in " + into), undo)
+          view.toastUndo("\u201c" + title + Lang.t("\u201d is a page again") + (was.parent === place.parent ? "" : Lang.t(", in ") + into), undo)
         })
       }))
       return true
     }
     move(function() {
       view.expandTo(id)
-      view.toastUndo("Moved \u201c" + title + "\u201d" + (was.parent === place.parent ? "" : " into " + into), undo)
+      view.toastUndo(Lang.t("Moved \u201c") + title + Lang.t("\u201d") + (was.parent === place.parent ? "" : Lang.t(" into ") + into), undo)
     })
     return true
   }
@@ -1628,7 +1629,7 @@ FocusScope {
       editor.removeBlocks(uids)
       view.markDirty()
       view.commit()
-      view.toast("Moved to \u201c" + name + "\u201d")
+      view.toast(Lang.t("Moved to \u201c") + name + Lang.t("\u201d"))
     })
   }
 
@@ -1638,11 +1639,11 @@ FocusScope {
   function importPaths(paths, parentId) {
     if (!workspace || !paths || !paths.length) return
     commit()
-    toast("Importing\u2026")
+    toast(Lang.t("Importing\u2026"))
     workspace.importPaths(paths, parentId || "", function(r) {
-      if (r.unready) { view.toast(workspace && workspace.files && workspace.files.blockedFolder ? "Not imported: this profile's notes folder can't be used. Pick another folder (Settings, Profiles)" : "Not imported: your notes are still opening. Try again in a moment"); return }
-      if (r.stopped) { view.toast("Not imported: another profile was opened"); return }
-      if (r.movedOn) { view.toast("Imported " + r.pages + (r.pages === 1 ? " page" : " pages") + " into the profile that was open when it began"); return }
+      if (r.unready) { view.toast(workspace && workspace.files && workspace.files.blockedFolder ? Lang.t("Not imported: this profile's notes folder can't be used. Pick another folder (Settings, Profiles)") : Lang.t("Not imported: your notes are still opening. Try again in a moment")); return }
+      if (r.stopped) { view.toast(Lang.t("Not imported: another profile was opened")); return }
+      if (r.movedOn) { view.toast(Lang.t("Imported ") + r.pages + (r.pages === 1 ? Lang.t(" page") : Lang.t(" pages")) + Lang.t(" into the profile that was open when it began")); return }
       var note = r.pages ? "Imported " + r.pages + (r.pages === 1 ? " page" : " pages") : "There were no notes to import"
       if (r.skipped && r.skipped.length) note += " (" + r.skipped.length + " not: install pandoc or LibreOffice for Word files)"
       // (What went wrong too, the first of it; a long message, cut.)
@@ -1683,7 +1684,7 @@ FocusScope {
   function toggleFavorite(id) {
     if (!workspace || !id) return
     workspace.toggleFavorite(id)
-    toast(workspace.isFavorite(id) ? "In Favorites" : "Out of Favorites")
+    toast(workspace.isFavorite(id) ? Lang.t("In Favorites") : Lang.t("Out of Favorites"))
   }
 
   function duplicatePage(id) {
@@ -1724,7 +1725,7 @@ FocusScope {
     editor.replaceSubtree(uid, { type: "page", id: child.id })
     markDirty()
     commit()
-    toast("\u201c" + (title || "Untitled") + "\u201d is a page now")
+    toast("\u201c" + (title || Lang.t("Untitled")) + Lang.t("\u201d is a page now"))
   }
 
   // ---- your agent ---------------------------------------------------------------------------------
@@ -1741,14 +1742,14 @@ FocusScope {
   // panel (that profile's request and answer) not shown here.
   function agentStillEnding() {
     if (!agentRun || !agentRun.left) return false
-    toast("The agent from the profile before is still stopping: try again in a moment")
+    toast(Lang.t("The agent from the profile before is still stopping: try again in a moment"))
     return true
   }
   function openAgent(scope, uids) {
     if (!workspace || !workspace.ready) return
     if (agentStillEnding()) return
     // (One at a time: while it works, its panel.)
-    if (agentRun) { agentPanel.visible = true; if (agentTalk && page && agentTalk.owner !== page.id) toast(Agent.name(agentTalk.agent) + " is still working on what you asked before"); return }
+    if (agentRun) { agentPanel.visible = true; if (agentTalk && page && agentTalk.owner !== page.id) toast(Agent.name(agentTalk.agent) + Lang.t(" is still working on what you asked before")); return }
     if (page && workspace.chatFor(page.id)) { openChat(page.id, agentContext(scope, uids)); return }
     openAgentBox(scope, uids)
   }
@@ -1795,7 +1796,7 @@ FocusScope {
     if (!page || !workspace) return
     var here = !terminal && Agent.runsHere(agent) && typeof workspace.files.stream === "function"
     if (here && agentStillEnding()) return
-    if (here && agentRun) { agentPanel.visible = true; toast(Agent.name(agent) + " is still working on what you asked before"); return }
+    if (here && agentRun) { agentPanel.visible = true; toast(Agent.name(agent) + Lang.t(" is still working on what you asked before")); return }
     // (A new conversation: a folder of its own.)
     if (here) newAgentFolder()
     // (A page made for the last one: kept if it's this one, now asked about.)
@@ -1811,7 +1812,7 @@ FocusScope {
     var prompt = promptFor(here)
     if (here) { runHere(agent, label || request, prompt, { picked: pickedKey(ctx), terminalPrompt: promptFor(false) }); return }
     workspace.files.launchAgent(prompt)
-    toast("Asked " + (Agent.name(agent) || "your agent") + ": it's working in a terminal, and what it changes shows up here")
+    toast(Lang.t("Asked ") + (Agent.name(agent) || Lang.t("your agent")) + Lang.t(": it's working in a terminal, and what it changes shows up here"))
   }
 
   // A new page for what you asked: made here first (at the top of Pages, as
@@ -1821,7 +1822,7 @@ FocusScope {
     if (!workspace || !workspace.ready) return
     var here = !terminal && Agent.runsHere(agent) && typeof workspace.files.stream === "function"
     if (here && agentStillEnding()) return
-    if (here && agentRun) { agentPanel.visible = true; toast(Agent.name(agent) + " is still working on what you asked before"); return }
+    if (here && agentRun) { agentPanel.visible = true; toast(Agent.name(agent) + Lang.t(" is still working on what you asked before")); return }
     // (A new conversation: a folder of its own.)
     if (here) newAgentFolder()
     // (The one made last time: kept if it's where this one goes; gone if
@@ -1858,7 +1859,7 @@ FocusScope {
       return
     }
     workspace.files.launchAgent(prompt)
-    toast("Asked " + (Agent.name(agent) || "your agent") + ": it's writing the new page in a terminal, and it shows up here as it goes")
+    toast(Lang.t("Asked ") + (Agent.name(agent) || Lang.t("your agent")) + Lang.t(": it's writing the new page in a terminal, and it shows up here as it goes"))
   }
 
   // The page made for what you asked last, while its panel's up: { id,
@@ -1893,7 +1894,7 @@ FocusScope {
         else activate()
       }
     }
-    toast("Nothing was written on the new page, so it's gone")
+    toast(Lang.t("Nothing was written on the new page, so it's gone"))
   }
 
   // ---- your agent, working here (Claude Code, Grok, Codex: no terminal) ----
@@ -2391,7 +2392,7 @@ FocusScope {
       view.markDirty()
       view.revision++
     }, function(top) {
-      if (!top) { view.toast("That template isn't there any more"); return }
+      if (!top) { view.toast(Lang.t("That template isn't there any more")); return }
       view.commit()
     })
   }
@@ -2403,7 +2404,7 @@ FocusScope {
     var parent = parentId && workspace.index.pages[parentId] ? parentId : ""
     var openHere = page && page.id === parent ? parent : ""
     workspace.pageFromTemplate(template, parent, "", templateFill(), function(id) {
-      if (!id) { view.toast("That template isn't there any more"); return }
+      if (!id) { view.toast(Lang.t("That template isn't there any more")); return }
       if (openHere && view.page && view.page.id === openHere) {
         editor.placeBlock(editor.uidAt(editor.model.count - 1), { type: "page", id: id })
         view.markDirty()
@@ -2419,8 +2420,8 @@ FocusScope {
     commit()
     var title = workspace.index.pages[id].title || "Untitled"
     workspace.saveAsTemplate(id, function(made) {
-      if (!made) { view.toast("It couldn't be saved as a template"); return }
-      view.toastUndo("\u201c" + title + "\u201d is a template: in Templates at the sidebar's foot", function() { view.workspace.trashPage(made, false) })
+      if (!made) { view.toast(Lang.t("It couldn't be saved as a template")); return }
+      view.toastUndo("\u201c" + title + Lang.t("\u201d is a template: in Templates at the sidebar's foot"), function() { view.workspace.trashPage(made, false) })
     })
   }
 
@@ -2464,14 +2465,14 @@ FocusScope {
     commit()
     workspace.setTemplate(id, false)
     revision++
-    toastUndo("\u201c" + (workspace.index.pages[id].title || "Untitled") + "\u201d is a page again, in Pages", function() { view.workspace.setTemplate(id, true); view.revision++ })
+    toastUndo("\u201c" + (workspace.index.pages[id].title || Lang.t("Untitled")) + Lang.t("\u201d is a page again, in Pages"), function() { view.workspace.setTemplate(id, true); view.revision++ })
   }
 
   // Your templates to pick from: "insert" (here, after the block you're
   // in), "newIn" (a new page inside `pageId`), "child" (what new pages
   // inside `pageId` start from).
   function openTemplatePick(mode, pageId, anchor) {
-    if (mode !== "child" && userTemplates.length === 0) { toast("No templates yet: Save as template, in a page's \u22ef menu"); return }
+    if (mode !== "child" && userTemplates.length === 0) { toast(Lang.t("No templates yet: Save as template, in a page's \u22ef menu")); return }
     templatePick.mode = mode
     templatePick.pageId = pageId || ""
     var a = anchor || main
@@ -2540,7 +2541,7 @@ FocusScope {
     var name = Audio.fileName(new Date())
     var pageId = page.id
     var problem = recorder.start("audio", uid, audioPath("assets/" + name), function(ok, r) {
-      if (!ok) { if (!r.canceled) view.toast(r.problem || "Nothing was recorded"); return }
+      if (!ok) { if (!r.canceled) view.toast(r.problem || Lang.t("Nothing was recorded")); return }
       view.updateAudio(pageId, uid, function(a) {
         a.src = "assets/" + name
         a.duration = r.duration
@@ -2549,7 +2550,7 @@ FocusScope {
         a.open = true
         return a
       }, function(saved) {
-        if (!saved) { view.toast("Its note is gone: the recording is in Pages/assets/" + name); return }
+        if (!saved) { view.toast(Lang.t("Its note is gone: the recording is in Pages/assets/") + name); return }
         if (view.settings.audioTranscribe !== false && view.recorder.canTranscribe) view.transcribeAudio(pageId, uid)
       })
     })
@@ -2573,10 +2574,10 @@ FocusScope {
       mine(function() {
         if (view.switching) return
         moved = false
-        if (!ok) { view.toast(problem || "It couldn't be written out"); return }
+        if (!ok) { view.toast(problem || Lang.t("It couldn't be written out")); return }
         view.updateAudio(pageId, uid, function(x) { x.transcript = text; x.open = true; return x })
       })
-      if (moved && ok) view.toast("An audio note's words weren't added: another profile was opened. Write it out again in its own")
+      if (moved && ok) view.toast(Lang.t("An audio note's words weren't added: another profile was opened. Write it out again in its own"))
     })
   }
 
@@ -2599,7 +2600,7 @@ FocusScope {
       mine(function() {
         if (view.switching) return
         moved = false
-        if (!ok) { view.toast("It couldn't be made louder"); return }
+        if (!ok) { view.toast(Lang.t("It couldn't be made louder")); return }
         view.updateAudio(pageId, uid, function(x) {
           x.src = "assets/" + name
           if (peaks.length) x.peaks = peaks
@@ -2608,7 +2609,7 @@ FocusScope {
       })
       if (moved && ok) {
         if (view.workspace && view.workspace.files) view.workspace.files.exec(["/usr/bin/rm", "-f", "--", made], null)
-        view.toast("An audio note wasn't made louder: another profile was opened. Try again in its own")
+        view.toast(Lang.t("An audio note wasn't made louder: another profile was opened. Try again in its own"))
       }
     })
   }
@@ -2640,12 +2641,12 @@ FocusScope {
   // are on the page, recording at once; again, it stops.
   readonly property bool recordingNote: recorder !== null && recorder.busy && recorder.kind === "audio"
   function newAudioNote() {
-    if (!recorder) { toast("Recording isn't here: Uber Notebook runs without the shell"); return }
+    if (!recorder) { toast(Lang.t("Recording isn't here: Uber Notebook runs without the shell")); return }
     if (recordingNote) { if (recorder.phase === "recording") recorder.stop(); return }
-    if (recorder.busy) { toast("Already recording: stop that one first"); return }
-    if (!page || locked || tagShown !== "") { toast(locked ? "This page is locked: unlock it to record on it" : "Open a page to record on it"); return }
+    if (recorder.busy) { toast(Lang.t("Already recording: stop that one first")); return }
+    if (!page || locked || tagShown !== "") { toast(locked ? Lang.t("This page is locked: unlock it to record on it") : Lang.t("Open a page to record on it")); return }
     if (switching) { toast(switchingText); return }
-    if (!recorder.canRecord) { toast("Recording needs ffmpeg"); return }
+    if (!recorder.canRecord) { toast(Lang.t("Recording needs ffmpeg")); return }
     var made = editor.placeBlock(editor.focusUid, { type: "audio" })
     if (made) Qt.callLater(function() { view.recordAudio(made) })
   }
@@ -2654,20 +2655,20 @@ FocusScope {
   // the microphone at the top, or "/dictate"; again, or Done, to finish).
   readonly property bool dictating: recorder !== null && recorder.busy && recorder.kind === "dictation" && recorder.owner === "page"
   function dictate() {
-    if (!recorder) { toast("Dictation isn't here: Uber Notebook runs without the shell"); return }
+    if (!recorder) { toast(Lang.t("Dictation isn't here: Uber Notebook runs without the shell")); return }
     if (dictating) { if (recorder.phase === "recording") recorder.stop(); return }
-    if (!page || locked || tagShown !== "") { toast(locked ? "This page is locked: unlock it to dictate into it" : "Open a page to dictate into it"); return }
+    if (!page || locked || tagShown !== "") { toast(locked ? Lang.t("This page is locked: unlock it to dictate into it") : Lang.t("Open a page to dictate into it")); return }
     if (switching) { toast(switchingText); return }
     var gen = workspace.generation
     var folder = workspace.folder
     var problem = recorder.start("dictation", "page", "", function(ok, r) {
-      if (!ok) { if (!r.canceled) view.toast(r.problem || "Nothing was written down"); return }
+      if (!ok) { if (!r.canceled) view.toast(r.problem || Lang.t("Nothing was written down")); return }
       // (Another profile's notes open by the time it's written down: never
       // put on a page of theirs; copied instead.)
       var here = view.workspace && gen === view.workspace.generation && folder === view.workspace.folder && !view.switching
       if (here && view.page && !view.locked && view.tagShown === "" && editor.dictated(r.text)) return
       view.workspace.files.copyText(r.text)
-      view.toast("Copied what you said: paste it where you want it")
+      view.toast(Lang.t("Copied what you said: paste it where you want it"))
     })
     if (problem) toast(problem)
   }
@@ -2718,21 +2719,21 @@ FocusScope {
   function startMeeting(uid) {
     if (!page || locked || !meetings || !meetings.available || !meetings.enabled) return
     if (meetings.waiting) { toast(meetings.waitingText); return }
-    if (meetings.status !== "idle" || meetingPending) { toast("voxtype is recording a meeting already"); return }
+    if (meetings.status !== "idle" || meetingPending) { toast(Lang.t("voxtype is recording a meeting already")); return }
     var title = Workspace.cleanTitle(titleEdit.text) || page.title || ""
     meetingPending = { pageId: page.id, uid: uid, title: title }
     meetingWait.restart()
     meetings.start(title, function(ok, problem) {
       if (ok) return
       view.meetingPending = null
-      view.toast(problem || "voxtype couldn't start the meeting")
+      view.toast(problem || Lang.t("voxtype couldn't start the meeting"))
     })
   }
   // voxtype says nothing started: said so.
   Timer {
     id: meetingWait
     interval: 12000
-    onTriggered: if (view.meetingPending) { view.meetingPending = null; view.toast("voxtype didn't start the meeting: is it running?") }
+    onTriggered: if (view.meetingPending) { view.meetingPending = null; view.toast(Lang.t("voxtype didn't start the meeting: is it running?")) }
   }
 
   // A meeting's transcript, from voxtype, into its block.
@@ -2747,8 +2748,8 @@ FocusScope {
       view.setMeetingWork(uid, false)
       var here = false
       mine(function() { here = !view.switching })
-      if (!here) { if (ok) view.toast("A meeting's transcript wasn't added: another profile was opened. Fetch it again in its own"); return }
-      if (!ok) { view.toast("voxtype couldn't give the meeting: " + out); return }
+      if (!here) { if (ok) view.toast(Lang.t("A meeting's transcript wasn't added: another profile was opened. Fetch it again in its own")); return }
+      if (!ok) { view.toast(Lang.t("voxtype couldn't give the meeting: ") + out); return }
       view.updateMeeting(pageId, uid, function(m) { return Meeting.fromExport(out, m) || m })
     })
   }
@@ -2783,14 +2784,14 @@ FocusScope {
   function newMeeting() {
     var problem = meetingProblem()
     if (!meetings || !meetings.available) { toast(problem); return }
-    if (!page || locked || tagShown !== "") { toast(locked ? "This page is locked: unlock it to record on it" : "Open a page to record on it"); return }
+    if (!page || locked || tagShown !== "") { toast(locked ? Lang.t("This page is locked: unlock it to record on it") : Lang.t("Open a page to record on it")); return }
     var running = meetings.status !== "idle" ? meetings.meetingId : ""
     if (running) {
-      if (editor.meetingBlock(running)) { toast("It's recording, on this page"); return }
+      if (editor.meetingBlock(running)) { toast(Lang.t("It's recording, on this page")); return }
       var o = meetingOwners[running]
       if (o && workspace.index.pages[o.pageId]) { open(o.pageId, false, { block: o.uid }); return }
       var here = editor.placeBlock(editor.focusUid, { type: "meeting", meeting: { id: running, title: "", startedAt: new Date().toISOString() } })
-      if (here) toast("voxtype's meeting, put here: it's written out when it ends")
+      if (here) toast(Lang.t("voxtype's meeting, put here: it's written out when it ends"))
       return
     }
     var made = editor.placeBlock(editor.focusUid, { type: "meeting" })
@@ -2804,7 +2805,7 @@ FocusScope {
     // (Another profile or page open by then: its list not shown there.)
     meetings.list(onThisPage(function(list) {
       if (editor.indexOf(uid) < 0) return
-      if (list.length === 0) { view.toast("voxtype hasn't recorded a meeting yet"); return }
+      if (list.length === 0) { view.toast(Lang.t("voxtype hasn't recorded a meeting yet")); return }
       meetingPick.uid = uid
       meetingPick.choices = list
       if (item) {
@@ -2849,7 +2850,7 @@ FocusScope {
     else if (what === "import") importMeeting(uid)
     else if (what === "summarize") summarizeMeeting(uid)
     else if (what === "enable") meetings.enable(function(ok, problem) {
-      view.toast(!ok ? "Meeting mode couldn't be turned on: " + problem : meetings.waiting ? meetings.waitingText : "voxtype's meeting mode is on")
+      view.toast(!ok ? Lang.t("Meeting mode couldn't be turned on: ") + problem : meetings.waiting ? meetings.waitingText : Lang.t("voxtype's meeting mode is on"))
     })
   }
 
@@ -2926,8 +2927,8 @@ FocusScope {
     var title = e.title || "Untitled"
     // (Another profile opened before it's done: nothing said there.)
     projectOf(id, on ? { status: "active", due: "" } : null, inThisFolder(function(ok) {
-      if (!ok) { view.toast("\u201c" + title + "\u201d is locked: unlock it first"); return }
-      view.toastUndo(on ? "\u201c" + title + "\u201d is a project, in Projects" : "\u201c" + title + "\u201d is a page again, in Pages", function() {
+      if (!ok) { view.toast("\u201c" + title + Lang.t("\u201d is locked: unlock it first")); return }
+      view.toastUndo(on ? "\u201c" + title + Lang.t("\u201d is a project, in Projects") : "\u201c" + title + Lang.t("\u201d is a page again, in Pages"), function() {
         view.projectOf(id, on ? null : had)
       })
     }))
@@ -2946,7 +2947,7 @@ FocusScope {
   function setProjectStatus(status) {
     if (!page || !page.project) return
     setProject({ status: status, due: page.project.due })
-    if (status === "done") toast("Done \u2713  Archive it to put it away")
+    if (status === "done") toast(Lang.t("Done \u2713  Archive it to put it away"))
   }
 
   function setProjectDue(due) {
@@ -2969,7 +2970,7 @@ FocusScope {
     var title = workspace.index.pages[id].title || "Untitled"
     workspace.setArchived(id, on)
     revision++
-    toastUndo(on ? "\u201c" + title + "\u201d is in the archive" : "\u201c" + title + "\u201d is out of the archive", function() {
+    toastUndo(on ? "\u201c" + title + Lang.t("\u201d is in the archive") : "\u201c" + title + Lang.t("\u201d is out of the archive"), function() {
       view.workspace.setArchived(id, !on)
       view.revision++
     })
@@ -3020,7 +3021,7 @@ FocusScope {
     page.icon = Workspace.cleanIcon(r.icon)
     markDirty()
     commit()
-    toast("Restored the version from " + label + "  \u00b7  Ctrl+Z takes it back")
+    toast(Lang.t("Restored the version from ") + label + Lang.t("  \u00b7  Ctrl+Z takes it back"))
   }
 
   function setIcon(emoji) {
@@ -3045,9 +3046,9 @@ FocusScope {
     workspace.readSyncedOf([p], function() {
       view.workspace.files.copyText(Markdown.fromDocPage(p, function(id) {
         var e = view.workspace.index.pages[id]
-        return e ? { title: e.title || "Untitled", icon: e.icon, file: "" } : null
+        return e ? { title: e.title || Lang.t("Untitled"), icon: e.icon, file: "" } : null
       }, { calendar: view.workspace.calendar, syncedPage: function(id) { return view.workspace.readPageNow(id) }, contactOf: function(id) { return view.workspace.contactById(id) } }))
-      view.toast("Copied the page as Markdown")
+      view.toast(Lang.t("Copied the page as Markdown"))
     })
   }
 
@@ -3227,11 +3228,11 @@ FocusScope {
         clip: true
         IconButton {
           visible: !view.sidebarShown && view.paneName === ""  // [fork] (the first pane's sidebar)
-          theme: view.theme; icon: view.theme.icons.sidebar; size: 30; iconSize: 16; tip: "Show the sidebar  Ctrl+\\"
+          theme: view.theme; icon: view.theme.icons.sidebar; size: 30; iconSize: 16; tip: Lang.t("Show the sidebar  Ctrl+\\")
           onClicked: view.sidebarShown = true
         }
-        IconButton { theme: view.theme; icon: view.theme.icons.back; size: 30; iconSize: 16; tip: "Back  Alt+\u2190"; active: view.historyAt > 0; onClicked: view.back() }
-        IconButton { theme: view.theme; icon: view.theme.icons.forward; size: 30; iconSize: 16; tip: "Forward  Alt+\u2192"; active: view.historyAt < view.history.length - 1; onClicked: view.forward() }
+        IconButton { theme: view.theme; icon: view.theme.icons.back; size: 30; iconSize: 16; tip: Lang.t("Back  Alt+\u2190"); active: view.historyAt > 0; onClicked: view.back() }
+        IconButton { theme: view.theme; icon: view.theme.icons.forward; size: 30; iconSize: 16; tip: Lang.t("Forward  Alt+\u2192"); active: view.historyAt < view.history.length - 1; onClicked: view.forward() }
         Item { width: 6; height: 1 }
         // The calendar shown, the Library, or People.
         Text {
@@ -3239,7 +3240,7 @@ FocusScope {
           anchors.verticalCenter: parent.verticalCenter
           leftPadding: 6
           textFormat: Text.PlainText
-          text: view.tasksShown ? "Tasks" : view.templatesShown ? "Templates" : view.peopleShown ? "People" : view.libraryShown ? "Library" : "Calendar"
+          text: view.tasksShown ? Lang.t("Tasks") : view.templatesShown ? Lang.t("Templates") : view.peopleShown ? Lang.t("People") : view.libraryShown ? Lang.t("Library") : Lang.t("Calendar")
           font.family: view.theme.uiFont
           font.pixelSize: 13
           color: view.theme.text
@@ -3250,7 +3251,7 @@ FocusScope {
           anchors.verticalCenter: parent.verticalCenter
           leftPadding: 6
           textFormat: Text.PlainText
-          text: "Tags  /  " + (view.tagShown ? view.tagView.info.label : "")
+          text: "Tags  /  " + (view.tagShown ? Lang.t(view.tagView.info.label) : "")
           font.family: view.theme.uiFont
           font.pixelSize: 13
           color: view.theme.text
@@ -3281,7 +3282,7 @@ FocusScope {
                 anchors.centerIn: parent
                 width: Math.min(implicitWidth, 200)
                 elide: Text.ElideRight
-                text: (modelData.icon ? modelData.icon + " " : "") + (modelData.title || "Untitled")
+                text: (modelData.icon ? modelData.icon + " " : "") + (modelData.title || Lang.t("Untitled"))
                 font.family: view.theme.uiFont
                 font.pixelSize: 13
                 color: view.theme.text
@@ -3312,15 +3313,15 @@ FocusScope {
         IconButton {
           visible: view.locked
           // [fork] Open in the other pane too: read here, changed there.
-          theme: view.theme; icon: view.theme.icons.lock; label: view.mirrored ? "Read only" : "Locked"; size: 30; iconSize: 14; tint: view.theme.muted
-          tip: view.mirrored ? "Open in the other pane too: change it there. Click to go there" : "Locked: it can't be changed. Click to unlock"
+          theme: view.theme; icon: view.theme.icons.lock; label: view.mirrored ? Lang.t("Read only") : Lang.t("Locked"); size: 30; iconSize: 14; tint: view.theme.muted
+          tip: view.mirrored ? Lang.t("Open in the other pane too: change it there. Click to go there") : Lang.t("Locked: it can't be changed. Click to unlock")
           onClicked: if (view.mirrored) view.peer.forceActiveFocus(); else view.setFormat("locked", false)
         }
         IconButton {
           visible: view.page !== null
           theme: view.theme; icon: view.favorite ? view.theme.icons.star : view.theme.icons.starOutline; size: 30; iconSize: 16
           tint: view.favorite ? "#e0a82e" : view.theme.text
-          tip: view.favorite ? "In Favorites" : "Add to Favorites"
+          tip: view.favorite ? Lang.t("In Favorites") : Lang.t("Add to Favorites")
           onClicked: view.toggleFavorite(view.page.id)
         }
         IconButton {
@@ -3329,7 +3330,7 @@ FocusScope {
           theme: view.theme; icon: view.theme.icons.agent; size: 30; iconSize: 16
           // (A conversation here: a mark under it, and it goes back to it.)
           swatch: view.pageChat !== null ? view.theme.accent : "transparent"
-          tip: view.pageChat !== null ? Agent.chatTip(view.pageChat) + "  Ctrl+J" : "Ask your agent  Ctrl+J"
+          tip: view.pageChat !== null ? Agent.chatTip(view.pageChat) + Lang.t("  Ctrl+J") : Lang.t("Ask your agent  Ctrl+J")
           onClicked: view.openAgent("auto")
         }
         IconButton {
@@ -3338,7 +3339,7 @@ FocusScope {
           theme: view.theme; icon: view.recordingNote ? view.theme.icons.stop : view.theme.icons.record; size: 30; iconSize: 17
           tint: view.theme.dark ? "#ff6b6b" : "#e5484d"
           checked: view.recordingNote
-          tip: view.recordingNote ? "Stop recording  Ctrl+Shift+R" : "Record an audio note here  Ctrl+Shift+R"
+          tip: view.recordingNote ? Lang.t("Stop recording  Ctrl+Shift+R") : Lang.t("Record an audio note here  Ctrl+Shift+R")
           onClicked: view.newAudioNote()
         }
         IconButton {
@@ -3348,7 +3349,7 @@ FocusScope {
           theme: view.theme; icon: view.theme.icons.people; size: 30; iconSize: 17
           tint: live ? (view.theme.dark ? "#ff6b6b" : "#e5484d") : view.theme.text
           checked: live
-          tip: live ? "A meeting is recording: go to it" : "Record a meeting (voxtype writes out who said what)"
+          tip: live ? Lang.t("A meeting is recording: go to it") : Lang.t("Record a meeting (voxtype writes out who said what)")
           onClicked: view.newMeeting()
         }
         IconButton {
@@ -3357,7 +3358,7 @@ FocusScope {
           theme: view.theme; icon: view.theme.icons.mic; size: 30; iconSize: 16
           tint: view.dictating ? (view.theme.dark ? "#ff6b6b" : "#e5484d") : view.theme.text
           checked: view.dictating
-          tip: view.dictating ? "Done dictating  Ctrl+Shift+D" : view.recorder && view.recorder.checked && !view.recorder.canTranscribe ? "Dictation needs voxtype (Omarchy's dictation)" : "Dictate: say it, and it's written where you are  Ctrl+Shift+D"
+          tip: view.dictating ? Lang.t("Done dictating  Ctrl+Shift+D") : view.recorder && view.recorder.checked && !view.recorder.canTranscribe ? Lang.t("Dictation needs voxtype (Omarchy's dictation)") : Lang.t("Dictate: say it, and it's written where you are  Ctrl+Shift+D")
           onClicked: view.dictate()
         }
         // [fork] The pane beside: opened on what's shown, or closed.
@@ -3365,14 +3366,14 @@ FocusScope {
           objectName: "splitButton"
           theme: view.theme; icon: view.paneName === "split" ? view.theme.icons.close : "\u{f0bcc}"; size: 30; iconSize: 16
           checked: view.paneName === "" && view.peer !== null
-          tip: view.paneName === "split" ? "Close this pane  Ctrl+Shift+S" : view.peer !== null ? "Close the pane beside  Ctrl+Shift+S" : "Open this beside, in a second pane  Ctrl+Shift+S"
+          tip: view.paneName === "split" ? Lang.t("Close this pane  Ctrl+Shift+S") : view.peer !== null ? Lang.t("Close the pane beside  Ctrl+Shift+S") : Lang.t("Open this beside, in a second pane  Ctrl+Shift+S")
           onClicked: view.toggleSplit()
         }
-        IconButton { visible: view.tagShown === "" && !view.calendarShown && !view.libraryShown && !view.peopleShown && !view.templatesShown && !view.tasksShown; theme: view.theme; icon: view.theme.icons.search; size: 30; iconSize: 16; tip: "Find on this page  Ctrl+F"; checked: findBar.shown; onClicked: findBar.toggle() }
+        IconButton { visible: view.tagShown === "" && !view.calendarShown && !view.libraryShown && !view.peopleShown && !view.templatesShown && !view.tasksShown; theme: view.theme; icon: view.theme.icons.search; size: 30; iconSize: 16; tip: Lang.t("Find on this page  Ctrl+F"); checked: findBar.shown; onClicked: findBar.toggle() }
         IconButton {
           id: moreButton
           visible: !view.calendarShown && !view.libraryShown && !view.peopleShown && !view.templatesShown && !view.tasksShown  // [fork] tasksShown
-          theme: view.theme; icon: view.theme.icons.more; size: 30; iconSize: 16; tip: "Font, width, export, trash"
+          theme: view.theme; icon: view.theme.icons.more; size: 30; iconSize: 16; tip: Lang.t("Font, width, export, trash")
           active: view.page !== null
           onClicked: pageMenu.open()
           PageMenu {
@@ -3529,8 +3530,8 @@ FocusScope {
           anchors.bottom: parent.bottom
           anchors.bottomMargin: 12
           spacing: 6
-          Chip { theme: view.theme; text: "Change cover"; color: view.theme.surfaceHigh; onClicked: coverPop.openAt(this) }
-          Chip { theme: view.theme; text: "Remove"; color: view.theme.surfaceHigh; onClicked: view.setCover("") }
+          Chip { theme: view.theme; text: Lang.t("Change cover"); color: view.theme.surfaceHigh; onClicked: coverPop.openAt(this) }
+          Chip { theme: view.theme; text: Lang.t("Remove"); color: view.theme.surfaceHigh; onClicked: view.setCover("") }
         }
       }
 
@@ -3562,13 +3563,13 @@ FocusScope {
             IconButton {
               id: addIcon
               visible: view.icon === ""
-              theme: view.theme; icon: view.theme.icons.emoji; label: "Add icon"; size: 28; iconSize: 15; tint: view.theme.muted
+              theme: view.theme; icon: view.theme.icons.emoji; label: Lang.t("Add icon"); size: 28; iconSize: 15; tint: view.theme.muted
               onClicked: { emojiPop.target = "page"; emojiPop.removable = false; view.setIcon(Docs.randomEmoji()) }
             }
             IconButton {
               id: addCover
               visible: view.cover === ""
-              theme: view.theme; icon: view.theme.icons.cover; label: "Add cover"; size: 28; iconSize: 15; tint: view.theme.muted
+              theme: view.theme; icon: view.theme.icons.cover; label: Lang.t("Add cover"); size: 28; iconSize: 15; tint: view.theme.muted
               onClicked: view.setCover("gradient:" + Math.floor(Math.random() * Docs.COVERS.length))
             }
           }
@@ -3606,7 +3607,7 @@ FocusScope {
           Text {
             textFormat: Text.PlainText
             visible: titleEdit.length === 0 && titleEdit.preeditText === ""
-            text: view.titleHint || "Untitled"
+            text: view.titleHint || Lang.t("Untitled")
             font: titleEdit.font
             color: Qt.alpha(view.theme.text, 0.25)
           }
@@ -3626,11 +3627,11 @@ FocusScope {
             anchors.centerIn: parent
             spacing: 8
             Text { anchors.verticalCenter: parent.verticalCenter; textFormat: Text.PlainText; text: view.theme.icons.archive; font.family: view.theme.iconFont; font.pixelSize: 14; color: view.theme.muted }
-            Text { anchors.verticalCenter: parent.verticalCenter; textFormat: Text.PlainText; text: "In the archive"; font.family: view.theme.uiFont; font.pixelSize: 13; color: view.theme.muted }
+            Text { anchors.verticalCenter: parent.verticalCenter; textFormat: Text.PlainText; text: Lang.t("In the archive"); font.family: view.theme.uiFont; font.pixelSize: 13; color: view.theme.muted }
             Text {
               anchors.verticalCenter: parent.verticalCenter
               textFormat: Text.PlainText
-              text: "Bring it back"
+              text: Lang.t("Bring it back")
               font.family: view.theme.uiFont
               font.pixelSize: 13
               font.weight: Font.DemiBold
@@ -3657,12 +3658,12 @@ FocusScope {
             anchors.centerIn: parent
             spacing: 8
             Text { anchors.verticalCenter: parent.verticalCenter; textFormat: Text.PlainText; text: view.theme.icons.synced; font.family: view.theme.iconFont; font.pixelSize: 14; color: "#c86f2a" }
-            Text { anchors.verticalCenter: parent.verticalCenter; textFormat: Text.PlainText; text: "A synced block's blocks: what you change here changes on " + (syncedNote.places === 1 ? "the page it's on" : "the " + syncedNote.places + " pages it's on"); font.family: view.theme.uiFont; font.pixelSize: 13; color: view.theme.text }
+            Text { anchors.verticalCenter: parent.verticalCenter; textFormat: Text.PlainText; text: Lang.t("A synced block's blocks: what you change here changes on ") + (syncedNote.places === 1 ? Lang.t("the page it's on") : "the " + syncedNote.places + Lang.t(" pages it's on")); font.family: view.theme.uiFont; font.pixelSize: 13; color: view.theme.text }
             Text {
               visible: view.historyAt > 0
               anchors.verticalCenter: parent.verticalCenter
               textFormat: Text.PlainText
-              text: "Back"
+              text: Lang.t("Back")
               font.family: view.theme.uiFont
               font.pixelSize: 13
               font.weight: Font.DemiBold
@@ -3723,12 +3724,12 @@ FocusScope {
             anchors.centerIn: parent
             spacing: 8
             Text { anchors.verticalCenter: parent.verticalCenter; textFormat: Text.PlainText; text: view.theme.icons.templates; font.family: view.theme.iconFont; font.pixelSize: 14; color: view.theme.accent }
-            Text { anchors.verticalCenter: parent.verticalCenter; textFormat: Text.PlainText; text: "A template: new pages from it start like this"; font.family: view.theme.uiFont; font.pixelSize: 13; color: view.theme.text }
+            Text { anchors.verticalCenter: parent.verticalCenter; textFormat: Text.PlainText; text: Lang.t("A template: new pages from it start like this"); font.family: view.theme.uiFont; font.pixelSize: 13; color: view.theme.text }
             Text {
               objectName: "templateUse"
               anchors.verticalCenter: parent.verticalCenter
               textFormat: Text.PlainText
-              text: "New page from it"
+              text: Lang.t("New page from it")
               font.family: view.theme.uiFont
               font.pixelSize: 13
               font.weight: Font.DemiBold
@@ -3770,7 +3771,7 @@ FocusScope {
             Text {
               visible: aboutInput.text === ""
               textFormat: Text.PlainText
-              text: "What it's for, in a line (shown in Templates)"
+              text: Lang.t("What it's for, in a line (shown in Templates)")
               font: aboutInput.font
               color: view.theme.faint
             }
@@ -3797,7 +3798,7 @@ FocusScope {
             height: 26
             verticalAlignment: Text.AlignVCenter
             rightPadding: 4
-            text: "\u21a9 Linked from"
+            text: Lang.t("\u21a9 Linked from")
             font.family: view.theme.uiFont
             font.pixelSize: 12
             color: view.theme.muted
@@ -3817,7 +3818,7 @@ FocusScope {
                 id: backName
                 textFormat: Text.PlainText
                 anchors.centerIn: parent
-                text: (parent.e.icon ? parent.e.icon + " " : "") + (parent.e.title || "Untitled")
+                text: (parent.e.icon ? parent.e.icon + " " : "") + (parent.e.title || Lang.t("Untitled"))
                 font.family: view.theme.uiFont
                 font.pixelSize: 12
                 color: view.theme.text
@@ -3917,7 +3918,7 @@ FocusScope {
             langPop.y = item.textTop - 4
             langPop.open()
           }
-          onTextCopied: function(text) { view.workspace.files.copyText(text); view.toast("Copied") }
+          onTextCopied: function(text) { view.workspace.files.copyText(text); view.toast(Lang.t("Copied")) }
           // (A reminder set while its details stay out of notifications:
           // asked whether to show them, with a button that does, once a
           // session; never once you've turned them on or off yourself, or
@@ -3928,7 +3929,7 @@ FocusScope {
             view.reminderHintShown = true
             // (The setting itself, which a service from before 1.1.2, still
             // running after an update, knows too.)
-            view.toastAction("Reminder set for " + label + ". Show its details in the notification?", "Turn on", function() {
+            view.toastAction(Lang.t("Reminder set for ") + label + Lang.t(". Show its details in the notification?"), Lang.t("Turn on"), function() {
               if (view.service && typeof view.service.setSetting === "function") view.service.setSetting("reminderWords", true)
             })
           }
@@ -3989,7 +3990,7 @@ FocusScope {
           spacing: 10
           Text {
             textFormat: Text.PlainText
-            text: "Start with a template"
+            text: Lang.t("Start with a template")
             font.family: view.theme.uiFont
             font.pixelSize: 12
             font.weight: Font.DemiBold
@@ -4017,7 +4018,7 @@ FocusScope {
                 required property var modelData
                 theme: view.theme
                 icon: view.theme.icons[modelData.icon] || ""
-                text: modelData.label
+                text: Lang.t(modelData.label)
                 onClicked: view.applyTemplate(modelData.id)
               }
             }
@@ -4101,14 +4102,14 @@ FocusScope {
       Text {
         textFormat: Text.PlainText
         anchors.horizontalCenter: parent.horizontalCenter
-        text: "No page open"
+        text: Lang.t("No page open")
         font.family: view.theme.uiFont
         font.pixelSize: 18
         color: view.theme.muted
       }
       IconButton {
         anchors.horizontalCenter: parent.horizontalCenter
-        theme: view.theme; icon: view.theme.icons.newPage; label: "New page"
+        theme: view.theme; icon: view.theme.icons.newPage; label: Lang.t("New page")
         onClicked: view.newPage("")
       }
     }
@@ -4145,9 +4146,9 @@ FocusScope {
       readonly property bool elsewhere: view.recorder !== null && view.recorder.busy && view.recorder.kind === "audio"
         && !(view.page && editor.indexOf(view.recorder.owner) >= 0)
       visible: view.dictating || elsewhere
-      label: view.dictating ? "Listening" : "Recording an audio note"
+      label: view.dictating ? Lang.t("Listening") : Lang.t("Recording an audio note")
       listening: view.recorder !== null && view.recorder.phase === "recording"
-      busyText: view.recorder && view.recorder.phase === "transcribing" ? "Writing it down\u2026" : "Saving\u2026"
+      busyText: view.recorder && view.recorder.phase === "transcribing" ? Lang.t("Writing it down\u2026") : Lang.t("Saving\u2026")
       seconds: view.recorder ? view.recorder.elapsed : 0
       levels: view.recorder ? view.recorder.recent : []
       anchors.horizontalCenter: parent.horizontalCenter
@@ -4166,9 +4167,9 @@ FocusScope {
       Timer { interval: 1000; repeat: true; running: meetingBar.visible; onTriggered: meetingBar.now = Date.now() }
       readonly property var owner: view.meetings && view.meetings.meetingId ? view.meetingOwners[view.meetings.meetingId] || null : null
       visible: !recordingBar.visible && owner !== null && !(view.page && view.page.id === owner.pageId)
-      label: view.meetings && view.meetings.status === "paused" ? "Meeting paused" : "Recording a meeting"
+      label: view.meetings && view.meetings.status === "paused" ? Lang.t("Meeting paused") : Lang.t("Recording a meeting")
       listening: view.meetings !== null && view.meetings.finishing === ""
-      busyText: "Writing it out\u2026"
+      busyText: Lang.t("Writing it out\u2026")
       seconds: owner ? (now - owner.at) / 1000 : 0
       doneLabel: "Stop"
       cancelable: false
@@ -4238,7 +4239,7 @@ FocusScope {
     onToPageRequested: function(uid) { view.turnIntoPage(uid) }
     onSyncedRequested: function(uids) { view.makeSynced(uids) }
     onMindMapRequested: function(uids) {
-      if (!editor.toMindMap(uids)) view.toast("A page or a sketch is among those blocks, and it would be lost: move it out first")
+      if (!editor.toMindMap(uids)) view.toast(Lang.t("A page or a sketch is among those blocks, and it would be lost: move it out first"))
     }
     onAgentRequested: function(uids) { view.openAgent("blocks", uids) }
     onColorRequested: function(uids, anchor, x, y) { view.openBlockColors(uids, anchor, x, y) }
@@ -4289,7 +4290,7 @@ FocusScope {
       view.settleAgentPage(true)
       if (!view.workspace || !view.agentRunPrompt) return
       view.workspace.files.launchAgent(view.agentRunPrompt)
-      view.toast("Opened in a terminal: what it changes shows up here")
+      view.toast(Lang.t("Opened in a terminal: what it changes shows up here"))
     }
   }
 
@@ -4543,17 +4544,17 @@ FocusScope {
         leftPadding: 10
         topPadding: 4
         bottomPadding: 4
-        text: tagMenu.info.label + "  \u00b7  " + tagMenu.info.blocks + (tagMenu.info.blocks === 1 ? " block" : " blocks")
+        text: Lang.t(tagMenu.info.label) + "  \u00b7  " + tagMenu.info.blocks + (tagMenu.info.blocks === 1 ? Lang.t(" block") : Lang.t(" blocks"))
         font.family: view.theme.uiFont
         font.pixelSize: 11
         font.weight: Font.DemiBold
         color: view.theme.muted
       }
-      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.open; text: "Every block with it"; onClicked: { tagMenu.close(); view.openTag(tagMenu.tag) } }
-      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.palette; text: "Color"; hint: "\u203a"; onClicked: { var a = tagMenu.anchor; var t = tagMenu.tag; tagMenu.close(); view.openTagColors(a, t, true) } }
-      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.pen; text: "Rename\u2026"; onClicked: { var a = tagMenu.anchor; var t = tagMenu.tag; tagMenu.close(); view.openTagRename(a, t, true) } }
+      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.open; text: Lang.t("Every block with it"); onClicked: { tagMenu.close(); view.openTag(tagMenu.tag) } }
+      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.palette; text: Lang.t("Color"); hint: "\u203a"; onClicked: { var a = tagMenu.anchor; var t = tagMenu.tag; tagMenu.close(); view.openTagColors(a, t, true) } }
+      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.pen; text: Lang.t("Rename\u2026"); onClicked: { var a = tagMenu.anchor; var t = tagMenu.tag; tagMenu.close(); view.openTagRename(a, t, true) } }
       Rectangle { width: parent.width; height: 1; color: view.theme.line }
-      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.trash; text: "Take it off every page"; danger: true; onClicked: { var t = tagMenu.tag; tagMenu.close(); view.removeTag(t) } }
+      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.trash; text: Lang.t("Take it off every page"); danger: true; onClicked: { var t = tagMenu.tag; tagMenu.close(); view.removeTag(t) } }
     }
   }
 
@@ -4643,7 +4644,7 @@ FocusScope {
         editor.focusBlock(at.uid, at.end, at.start)
         editor.formatInline(kind === "color" ? "color" : "highlight", hex)
       } else {
-        view.toast("Those words changed while you picked: select them again")
+        view.toast(Lang.t("Those words changed while you picked: select them again"))
       }
       view.rememberColor(hex)
     }
@@ -4812,8 +4813,8 @@ FocusScope {
     width: 300
     contentItem: Column {
       spacing: 2
-      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.page; text: "Files\u2026"; hint: "Markdown, HTML, text, Word\u2026"; onClicked: { importMenu.close(); view.importRequested(false) } }
-      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.folder; text: "A folder\u2026"; hint: "a Notion or Obsidian export"; onClicked: { importMenu.close(); view.importRequested(true) } }
+      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.page; text: Lang.t("Files\u2026"); hint: Lang.t("Markdown, HTML, text, Word\u2026"); onClicked: { importMenu.close(); view.importRequested(false) } }
+      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.folder; text: Lang.t("A folder\u2026"); hint: Lang.t("a Notion or Obsidian export"); onClicked: { importMenu.close(); view.importRequested(true) } }
     }
   }
 
@@ -4845,15 +4846,15 @@ FocusScope {
         theme: view.theme
         width: parent.width
         height: 34
-        placeholder: "Its words (else the template's name)"
+        placeholder: Lang.t("Its words (else the template's name)")
         onAccepted: buttonSetup.set({ label: text })
       }
       Row {
         spacing: 6
-        Chip { objectName: "buttonInsert"; theme: view.theme; text: "Puts it in, here"; checked: buttonSetup.d && buttonSetup.d.action !== "page"; onClicked: buttonSetup.set({ action: "insert" }) }
-        Chip { objectName: "buttonPage"; theme: view.theme; text: "Makes a page inside"; checked: buttonSetup.d && buttonSetup.d.action === "page"; onClicked: buttonSetup.set({ action: "page" }) }
+        Chip { objectName: "buttonInsert"; theme: view.theme; text: Lang.t("Puts it in, here"); checked: buttonSetup.d && buttonSetup.d.action !== "page"; onClicked: buttonSetup.set({ action: "insert" }) }
+        Chip { objectName: "buttonPage"; theme: view.theme; text: Lang.t("Makes a page inside"); checked: buttonSetup.d && buttonSetup.d.action === "page"; onClicked: buttonSetup.set({ action: "page" }) }
       }
-      Text { textFormat: Text.PlainText; leftPadding: 4; text: "Your templates"; visible: view.userTemplates.length > 0; font.family: view.theme.uiFont; font.pixelSize: 11; color: view.theme.muted }
+      Text { textFormat: Text.PlainText; leftPadding: 4; text: Lang.t("Your templates"); visible: view.userTemplates.length > 0; font.family: view.theme.uiFont; font.pixelSize: 11; color: view.theme.muted }
       Repeater {
         model: view.userTemplates
         delegate: MenuRow {
@@ -4877,7 +4878,7 @@ FocusScope {
             required property var modelData
             theme: view.theme
             icon: view.theme.icons[modelData.icon] || ""
-            text: modelData.label
+            text: Lang.t(modelData.label)
             checked: buttonSetup.d && buttonSetup.d.template === modelData.id
             onClicked: buttonSetup.set({ template: modelData.id })
           }
@@ -4887,7 +4888,7 @@ FocusScope {
         objectName: "buttonDone"
         anchors.right: parent.right
         theme: view.theme
-        text: "Done"
+        text: Lang.t("Done")
         checked: true
         onClicked: buttonSetup.close()
       }
@@ -4907,8 +4908,8 @@ FocusScope {
       spacing: 2
       MenuRow {
         objectName: "syncedNew"
-        width: parent.width; theme: view.theme; icon: view.theme.icons.plus; text: "A new synced block"
-        hint: "write in it, then put it anywhere"
+        width: parent.width; theme: view.theme; icon: view.theme.icons.plus; text: Lang.t("A new synced block")
+        hint: Lang.t("write in it, then put it anywhere")
         onClicked: {
           syncedPick.close()
           var id = view.workspace.newSyncedPage([])
@@ -4916,7 +4917,7 @@ FocusScope {
           view.open(id, false, { block: "" })
         }
       }
-      Text { visible: syncedPick.list.length > 0; textFormat: Text.PlainText; leftPadding: 8; topPadding: 4; text: "Or one there is"; font.family: view.theme.uiFont; font.pixelSize: 11; color: view.theme.muted }
+      Text { visible: syncedPick.list.length > 0; textFormat: Text.PlainText; leftPadding: 8; topPadding: 4; text: Lang.t("Or one there is"); font.family: view.theme.uiFont; font.pixelSize: 11; color: view.theme.muted }
       Repeater {
         model: syncedPick.list
         delegate: MenuRow {
@@ -4978,7 +4979,7 @@ FocusScope {
           width: parent.width
           theme: view.theme
           icon: ""
-          text: modelData.label
+          text: Lang.t(modelData.label)
           onClicked: { var t = askPop.then; askPop.close(); if (t) t(modelData.value) }
         }
       }
@@ -5054,7 +5055,7 @@ FocusScope {
         spacing: 2
         Text {
           textFormat: Text.PlainText
-          text: icsPop.events.length === 1 ? "An event" : icsPop.events.length + " events"
+          text: icsPop.events.length === 1 ? Lang.t("An event") : icsPop.events.length + Lang.t(" events")
           font.family: view.theme.uiFont
           font.pixelSize: 15
           font.weight: Font.DemiBold
@@ -5089,7 +5090,7 @@ FocusScope {
               width: parent.width
               elide: Text.ElideRight
               textFormat: Text.PlainText
-              text: (view.theme.twelveHour, view.eventWhen(parent.parent.modelData)) + (parent.parent.modelData.place ? "  \u00b7  " + parent.parent.modelData.place : "") + (parent.parent.there ? "  \u00b7  on your calendar" : "")
+              text: (view.theme.twelveHour, view.eventWhen(parent.parent.modelData)) + (parent.parent.modelData.place ? "  \u00b7  " + parent.parent.modelData.place : "") + (parent.parent.there ? Lang.t("  \u00b7  on your calendar") : "")
               font.family: view.theme.uiFont
               font.pixelSize: 12
               color: view.theme.muted
@@ -5100,7 +5101,7 @@ FocusScope {
       Text {
         visible: icsPop.events.length > 6
         textFormat: Text.PlainText
-        text: "and " + (icsPop.events.length - 6) + " more"
+        text: "and " + (icsPop.events.length - 6) + Lang.t(" more")
         font.family: view.theme.uiFont
         font.pixelSize: 12
         color: view.theme.muted
@@ -5110,7 +5111,7 @@ FocusScope {
         width: parent.width
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: icsPop.events.length === 1 ? "It's on your calendar already." : "They're on your calendar already."
+        text: icsPop.events.length === 1 ? Lang.t("It's on your calendar already.") : Lang.t("They're on your calendar already.")
         font.family: view.theme.uiFont
         font.pixelSize: 12
         color: view.theme.muted
@@ -5123,10 +5124,10 @@ FocusScope {
           visible: icsPop.fresh.length > 0
           theme: view.theme
           primary: true
-          text: icsPop.fresh.length === icsPop.events.length ? "Add to calendar" : "Add the " + icsPop.fresh.length + " new"
+          text: icsPop.fresh.length === icsPop.events.length ? Lang.t("Add to calendar") : Lang.t("Add the ") + icsPop.fresh.length + Lang.t(" new")
           onClicked: view.addIcsEvents()
         }
-        TextButton { theme: view.theme; text: icsPop.fresh.length > 0 ? "Cancel" : "Close"; onClicked: icsPop.close() }
+        TextButton { theme: view.theme; text: icsPop.fresh.length > 0 ? Lang.t("Cancel") : Lang.t("Close"); onClicked: icsPop.close() }
       }
     }
   }
@@ -5149,14 +5150,14 @@ FocusScope {
         bottomPadding: 4
         width: parent.width
         wrapMode: Text.Wrap
-        text: templatePick.mode === "child" ? "New pages inside it start from" : templatePick.mode === "newIn" ? "A new page inside it, from" : "Put a template here"
+        text: templatePick.mode === "child" ? Lang.t("New pages inside it start from") : templatePick.mode === "newIn" ? Lang.t("A new page inside it, from") : Lang.t("Put a template here")
         font.family: view.theme.uiFont
         font.pixelSize: 12
         color: view.theme.muted
       }
       MenuRow {
         visible: templatePick.mode === "child"
-        width: parent.width; theme: view.theme; icon: view.theme.icons.page; text: "A blank page"
+        width: parent.width; theme: view.theme; icon: view.theme.icons.page; text: Lang.t("A blank page")
         checked: templatePick.current === ""
         onClicked: { templatePick.close(); view.workspace.setChildTemplate(templatePick.pageId, "") }
       }
@@ -5185,7 +5186,7 @@ FocusScope {
         leftPadding: 8
         width: parent.width
         wrapMode: Text.Wrap
-        text: "No templates yet: Save as template, in a page's \u22ef menu."
+        text: Lang.t("No templates yet: Save as template, in a page's \u22ef menu.")
         font.family: view.theme.uiFont
         font.pixelSize: 12
         color: view.theme.muted
@@ -5208,7 +5209,7 @@ FocusScope {
         textFormat: Text.PlainText
         leftPadding: 8
         bottomPadding: 4
-        text: "Meetings voxtype recorded"
+        text: Lang.t("Meetings voxtype recorded")
         font.family: view.theme.uiFont
         font.pixelSize: 12
         color: view.theme.muted
@@ -5221,7 +5222,7 @@ FocusScope {
           width: parent.width
           theme: view.theme
           icon: view.theme.icons.people
-          text: modelData.title || "Meeting"
+          text: modelData.title || Lang.t("Meeting")
           hint: [modelData.date, modelData.duration].filter(function(x) { return x }).join("  \u00b7  ")
           onClicked: {
             meetingPick.close()
@@ -5258,7 +5259,7 @@ FocusScope {
       visible: rowMenu.sorting
       width: parent.width
       spacing: 2
-      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.back; text: "Sort the pages inside"; onClicked: rowMenu.sorting = false }
+      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.back; text: Lang.t("Sort the pages inside"); onClicked: rowMenu.sorting = false }
       Rectangle { width: parent.width; height: 1; color: view.theme.line }
       Repeater {
         model: PageSort.MODES
@@ -5277,35 +5278,35 @@ FocusScope {
       width: parent.width
       spacing: 2
       // [fork] In a new tab, or beside.
-      MenuRow { objectName: "rowNewTab"; width: parent.width; theme: view.theme; icon: "\u{f075c}"; text: "Open in a new tab"; hint: "Ctrl+click"; onClicked: { rowMenu.close(); view.newTab(rowMenu.pageId) } }
-      MenuRow { objectName: "rowBeside"; width: parent.width; theme: view.theme; icon: "\u{f0bcc}"; text: view.paneName === "split" ? "Open in the first pane" : "Open beside"; hint: "Ctrl+Shift+click"; onClicked: { rowMenu.close(); view.openBeside(rowMenu.pageId) } }
+      MenuRow { objectName: "rowNewTab"; width: parent.width; theme: view.theme; icon: "\u{f075c}"; text: Lang.t("Open in a new tab"); hint: Lang.t("Ctrl+click"); onClicked: { rowMenu.close(); view.newTab(rowMenu.pageId) } }
+      MenuRow { objectName: "rowBeside"; width: parent.width; theme: view.theme; icon: "\u{f0bcc}"; text: view.paneName === "split" ? Lang.t("Open in the first pane") : Lang.t("Open beside"); hint: Lang.t("Ctrl+Shift+click"); onClicked: { rowMenu.close(); view.openBeside(rowMenu.pageId) } }
       Rectangle { width: parent.width; height: 1; color: view.theme.line }
-      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.newPage; text: "A page inside it"; onClicked: { rowMenu.close(); view.newPage(rowMenu.pageId) } }
+      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.newPage; text: Lang.t("A page inside it"); onClicked: { rowMenu.close(); view.newPage(rowMenu.pageId) } }
       MenuRow {
         objectName: "rowFromTemplate"
-        width: parent.width; theme: view.theme; icon: view.theme.icons.templates; text: "A page inside it, from a template\u2026"
+        width: parent.width; theme: view.theme; icon: view.theme.icons.templates; text: Lang.t("A page inside it, from a template\u2026")
         onClicked: { rowMenu.close(); view.openTemplatePick("newIn", rowMenu.pageId, rowMenu.parent) }
       }
       MenuRow {
         width: parent.width; theme: view.theme
         icon: view.workspace && view.workspace.isFavorite(rowMenu.pageId) ? view.theme.icons.star : view.theme.icons.starOutline
-        text: view.workspace && view.workspace.isFavorite(rowMenu.pageId) ? "Out of Favorites" : "Add to Favorites"
+        text: view.workspace && view.workspace.isFavorite(rowMenu.pageId) ? Lang.t("Out of Favorites") : Lang.t("Add to Favorites")
         onClicked: { rowMenu.close(); view.toggleFavorite(rowMenu.pageId) }
       }
       MenuRow {
         objectName: "rowProject"
         width: parent.width; theme: view.theme; icon: view.theme.icons.briefcase
         readonly property bool isProject: { var r = view.workspace ? view.workspace.revision : 0; return !!(view.workspace && view.workspace.index.pages[rowMenu.pageId] && view.workspace.index.pages[rowMenu.pageId].project) }
-        text: isProject ? "Not a project" : "Make it a project"
+        text: isProject ? Lang.t("Not a project") : Lang.t("Make it a project")
         onClicked: { rowMenu.close(); view.makeProjectOf(rowMenu.pageId, !isProject) }
       }
-      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.duplicate; text: "Duplicate"; onClicked: { rowMenu.close(); view.duplicatePage(rowMenu.pageId) } }
-      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.move; text: "Move to\u2026"; onClicked: { rowMenu.close(); view.movePageAsk(rowMenu.pageId) } }
-      MenuRow { objectName: "rowArchive"; width: parent.width; theme: view.theme; icon: view.theme.icons.archive; text: "Archive"; onClicked: { rowMenu.close(); view.archivePage(rowMenu.pageId, true) } }
+      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.duplicate; text: Lang.t("Duplicate"); onClicked: { rowMenu.close(); view.duplicatePage(rowMenu.pageId) } }
+      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.move; text: Lang.t("Move to\u2026"); onClicked: { rowMenu.close(); view.movePageAsk(rowMenu.pageId) } }
+      MenuRow { objectName: "rowArchive"; width: parent.width; theme: view.theme; icon: view.theme.icons.archive; text: Lang.t("Archive"); onClicked: { rowMenu.close(); view.archivePage(rowMenu.pageId, true) } }
       // [fork] PageSort.js
-      MenuRow { objectName: "rowSort"; visible: rowMenu.hasPagesIn; width: parent.width; theme: view.theme; icon: "\u{f04ba}"; text: "Sort the pages inside"; hint: rowMenu.sortName; onClicked: rowMenu.sorting = true }
+      MenuRow { objectName: "rowSort"; visible: rowMenu.hasPagesIn; width: parent.width; theme: view.theme; icon: "\u{f04ba}"; text: Lang.t("Sort the pages inside"); hint: rowMenu.sortName; onClicked: rowMenu.sorting = true }
       Rectangle { width: parent.width; height: 1; color: view.theme.line }
-      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.trash; text: "Move to the trash"; danger: true; onClicked: { rowMenu.close(); view.trashPage(rowMenu.pageId) } }
+      MenuRow { width: parent.width; theme: view.theme; icon: view.theme.icons.trash; text: Lang.t("Move to the trash"); danger: true; onClicked: { rowMenu.close(); view.trashPage(rowMenu.pageId) } }
      }
     }
   }

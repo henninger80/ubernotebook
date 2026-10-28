@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "../Lang.js" as Lang  // [fork] German
 
 // Every page in the notebook: its number, title, date and tab. Click one to
 // turn to it; move pages up and down, or start a new one.
@@ -62,7 +63,7 @@ Pop {
           Text {
             textFormat: Text.PlainText
             width: parent.width
-            text: row.modelData.title || (row.modelData.blank ? "Blank page" : "Untitled")
+            text: row.modelData.title || (row.modelData.blank ? Lang.t("Blank page") : Lang.t("Untitled"))
             elide: Text.ElideRight
             font.family: pop.theme.uiFont
             font.pixelSize: 13
@@ -86,8 +87,8 @@ Pop {
           anchors.rightMargin: 4
           anchors.verticalCenter: parent.verticalCenter
           visible: rowHover.hovered
-          IconButton { theme: pop.theme; icon: pop.theme.icons.up; size: 28; iconSize: 15; tip: "Move up"; active: row.index > 0; onClicked: pop.view.movePage(row.index, row.index - 1) }
-          IconButton { theme: pop.theme; icon: pop.theme.icons.down; size: 28; iconSize: 15; tip: "Move down"; active: row.index < pop.view.pageCount - 1; onClicked: pop.view.movePage(row.index, row.index + 1) }
+          IconButton { theme: pop.theme; icon: pop.theme.icons.up; size: 28; iconSize: 15; tip: Lang.t("Move up"); active: row.index > 0; onClicked: pop.view.movePage(row.index, row.index - 1) }
+          IconButton { theme: pop.theme; icon: pop.theme.icons.down; size: 28; iconSize: 15; tip: Lang.t("Move down"); active: row.index < pop.view.pageCount - 1; onClicked: pop.view.movePage(row.index, row.index + 1) }
         }
         HoverHandler { id: rowHover }
         TapHandler {
@@ -105,8 +106,8 @@ Pop {
       MenuRow {
         theme: pop.theme
         icon: pop.theme.icons.plus
-        text: "New page after this one"
-        hint: "Ctrl+N"
+        text: Lang.t("New page after this one")
+        hint: Lang.t("Ctrl+N")
         width: list.width
         onClicked: { pop.close(); pop.view.newPage(pop.view.pageIndex + 1) }
       }
@@ -115,8 +116,8 @@ Pop {
       id: fromTemplate
       theme: pop.theme
       icon: pop.theme.icons.templates
-      text: "A page from a template\u2026"
-      hint: "Ctrl+T"
+      text: Lang.t("A page from a template\u2026")
+      hint: Lang.t("Ctrl+T")
       width: list.width
       onClicked: { pop.close(); pop.view.openTemplates() }
     }

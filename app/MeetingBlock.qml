@@ -5,6 +5,7 @@ import "../Audio.js" as Audio
 import "../Docs.js" as Docs
 import "../Colors.js" as Colors
 import "../Dates.js" as Dates
+import "../Lang.js" as Lang  // [fork] German
 
 // A meeting on a page in Pages, recorded by voxtype's meeting mode: your
 // microphone and what the computer plays (the other side of a call). Before
@@ -207,7 +208,7 @@ Item {
           width: parent.width
           elide: Text.ElideRight
           textFormat: Text.PlainText
-          text: !mb.started ? (mb.readOnly ? "A meeting, not recorded" : "Record a meeting")
+          text: !mb.started ? (mb.readOnly ? Lang.t("A meeting, not recorded") : Lang.t("Record a meeting"))
             : mb.live ? (mb.paused ? "Paused" : "Recording") + "  \u00b7  " + Audio.clock(mb.elapsed)
             : mb.finishing ? "Writing it out\u2026"
             : (mb.meeting.title || "Meeting")
@@ -264,26 +265,26 @@ Item {
         IconButton {
           objectName: "meetingImport"
           visible: !mb.started && !mb.readOnly && mb.meetings !== null && mb.meetings.available
-          theme: mb.theme; icon: mb.theme ? mb.theme.icons.history : ""; label: head.tiny ? "" : "Bring one in"; size: 30; iconSize: 14; tint: mb.words
-          tip: "A meeting voxtype recorded, put here"
+          theme: mb.theme; icon: mb.theme ? mb.theme.icons.history : ""; label: head.tiny ? "" : Lang.t("Bring one in"); size: 30; iconSize: 14; tint: mb.words
+          tip: Lang.t("A meeting voxtype recorded, put here")
           onClicked: mb.act("import")
         }
         Pill {
           most: head.narrow ? head.width - 24 : 1e9
           objectName: "meetingEnable"
           visible: !mb.started && !mb.readOnly && mb.meetings !== null && mb.meetings.available && mb.meetings.checked && !mb.meetings.enabled
-          label: mb.meetings && mb.meetings.working === "enable" ? "Turning it on\u2026" : "Turn on meeting mode"
+          label: mb.meetings && mb.meetings.working === "enable" ? Lang.t("Turning it on\u2026") : Lang.t("Turn on meeting mode")
           fillColor: mb.tint
-          tip: "Sets meeting.enabled in voxtype's settings; it takes effect when voxtype restarts"
+          tip: Lang.t("Sets meeting.enabled in voxtype's settings; it takes effect when voxtype restarts")
           onClicked: if (!mb.meetings.working) mb.act("enable")
         }
         Pill {
           most: head.narrow ? head.width - 24 : 1e9
           objectName: "meetingStart"
           visible: !mb.started && !mb.readOnly && mb.meetings !== null && mb.meetings.enabled && !mb.meetings.waiting
-          label: mb.meetings && mb.meetings.working === "start" ? "Starting\u2026" : "Start"
+          label: mb.meetings && mb.meetings.working === "start" ? Lang.t("Starting\u2026") : Lang.t("Start")
           fillColor: mb.red
-          tip: "Start recording the meeting"
+          tip: Lang.t("Start recording the meeting")
           onClicked: if (!mb.meetings.working) mb.act("start")
         }
         // Recording: pause or go on, stop.
@@ -291,31 +292,31 @@ Item {
           objectName: "meetingPause"
           visible: mb.live && !mb.readOnly
           theme: mb.theme; icon: mb.theme ? (mb.paused ? mb.theme.icons.play : mb.theme.icons.pause) : ""; size: 32; iconSize: 17; tint: mb.words
-          tip: mb.paused ? "Go on recording" : "Pause (what's said meanwhile isn't recorded)"
+          tip: mb.paused ? Lang.t("Go on recording") : Lang.t("Pause (what's said meanwhile isn't recorded)")
           onClicked: mb.act(mb.paused ? "resume" : "pause")
         }
         Pill {
           most: head.narrow ? head.width - 24 : 1e9
           objectName: "meetingStop"
           visible: mb.live && !mb.readOnly
-          label: "Stop"
+          label: Lang.t("Stop")
           fillColor: mb.red
-          tip: "End the meeting: voxtype writes it out"
+          tip: Lang.t("End the meeting: voxtype writes it out")
           onClicked: mb.act("stop")
         }
         // Done: what it was, summarized; who said what, shown or not; its colors.
         IconButton {
           objectName: "meetingFetch"
           visible: mb.done && mb.meeting.segments.length === 0 && !mb.readOnly
-          theme: mb.theme; icon: mb.theme ? mb.theme.icons.restore : ""; label: head.tiny ? "" : "Get it again"; size: 30; iconSize: 14; tint: mb.words
-          tip: "Ask voxtype for what it wrote out"
+          theme: mb.theme; icon: mb.theme ? mb.theme.icons.restore : ""; label: head.tiny ? "" : Lang.t("Get it again"); size: 30; iconSize: 14; tint: mb.words
+          tip: Lang.t("Ask voxtype for what it wrote out")
           onClicked: mb.act("fetch")
         }
         IconButton {
           objectName: "meetingSummarize"
           visible: mb.done && mb.meeting.segments.length > 0 && !mb.readOnly
-          theme: mb.theme; icon: mb.theme ? mb.theme.icons.agent : ""; label: head.tiny ? "" : "Summarize"; size: 30; iconSize: 15; tint: mb.words
-          tip: "Your agent writes the summary, the decisions and the to-dos under it"
+          theme: mb.theme; icon: mb.theme ? mb.theme.icons.agent : ""; label: head.tiny ? "" : Lang.t("Summarize"); size: 30; iconSize: 15; tint: mb.words
+          tip: Lang.t("Your agent writes the summary, the decisions and the to-dos under it")
           onClicked: mb.act("summarize")
         }
         IconButton {
@@ -323,7 +324,7 @@ Item {
           visible: mb.done && mb.meeting.segments.length > 0
           theme: mb.theme; icon: mb.theme ? mb.theme.icons.transcript : ""; size: 30; iconSize: 15; tint: mb.words
           checked: mb.meeting.open
-          tip: mb.meeting.open ? "Hide who said what" : "Show who said what"
+          tip: mb.meeting.open ? Lang.t("Hide who said what") : Lang.t("Show who said what")
           onClicked: mb.change({ open: !mb.meeting.open })
         }
         IconButton {
@@ -331,7 +332,7 @@ Item {
           objectName: "meetingColors"
           visible: !mb.live && !mb.readOnly && (mb.pointerIn || mb.trying !== null)
           theme: mb.theme; icon: mb.theme ? mb.theme.icons.palette : ""; size: 30; iconSize: 15; tint: mb.words
-          tip: "Its colors"
+          tip: Lang.t("Its colors")
           onClicked: mb.askColors(colorButton)
         }
       }
@@ -382,7 +383,7 @@ Item {
                 TapHandler { enabled: !mb.readOnly; onTapped: namePop.openFor(chip, chip.speaker) }
                 ToolTip.visible: chipHover.hovered && !mb.readOnly
                 ToolTip.delay: 700
-                ToolTip.text: "Name them"
+                ToolTip.text: Lang.t("Name them")
               }
               Text {
                 anchors.verticalCenter: parent.verticalCenter
@@ -411,7 +412,7 @@ Item {
         IconButton {
           objectName: "meetingShowAll"
           visible: !mb.showAll && mb.turns.length > 40
-          theme: mb.theme; icon: mb.theme ? mb.theme.icons.down : ""; label: "Show all " + mb.turns.length + " turns"; size: 30; iconSize: 14; tint: mb.words
+          theme: mb.theme; icon: mb.theme ? mb.theme.icons.down : ""; label: Lang.t("Show all ") + mb.turns.length + Lang.t(" turns"); size: 30; iconSize: 14; tint: mb.words
           onClicked: mb.showAll = true
         }
       }
@@ -439,7 +440,7 @@ Item {
       width: Math.min(implicitWidth, pill.width - 16)
       elide: Text.ElideRight
       textFormat: Text.PlainText
-      text: pill.label
+      text: Lang.t(pill.label)
       font.family: mb.editor ? mb.editor.uiFamily : ""
       font.pixelSize: 13
       font.weight: Font.DemiBold
@@ -471,7 +472,7 @@ Item {
       spacing: 6
       Text {
         textFormat: Text.PlainText
-        text: "Who's " + (namePop.speaker === "You" ? "\u201cYou\u201d" : "this") + "?"
+        text: Lang.t("Who's ") + (namePop.speaker === "You" ? Lang.t("\u201cYou\u201d") : Lang.t("this")) + "?"
         font.family: mb.theme ? mb.theme.uiFont : ""
         font.pixelSize: 12
         color: mb.theme ? mb.theme.muted : "gray"

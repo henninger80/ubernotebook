@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Docs.js" as Docs
+import "../Lang.js" as Lang  // [fork] German
 
 // A page's cover: one of Uber Notebook's gradients, a picture of your own, or none.
 Pop {
@@ -40,8 +41,8 @@ Pop {
     }
     Row {
       spacing: 6
-      Chip { theme: pop.theme; text: "A picture\u2026"; icon: pop.theme.icons.image; onClicked: { pop.close(); pop.uploadRequested() } }
-      Chip { theme: pop.theme; text: "Remove"; icon: pop.theme.icons.trash; onClicked: { pop.close(); pop.picked("") } }
+      Chip { theme: pop.theme; text: Lang.t("A picture\u2026"); icon: pop.theme.icons.image; onClicked: { pop.close(); pop.uploadRequested() } }
+      Chip { theme: pop.theme; text: Lang.t("Remove"); icon: pop.theme.icons.trash; onClicked: { pop.close(); pop.picked("") } }
     }
   }
 }

@@ -94,12 +94,13 @@ fi
 
 runner=/usr/lib/qt6/bin/qmltestrunner
 if [[ -x $runner ]]; then
-  out=$(QT_QPA_PLATFORM=offscreen QT_FORCE_STDERR_LOGGING=1 "$runner" -input tests/qml 2>&1) || { echo "$out" | grep -v '^QDEBUG' >&2; exit 1; }
+  # [fork] LC_ALL=C: the tests read the English texts (Lang.js)
+  out=$(LC_ALL=en_US.UTF-8 QT_QPA_PLATFORM=offscreen QT_FORCE_STDERR_LOGGING=1 "$runner" -input tests/qml 2>&1) || { echo "$out" | grep -v '^QDEBUG' >&2; exit 1; }
   echo "qml: $(echo "$out" | grep -o 'Totals: [0-9]* passed, [0-9]* failed' | tail -1)"
   # Without QtQuick.Pdf (qt6-webengine), hidden from the test by bwrap.
   pdf=/usr/lib/qt6/qml/QtQuick/Pdf
   if [[ -x /usr/bin/bwrap && -d $pdf ]]; then
-    out=$(/usr/bin/bwrap --dev-bind / / --tmpfs "$pdf" /usr/bin/env QT_QPA_PLATFORM=offscreen QT_FORCE_STDERR_LOGGING=1 "$runner" -input tests/nopdf 2>&1) || { echo "$out" | grep -v '^QDEBUG' >&2; exit 1; }
+    out=$(/usr/bin/bwrap --dev-bind / / --tmpfs "$pdf" /usr/bin/env LC_ALL=en_US.UTF-8 QT_QPA_PLATFORM=offscreen QT_FORCE_STDERR_LOGGING=1 "$runner" -input tests/nopdf 2>&1) || { echo "$out" | grep -v '^QDEBUG' >&2; exit 1; }
     echo "qml without QtQuick.Pdf: $(echo "$out" | grep -o 'Totals: [0-9]* passed, [0-9]* failed' | tail -1)"
   else
     echo "qml without QtQuick.Pdf: skipped (no bwrap, or no QtQuick.Pdf to hide)"

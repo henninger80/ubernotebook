@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Shapes
 import "../Diagram.js" as Diagram
 import "../Colors.js" as Colors
+import "../Lang.js" as Lang  // [fork] German
 
 // A Mermaid flowchart, drawn (Diagram.js reads and lays it out): boxes in
 // their shapes with their icons and words, the lines between them with
@@ -87,7 +88,7 @@ Item {
           width: parent.width - 20
           elide: Text.ElideRight
           textFormat: Text.PlainText
-          text: group.modelData.label
+          text: Lang.t(group.modelData.label)
           font.family: view.family
           font.pixelSize: 11
           font.weight: group.look.bold ? Font.Bold : Font.DemiBold
@@ -219,7 +220,7 @@ Item {
           anchors.centerIn: parent
           horizontalAlignment: Text.AlignHCenter
           textFormat: Text.PlainText
-          text: (modelData.labelLines && modelData.labelLines.length ? modelData.labelLines : [modelData.label]).join("\n")
+          text: (modelData.labelLines && modelData.labelLines.length ? modelData.labelLines : [Lang.t(modelData.label)]).join("\n")
           font.family: view.family
           font.pixelSize: 12
           font.weight: words.look.bold ? Font.DemiBold : Font.Normal

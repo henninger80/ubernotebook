@@ -10,6 +10,8 @@
 // keep it plain JavaScript with no QML or Node APIs.
 .pragma library
 .import "Diagram.js" as Diagram
+.import "Lang.js" as Lang
+// [fork] Lang.js: the "/" menu found by its German names too
 
 // ---- type ------------------------------------------------------------------------
 
@@ -217,8 +219,8 @@ function findCommands(query) {
   if (!q) return COMMANDS.slice()
   var out = []
   COMMANDS.concat(colorCommands()).forEach(function(c, i) {
-    var label = c.label.toLowerCase()
-    var words = (label + " " + (c.keys || "")).toLowerCase()
+    var label = Lang.t(c.label).toLowerCase()  // [fork] found by its German name too
+    var words = (label + " " + c.label + " " + (c.keys || "")).toLowerCase()
     // (Its name or its id, from the start: "/age" is Ask agent before Agenda.)
     var score = label.indexOf(q) === 0 || String(c.id || "").indexOf(q) === 0 ? 3 : words.split(/\s+/).some(function(w) { return w.indexOf(q) === 0 }) ? 2 : words.indexOf(q) >= 0 ? 1 : 0
     if (score > 0) out.push({ c: c, score: score, i: i })

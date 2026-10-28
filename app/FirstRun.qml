@@ -1,4 +1,5 @@
 import QtQuick
+import "../Lang.js" as Lang  // [fork] German
 
 // The first time Uber Notebook opens: your first profile (its name, and the folder
 // its notes go in), the demo to look around in first, or your profiles put
@@ -44,7 +45,7 @@ Rectangle {
     anchors.margins: 16
     theme: fr.theme
     icon: fr.theme.icons.close
-    tip: "Back  Esc"
+    tip: Lang.t("Back  Esc")
     onClicked: fr.service.profiles.closeStart()
   }
 
@@ -56,7 +57,7 @@ Rectangle {
 
     Text {
       textFormat: Text.PlainText
-      text: "Welcome to Uber Notebook"
+      text: Lang.t("Welcome to Uber Notebook")
       font.family: fr.theme.uiFont
       font.pixelSize: 28
       font.weight: Font.DemiBold
@@ -66,7 +67,7 @@ Rectangle {
       width: parent.width
       wrapMode: Text.Wrap
       textFormat: Text.PlainText
-      text: "Your notes stay on your computer, in a folder you choose. Start with a profile; make more later to keep personal, work and anything else apart."
+      text: Lang.t("Your notes stay on your computer, in a folder you choose. Start with a profile; make more later to keep personal, work and anything else apart.")
       font.family: fr.theme.uiFont
       font.pixelSize: 14
       lineHeight: 1.2
@@ -81,7 +82,7 @@ Rectangle {
       // (Asked for again: Esc or Cancel goes back to the profile open.)
       cancellable: fr.again
       onCancelled: fr.service.profiles.closeStart()
-      createLabel: "Create profile"
+      createLabel: Lang.t("Create profile")
     }
     Item { width: 1; height: 14 }
     Rectangle { width: parent.width; height: 1; color: fr.theme.line }
@@ -95,7 +96,7 @@ Rectangle {
         spacing: 2
         Text {
           textFormat: Text.PlainText
-          text: "Look around first?"
+          text: Lang.t("Look around first?")
           font.family: fr.theme.uiFont
           font.pixelSize: 14
           font.weight: Font.Medium
@@ -105,7 +106,7 @@ Rectangle {
           width: parent.width
           wrapMode: Text.Wrap
           textFormat: Text.PlainText
-          text: "The demo is a profile of its own, full of example pages. Make yours whenever you're ready."
+          text: Lang.t("The demo is a profile of its own, full of example pages. Make yours whenever you're ready.")
           font.family: fr.theme.uiFont
           font.pixelSize: 12
           color: fr.theme.muted
@@ -116,7 +117,7 @@ Rectangle {
         objectName: "firstRunDemo"
         anchors.verticalCenter: parent.verticalCenter
         theme: fr.theme
-        text: fr.inDemo ? "Back to the demo" : "Explore the demo"
+        text: fr.inDemo ? Lang.t("Back to the demo") : Lang.t("Explore the demo")
         onClicked: if (fr.inDemo) fr.service.profiles.closeStart(); else fr.service.profiles.openDemo()
       }
     }
@@ -130,7 +131,7 @@ Rectangle {
         spacing: 2
         Text {
           textFormat: Text.PlainText
-          text: "Coming from another computer?"
+          text: Lang.t("Coming from another computer?")
           font.family: fr.theme.uiFont
           font.pixelSize: 14
           font.weight: Font.Medium
@@ -141,7 +142,7 @@ Rectangle {
           width: parent.width
           wrapMode: Text.Wrap
           textFormat: Text.PlainText
-          text: fr.restoring === "working" ? "Putting your profiles back…" : fr.restoring || "Put your profiles back from a backup Uber Notebook made (Settings → Backups)."
+          text: fr.restoring === "working" ? Lang.t("Putting your profiles back…") : fr.restoring || Lang.t("Put your profiles back from a backup Uber Notebook made (Settings → Backups).")
           font.family: fr.theme.uiFont
           font.pixelSize: 12
           color: fr.restoring !== "" && fr.restoring !== "working" ? fr.theme.urgent : fr.theme.muted
@@ -152,7 +153,7 @@ Rectangle {
         objectName: "firstRunRestore"
         anchors.verticalCenter: parent.verticalCenter
         theme: fr.theme
-        text: "Restore a backup…"
+        text: Lang.t("Restore a backup…")
         onClicked: if (fr.restoring !== "working") fr.restore()
       }
     }

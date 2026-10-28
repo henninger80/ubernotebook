@@ -5,6 +5,7 @@ import "../Papers.js" as Papers
 import "../Covers.js" as Covers
 import "../Blocks.js" as Blocks
 import "../Overlays.js" as Overlays
+import "../Lang.js" as Lang  // [fork] German
 
 // Uber Notebook: a desk with your notebooks on it. The shelf shows them cover up;
 // pick one and it slides onto the desk and its cover swings open. Or Pages:
@@ -163,7 +164,7 @@ FocusScope {
       Text {
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: "You're exploring the demo."
+        text: Lang.t("You're exploring the demo.")
         font.family: themeObject.uiFont
         font.pixelSize: 13
         color: themeObject.muted
@@ -172,7 +173,7 @@ FocusScope {
         objectName: "demoStripStart"
         anchors.verticalCenter: parent.verticalCenter
         theme: themeObject
-        text: "Make my own profile"
+        text: Lang.t("Make my own profile")
         onClicked: root.service.profiles.openStart()
       }
     }
@@ -208,7 +209,7 @@ FocusScope {
         width: Math.min(implicitWidth, setupStrip.width - 32 - setupTurnOn.width - setupDismiss.width - 28)
         wrapMode: Text.WordWrap
         textFormat: Text.PlainText
-        text: setupStrip.asks.length > 1 ? "Use the Uber Notebook skill in Claude Code and Codex, and see reminder details in notifications."
+        text: setupStrip.asks.length > 1 ? Lang.t("Use the Uber Notebook skill in Claude Code and Codex, and see reminder details in notifications.")
           : setupStrip.asks[0] === "skill" ? "Use the Uber Notebook skill in Claude Code and Codex."
           : "See reminder details in notifications."
         font.family: themeObject.uiFont
@@ -221,7 +222,7 @@ FocusScope {
         anchors.verticalCenter: parent.verticalCenter
         theme: themeObject
         primary: true
-        text: "Turn on"
+        text: Lang.t("Turn on")
         onClicked: {
           if (setupStrip.asks.length > 1) setupPanel.open()
           else if (setupStrip.asks.length === 1) root.service.turnOn(setupStrip.asks[0])
@@ -232,7 +233,7 @@ FocusScope {
         objectName: "setupStripDismiss"
         anchors.verticalCenter: parent.verticalCenter
         theme: themeObject
-        text: "Dismiss"
+        text: Lang.t("Dismiss")
         onClicked: root.service.dismissSetup()
       }
     }
@@ -285,7 +286,7 @@ FocusScope {
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: (privateStrip.store && privateStrip.store.blockedWhy === "made" ? "Your notes folder " + privateStrip.blocked.replace(/^\/home\/[^\/]+/, "~") + " can't be reached or made."
+        text: (privateStrip.store && privateStrip.store.blockedWhy === "made" ? Lang.t("Your notes folder ") + privateStrip.blocked.replace(/^\/home\/[^\/]+/, "~") + Lang.t(" can't be reached or made.")
           : "Your notes in " + privateStrip.blocked.replace(/^\/home\/[^\/]+/, "~") + " can't be kept private there: another account on this computer could read them.")
           + " Nothing of this profile is open until it has a folder that works."
         font.family: themeObject.uiFont
@@ -298,13 +299,13 @@ FocusScope {
         TextButton {
           objectName: "privateStripRetry"
           theme: themeObject
-          text: "Try again"
+          text: Lang.t("Try again")
           onClicked: if (privateStrip.store && typeof privateStrip.store.retry === "function") privateStrip.store.retry()
         }
         TextButton {
           objectName: "privateStripProfiles"
           theme: themeObject
-          text: "Pick another folder"
+          text: Lang.t("Pick another folder")
           onClicked: root.openSettings("profiles")
         }
       }
@@ -428,7 +429,7 @@ FocusScope {
     store.openNotebook(meta.id, function(nb) {
       opening = false
       // (Another profile opened while it was read: not opened, nothing said.)
-      if (!nb) { if (store.rootPath === root0) toast("That notebook couldn't be read"); return }
+      if (!nb) { if (store.rootPath === root0) toast(Lang.t("That notebook couldn't be read")); return }
       if (store.rootPath !== root0) return
       var index = -1
       if (pageId) nb.pages.forEach(function(p, i) { if (p.id === pageId) index = i })
@@ -548,7 +549,7 @@ FocusScope {
   }
 
   function askDelete(notebook) {
-    confirm.ask("Put \u201c" + notebook.title + "\u201d in the trash?",
+    confirm.ask(Lang.t("Put \u201c") + notebook.title + Lang.t("\u201d in the trash?"),
       "Its folder moves to the .trash folder inside your notebooks folder, where you can get it back.",
       "Put in the trash",
       function() {
@@ -557,7 +558,7 @@ FocusScope {
           shelf.opacity = 1
         }
         root.store.deleteNotebook(notebook.id)
-        root.toast("\u201c" + notebook.title + "\u201d is in the trash")
+        root.toast("\u201c" + notebook.title + Lang.t("\u201d is in the trash"))
       })
   }
 
@@ -566,7 +567,7 @@ FocusScope {
   // notebook goes in the trash (where it can be got back), unless a picture
   // of it couldn't be copied: then it stays on the shelf too.
   function askMove(notebook) {
-    confirm.ask("Move \u201c" + notebook.title + "\u201d to Pages?",
+    confirm.ask(Lang.t("Move \u201c") + notebook.title + Lang.t("\u201d to Pages?"),
       "It becomes a page in Pages with a page inside it for each of its pages: their text, pictures and drawings (a drawing becomes a sketch at the end of its page). The notebook then moves to the .trash folder inside your notebooks folder, where you can get it back.",
       "Move to Pages",
       function() { root.moveToPages(notebook) })
@@ -580,19 +581,19 @@ FocusScope {
     var from = root.store.rootPath
     function moved() { return root.store.rootPath !== from }
     root.store.openNotebook(notebook.id, function(nb) {
-      if (moved()) { root.toast(name + " wasn't moved: another profile was opened"); return }
-      if (!nb) { root.toast(name + " couldn't be read"); return }
+      if (moved()) { root.toast(name + Lang.t(" wasn't moved: another profile was opened")); return }
+      if (!nb) { root.toast(name + Lang.t(" couldn't be read")); return }
       root.workspace.importNotebook(nb, from + "/" + notebook.id, function(r) {
-        if (r && r.stopped || moved()) { root.toast(name + " wasn't moved: another profile was opened"); return }
-        if (!r) { root.toast(name + " couldn't be moved to Pages"); return }
-        if (r.tooLong) { root.toast("\u201c" + r.tooLong + "\u201d in " + name + " is longer than a page in Pages can be: nothing was moved"); return }
+        if (r && r.stopped || moved()) { root.toast(name + Lang.t(" wasn't moved: another profile was opened")); return }
+        if (!r) { root.toast(name + Lang.t(" couldn't be moved to Pages")); return }
+        if (r.tooLong) { root.toast("\u201c" + r.tooLong + Lang.t("\u201d in ") + name + Lang.t(" is longer than a page in Pages can be: nothing was moved")); return }
         // (Into the trash only once all of it is in Pages, and saved.)
         if (r.missing === 0 && r.failed === 0) root.store.deleteNotebook(notebook.id)
         root.showSpace("pages")
         docs.open(r.id)
-        if (r.failed > 0) root.toast(name + " is in Pages, but not all of it could be saved: the notebook stays on the shelf")
-        else if (r.missing > 0) root.toast(name + " is in Pages now, but " + (r.missing === 1 ? "a picture" : r.missing + " pictures") + " couldn't be copied: the notebook stays on the shelf")
-        else root.toast(name + " is in Pages now")
+        if (r.failed > 0) root.toast(name + Lang.t(" is in Pages, but not all of it could be saved: the notebook stays on the shelf"))
+        else if (r.missing > 0) root.toast(name + Lang.t(" is in Pages now, but ") + (r.missing === 1 ? "a picture" : r.missing + Lang.t(" pictures")) + Lang.t(" couldn't be copied: the notebook stays on the shelf"))
+        else root.toast(name + Lang.t(" is in Pages now"))
       })
     })
   }
@@ -659,7 +660,7 @@ FocusScope {
       if (!to) return
       root.store.copyFileTo(path, to, function(ok, why) {
         var home = root.store.home
-        root.toast(ok ? "Saved to " + (home && to.indexOf(home + "/") === 0 ? "~" + to.slice(home.length) : to) : "The picture couldn't be saved" + (why ? ": " + why : ""))
+        root.toast(ok ? Lang.t("Saved to ") + (home && to.indexOf(home + "/") === 0 ? "~" + to.slice(home.length) : to) : Lang.t("The picture couldn't be saved") + (why ? ": " + why : ""))
       })
     })
   }
@@ -770,8 +771,8 @@ FocusScope {
     target: root.store
     ignoreUnknownSignals: true
     function onFailed(message) { root.toast(message) }
-    function onRecovered(count) { root.toast(count === 1 ? "Saved now: the change that couldn't be saved before" : "Saved now: the " + count + " changes that couldn't be saved before") }
-    function onExported(path) { root.toast("Exported to " + path.replace(/^\/home\/[^\/]+/, "~")) }
+    function onRecovered(count) { root.toast(count === 1 ? Lang.t("Saved now: the change that couldn't be saved before") : Lang.t("Saved now: the ") + count + Lang.t(" changes that couldn't be saved before")) }
+    function onExported(path) { root.toast(Lang.t("Exported to ") + path.replace(/^\/home\/[^\/]+/, "~")) }
   }
   // (Pages' own: a file it couldn't read, so left as it is; a zip that
   // wouldn't unzip; a picture not copied.)

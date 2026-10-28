@@ -17,6 +17,7 @@ import "Bookmark.js" as Bookmark
 import "Permissions.js" as Permissions
 import "Starter.js" as Starter
 import "Agent.js" as Agent
+import "Lang.js" as Lang  // [fork] German
 
 // Pages on disk: the workspace in the Pages folder of your notebooks folder
 // (~/Documents/Uber Notebook/Pages), a JSON file per page, named by its UUID, and
@@ -1686,7 +1687,7 @@ Item {
         pages.forEach(function(p) {
           files.writeFile(dir + "/" + names[p.id] + ".md", Markdown.fromDocPage(p, function(pid) {
             var e = ws.index.pages[pid]
-            return e ? { title: e.title || "Untitled", icon: e.icon, file: names[pid] ? encodeURI(names[pid] + ".md") : "" } : null
+            return e ? { title: e.title || Lang.t("Untitled"), icon: e.icon, file: names[pid] ? encodeURI(names[pid] + ".md") : "" } : null
           }, { sketchFile: function(bid) { return "sketches/" + bid + ".svg" } }), one)
         })
         sketches.forEach(function(k) { files.writeFile(dir + "/sketches/" + k.id + ".svg", Sketch.toSvg(k.sketch, "A sketch on " + (k.title || "Untitled")), one) })

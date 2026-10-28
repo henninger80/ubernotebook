@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Workspace.js" as Workspace
+import "../Lang.js" as Lang  // [fork] German
 
 // The archive (the sidebar's foot): pages put away, with the pages inside
 // them, the last changed first. A click opens one (it stays in the archive);
@@ -27,7 +28,7 @@ Pop {
     Text {
       textFormat: Text.PlainText
       leftPadding: 6
-      text: "Archive"
+      text: Lang.t("Archive")
       font.family: pop.theme.uiFont
       font.pixelSize: 13
       font.weight: Font.DemiBold
@@ -66,7 +67,7 @@ Pop {
             textFormat: Text.PlainText
             width: parent.width
             elide: Text.ElideRight
-            text: row.e.title || "Untitled"
+            text: row.e.title || Lang.t("Untitled")
             font.family: pop.theme.uiFont
             font.pixelSize: 13
             color: pop.theme.text
@@ -75,7 +76,7 @@ Pop {
             textFormat: Text.PlainText
             width: parent.width
             elide: Text.ElideRight
-            text: (row.e.project ? Workspace.statusOf(row.e.project.status).label + " project  \u00b7  " : "")
+            text: (row.e.project ? Workspace.statusOf(row.e.project.status).label + Lang.t(" project  \u00b7  ") : "")
               + (row.inside > 0 ? row.inside + (row.inside === 1 ? " page" : " pages") + " in it  \u00b7  " : "")
               + "edited " + Qt.formatDate(new Date(row.e.modified), "d MMM yyyy")
             font.family: pop.theme.uiFont
@@ -89,7 +90,7 @@ Pop {
           anchors.right: parent.right
           anchors.rightMargin: 4
           anchors.verticalCenter: parent.verticalCenter
-          theme: pop.theme; icon: pop.theme.icons.unarchive; size: 28; iconSize: 15; tip: "Bring it back"
+          theme: pop.theme; icon: pop.theme.icons.unarchive; size: 28; iconSize: 15; tip: Lang.t("Bring it back")
           onClicked: pop.unarchiveRequested(row.modelData)
         }
         HoverHandler { id: rowHover; cursorShape: Qt.PointingHandCursor }
@@ -111,7 +112,7 @@ Pop {
         y: 8
         width: list.width - 16
         wrapMode: Text.Wrap
-        text: "Nothing in the archive. A page's \u22ef menu puts it here (a project that's done, a page you're finished with): out of the way, still there to find."
+        text: Lang.t("Nothing in the archive. A page's \u22ef menu puts it here (a project that's done, a page you're finished with): out of the way, still there to find.")
         font.family: pop.theme.uiFont
         font.pixelSize: 12
         color: pop.theme.muted

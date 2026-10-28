@@ -6,6 +6,7 @@ import "../Blocks.js" as Blocks
 import "../Workspace.js" as Workspace
 import "../Library.js" as Library
 import "../Html.js" as Html
+import "../Lang.js" as Lang  // [fork] German
 
 // A page made a PDF, a Word file, or printed (a PDF opened in your PDF
 // viewer, whose print dialog has your printers): Export.js writes it as HTML
@@ -69,18 +70,18 @@ Item {
   // "pdf", "docx" or "print": the page `pageId` (`page`, as it is now),
   // and the pages inside it with `withPages`.
   function run(kind, page, withPages) {
-    if (busy) { toast("Still making the last one"); return }
+    if (busy) { toast(Lang.t("Still making the last one")); return }
     if (!workspace || !page) return
     var files = workspace.files
     // (The profile it began in: another opened on the way, it stops at the
     // next step, its folder taken away; nothing is made from a mix of two.)
     from = { gen: workspace.generation, folder: workspace.folder, root: files.rootPath, assets: Workspace.assetsDir(files.rootPath) }
     probe(function(t) {
-      if (ex.moved()) { toast("Not made: another profile was opened"); return }
-      if (kind === "docx" && !t.office) { toast("A Word file needs LibreOffice: install the libreoffice-fresh package and try again"); return }
-      if (kind !== "docx" && !t.browser) { toast("A PDF needs Chromium: install the chromium package and try again"); return }
+      if (ex.moved()) { toast(Lang.t("Not made: another profile was opened")); return }
+      if (kind === "docx" && !t.office) { toast(Lang.t("A Word file needs LibreOffice: install the libreoffice-fresh package and try again")); return }
+      if (kind !== "docx" && !t.browser) { toast(Lang.t("A PDF needs Chromium: install the chromium package and try again")); return }
       busy = true
-      toast(kind === "print" ? "Getting it ready to print…" : kind === "docx" ? "Making the Word file…" : "Making the PDF…")
+      toast(kind === "print" ? Lang.t("Getting it ready to print…") : kind === "docx" ? Lang.t("Making the Word file…") : Lang.t("Making the PDF…"))
       var ids = withPages ? Workspace.withDescendants(workspace.index, page.id).filter(function(pid) { return pid === page.id || !Workspace.inTrash(workspace.index, pid) }) : [page.id]
       var others = ids.filter(function(pid) { return pid !== page.id })
       workspace.readPages(others, function(read) {
@@ -226,9 +227,9 @@ Item {
           var to = dir + "/" + name
           files.exec(["/usr/bin/cp", "--", made, to], function(ok) {
             ex.done(work)
-            if (!ok) { toast("It couldn't be got ready to print"); return }
+            if (!ok) { toast(Lang.t("It couldn't be got ready to print")); return }
             files.openPrint(to, function(opened) {
-              toast(opened ? "Opened in your PDF viewer: print it from there" : "No app to print from: the PDF is " + to.replace(/^\/run\/user\/\d+/, "$XDG_RUNTIME_DIR"))
+              toast(opened ? Lang.t("Opened in your PDF viewer: print it from there") : Lang.t("No app to print from: the PDF is ") + to.replace(/^\/run\/user\/\d+/, "$XDG_RUNTIME_DIR"))
             })
           }, { timeoutMs: 30000 })
         })
@@ -240,7 +241,7 @@ Item {
     function copyTo(to, overwrite) {
       files.placeFile(made, to, overwrite, function(ok) {
         ex.done(work)
-        toast(ok ? "Saved to " + to.replace(/^\/home\/[^\/]+/, "~") : "It couldn't be saved there")
+        toast(ok ? Lang.t("Saved to ") + to.replace(/^\/home\/[^\/]+/, "~") : Lang.t("It couldn't be saved there"))
       })
     }
     if (settings.exportTo === "folder" || !service || typeof service.pickSavePath !== "function") {
@@ -250,7 +251,7 @@ Item {
     }
     // (Saving over a file that's there, the dialog asks first.)
     service.pickSavePath(name, function(to) {
-      if (!to) { ex.done(work); toast("Not saved"); return }
+      if (!to) { ex.done(work); toast(Lang.t("Not saved")); return }
       if (ex.moved()) { ex.fail(work, ex.movedWhy); return }
       copyTo(to, true)
     }, "document")
@@ -262,6 +263,6 @@ Item {
   }
   function fail(work, why) {
     done(work)
-    toast("It couldn't be made: " + why)
+    toast(Lang.t("It couldn't be made: ") + why)
   }
 }

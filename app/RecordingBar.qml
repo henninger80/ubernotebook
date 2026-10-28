@@ -1,5 +1,6 @@
 import QtQuick
 import "../Audio.js" as Audio
+import "../Lang.js" as Lang  // [fork] German
 
 // The bar at the foot of a page while something records: dictation
 // listening (then writing it down), an audio note recording on a page that
@@ -55,7 +56,7 @@ Rectangle {
     Text {
       anchors.verticalCenter: parent.verticalCenter
       textFormat: Text.PlainText
-      text: bar.listening ? bar.label : bar.busyText
+      text: bar.listening ? Lang.t(bar.label) : bar.busyText
       font.family: bar.theme ? bar.theme.uiFont : ""
       font.pixelSize: 14
       font.weight: Font.DemiBold
@@ -120,7 +121,7 @@ Rectangle {
       visible: bar.cancelable
       anchors.verticalCenter: parent.verticalCenter
       theme: bar.theme; icon: bar.theme ? bar.theme.icons.close : ""; size: 30; iconSize: 15
-      tip: "Throw it away"
+      tip: Lang.t("Throw it away")
       onClicked: bar.canceled()
     }
   }

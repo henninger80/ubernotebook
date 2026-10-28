@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Workspace.js" as Workspace
+import "../Lang.js" as Lang  // [fork] German
 
 // Picks a page: to link to, or to move something into. Type to find one by
 // its title; the arrows and Enter pick it.
@@ -78,7 +79,7 @@ Pop {
       width: parent.width
       height: 34
       icon: pop.theme.icons.search
-      placeholder: "Find a page"
+      placeholder: Lang.t("Find a page")
       onEdited: function(text) { pop.query = text; pop.current = 0 }
       onAccepted: pop.take(pop.current)
       onEscaped: pop.close()
@@ -116,7 +117,7 @@ Pop {
           y: 7
           width: parent.width - x - 8
           elide: Text.ElideRight
-          text: modelData.title || "Untitled"
+          text: modelData.title || Lang.t("Untitled")
           font.family: pop.theme.uiFont
           font.pixelSize: 13
           color: pop.theme.text
@@ -141,7 +142,7 @@ Pop {
         visible: list.count === 0
         x: 8
         y: 6
-        text: pop.query ? "No page is called that." : "No pages to pick."
+        text: pop.query ? Lang.t("No page is called that.") : Lang.t("No pages to pick.")
         font.family: pop.theme.uiFont
         font.pixelSize: 12
         color: pop.theme.muted

@@ -4,6 +4,7 @@ import QtQuick.Shapes
 import "../Html.js" as Html
 import "../Blocks.js" as Blocks
 import "../Papers.js" as Papers
+import "../Lang.js" as Lang  // [fork] German
 
 // One block of a page. Text blocks (paragraphs, headings, list and checklist
 // items, quotes, sticky notes, code, time slots, habits) are each their own
@@ -397,7 +398,7 @@ Item {
     width: textEdit.width
     elide: Text.ElideRight
     horizontalAlignment: textEdit.horizontalAlignment
-    text: block.hint
+    text: Lang.t(block.hint)
     font: textEdit.font
     color: Qt.alpha(block.editor.ink, 0.3)
   }
@@ -425,7 +426,7 @@ Item {
     width: block.markerW - Math.round(block.pitch * 0.55)
     y: block.textBaseline - baselineOffset
     horizontalAlignment: TextInput.AlignRight
-    text: block.label
+    text: Lang.t(block.label)
     maximumLength: 12
     selectByMouse: true
     font.family: block.editor.family

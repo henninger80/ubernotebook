@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Effects
 import "../Papers.js" as Papers
 import "../Blocks.js" as Blocks
+import "../Lang.js" as Lang  // [fork] German
 
 // The formatting bar, floating at the foot of the desk like a pencil case:
 // undo, the kind of block, pen and size, bold/italic/underline/strike, ink and
@@ -112,14 +113,14 @@ Item {
     IconButton {
       visible: bar.medium
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.undo; tip: "Undo  Ctrl+Z"
+      theme: bar.theme; icon: bar.theme.icons.undo; tip: Lang.t("Undo  Ctrl+Z")
       active: bar.editor && bar.editor.canUndo
       onClicked: bar.editor.undo()
     }
     IconButton {
       visible: bar.medium
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.redo; tip: "Redo  Ctrl+Shift+Z"
+      theme: bar.theme; icon: bar.theme.icons.redo; tip: Lang.t("Redo  Ctrl+Shift+Z")
       active: bar.editor && bar.editor.canRedo
       onClicked: bar.editor.redo()
     }
@@ -131,7 +132,7 @@ Item {
       anchors.verticalCenter: parent.verticalCenter
       theme: bar.theme
       label: bar.kindLabel(bar.st.type) + "  \u25be"
-      tip: "Kind of block"
+      tip: Lang.t("Kind of block")
       onClicked: kindMenu.open()
       Pop {
         id: kindMenu
@@ -158,7 +159,7 @@ Item {
               theme: bar.theme
               icon: modelData.icon
               text: bar.kindLabel(modelData.type)
-              hint: modelData.hint
+              hint: Lang.t(modelData.hint)
               checked: bar.st.type === modelData.type
               onClicked: {
                 kindMenu.close()
@@ -178,7 +179,7 @@ Item {
       anchors.verticalCenter: parent.verticalCenter
       theme: bar.theme
       icon: bar.theme.icons.sticky
-      tip: "Sticky note color"
+      tip: Lang.t("Sticky note color")
       swatch: Papers.toneColor(bar.st.tone || "yellow", bar.dark)
       onClicked: toneMenu.open()
       Pop {
@@ -211,7 +212,7 @@ Item {
       id: fontButton
       visible: bar.medium
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.font; tip: "Pen"
+      theme: bar.theme; icon: bar.theme.icons.font; tip: Lang.t("Pen")
       onClicked: fontMenu.open()
       Pop {
         id: fontMenu
@@ -240,7 +241,7 @@ Item {
                   anchors.centerIn: parent
                   spacing: 2
                   Text { textFormat: Text.PlainText; anchors.horizontalCenter: parent.horizontalCenter; text: "Aa"; font.family: parent.parent.family; font.pixelSize: 22 * modelData.scale; color: bar.theme.text }
-                  Text { textFormat: Text.PlainText; anchors.horizontalCenter: parent.horizontalCenter; text: modelData.label; font.family: bar.theme.uiFont; font.pixelSize: 11; color: bar.theme.muted }
+                  Text { textFormat: Text.PlainText; anchors.horizontalCenter: parent.horizontalCenter; text: Lang.t(modelData.label); font.family: bar.theme.uiFont; font.pixelSize: 11; color: bar.theme.muted }
                 }
                 HoverHandler { id: penHover; cursorShape: Qt.PointingHandCursor }
                 TapHandler {
@@ -264,7 +265,7 @@ Item {
       anchors.verticalCenter: parent.verticalCenter
       theme: bar.theme
       label: bar.sizeLabel + "  \u25be"
-      tip: "Text size  Ctrl+Shift+> bigger, Ctrl+Shift+< smaller"
+      tip: Lang.t("Text size  Ctrl+Shift+> bigger, Ctrl+Shift+< smaller")
       onClicked: sizeMenu.open()
       Pop {
         id: sizeMenu
@@ -289,7 +290,7 @@ Item {
                 textFormat: Text.PlainText
                 x: 12
                 anchors.verticalCenter: parent.verticalCenter
-                text: modelData === bar.normalSize ? "Normal" : "Aa"
+                text: modelData === bar.normalSize ? Lang.t("Normal") : "Aa"
                 font.family: bar.theme.penFamily(Papers.pen(bar.pen).families)
                 font.pixelSize: parent.shown
                 color: parent.on ? bar.theme.accent : bar.theme.text
@@ -322,25 +323,25 @@ Item {
 
     IconButton {
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.bold; tip: "Bold  Ctrl+B"
+      theme: bar.theme; icon: bar.theme.icons.bold; tip: Lang.t("Bold  Ctrl+B")
       checked: bar.inline.bold === "all"
       onClicked: bar.editor.formatInline("bold")
     }
     IconButton {
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.italic; tip: "Italic  Ctrl+I"
+      theme: bar.theme; icon: bar.theme.icons.italic; tip: Lang.t("Italic  Ctrl+I")
       checked: bar.inline.italic === "all"
       onClicked: bar.editor.formatInline("italic")
     }
     IconButton {
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.underline; tip: "Underline  Ctrl+U"
+      theme: bar.theme; icon: bar.theme.icons.underline; tip: Lang.t("Underline  Ctrl+U")
       checked: bar.inline.underline === "all"
       onClicked: bar.editor.formatInline("underline")
     }
     IconButton {
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.strike; tip: "Strikethrough  Ctrl+Shift+X"
+      theme: bar.theme; icon: bar.theme.icons.strike; tip: Lang.t("Strikethrough  Ctrl+Shift+X")
       checked: bar.inline.strike === "all"
       onClicked: bar.editor.formatInline("strike")
     }
@@ -350,7 +351,7 @@ Item {
     IconButton {
       id: inkButton
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.ink; tip: "Ink color"
+      theme: bar.theme; icon: bar.theme.icons.ink; tip: Lang.t("Ink color")
       swatch: bar.inline.color ? (bar.dark ? (Papers.darkMap()[bar.inline.color] || bar.inline.color) : bar.inline.color) : "transparent"
       onClicked: inkMenu.open()
       Pop {
@@ -383,7 +384,7 @@ Item {
     // Highlighter.
     IconButton {
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.highlight; tip: "Highlighter  Ctrl+Shift+H"
+      theme: bar.theme; icon: bar.theme.icons.highlight; tip: Lang.t("Highlighter  Ctrl+Shift+H")
       swatch: bar.inline.highlight ? (bar.dark ? (Papers.darkMap()[bar.inline.highlight] || bar.inline.highlight) : bar.inline.highlight) : "transparent"
       onClicked: markMenu.open()
       Pop {
@@ -406,7 +407,7 @@ Item {
             }
           }
           IconButton {
-            theme: bar.theme; icon: bar.theme.icons.close; tip: "No highlight"; size: 30
+            theme: bar.theme; icon: bar.theme.icons.close; tip: Lang.t("No highlight"); size: 30
             anchors.verticalCenter: parent.verticalCenter
             onClicked: { markMenu.close(); bar.editor.formatInline("highlight", "") }
           }
@@ -417,19 +418,19 @@ Item {
 
     IconButton {
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.bullets; tip: "Bulleted list  - space"
+      theme: bar.theme; icon: bar.theme.icons.bullets; tip: Lang.t("Bulleted list  - space")
       checked: bar.st.type === "bullet"
       onClicked: bar.editor.toggleType(bar.editor.selectedList.length ? bar.editor.selectedList : [bar.editor.focusUid], "bullet")
     }
     IconButton {
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.numbers; tip: "Numbered list  1. space"
+      theme: bar.theme; icon: bar.theme.icons.numbers; tip: Lang.t("Numbered list  1. space")
       checked: bar.st.type === "number"
       onClicked: bar.editor.toggleType(bar.editor.selectedList.length ? bar.editor.selectedList : [bar.editor.focusUid], "number")
     }
     IconButton {
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.checks; tip: "Checklist  [] space"
+      theme: bar.theme; icon: bar.theme.icons.checks; tip: Lang.t("Checklist  [] space")
       checked: bar.st.type === "check"
       onClicked: bar.editor.toggleType(bar.editor.selectedList.length ? bar.editor.selectedList : [bar.editor.focusUid], "check")
     }
@@ -441,7 +442,7 @@ Item {
       anchors.verticalCenter: parent.verticalCenter
       theme: bar.theme
       icon: bar.st.align === "center" ? bar.theme.icons.alignCenter : bar.st.align === "right" ? bar.theme.icons.alignRight : bar.st.align === "justify" ? bar.theme.icons.alignJustify : bar.theme.icons.alignLeft
-      tip: "Alignment"
+      tip: Lang.t("Alignment")
       onClicked: alignMenu.open()
       Pop {
         id: alignMenu
@@ -474,7 +475,7 @@ Item {
     IconButton {
       id: insertButton
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.plus; tip: "Insert"
+      theme: bar.theme; icon: bar.theme.icons.plus; tip: Lang.t("Insert")
       onClicked: insertMenu.open()
       Pop {
         id: insertMenu
@@ -484,27 +485,27 @@ Item {
         onClosed: bar.refocus()
         contentItem: Column {
           spacing: 2
-          MenuRow { theme: bar.theme; icon: bar.theme.icons.link; text: "Link"; hint: "Ctrl+K"; onClicked: { insertMenu.close(); bar.linkRequested(insertButton) } }
-          MenuRow { theme: bar.theme; icon: bar.theme.icons.image; text: "Picture\u2026"; hint: "or paste, or drop"; onClicked: { insertMenu.close(); bar.pictureRequested() } }
-          MenuRow { theme: bar.theme; icon: bar.theme.icons.sticky; text: "Sticky note"; hint: "!! "; onClicked: { insertMenu.close(); bar.editor.insertKind("callout", { tone: "yellow" }) } }
-          MenuRow { theme: bar.theme; icon: bar.theme.icons.code; text: "Code"; hint: "``` "; onClicked: { insertMenu.close(); bar.editor.insertKind("code") } }
-          MenuRow { theme: bar.theme; icon: bar.theme.icons.divider; text: "Divider"; hint: "---"; onClicked: { insertMenu.close(); bar.editor.insertKind("divider", { style: "line" }) } }
-          MenuRow { theme: bar.theme; icon: bar.theme.icons.calendarMonth; text: "Month calendar"; onClicked: { insertMenu.close(); bar.editor.insertKind("calendar", {}) } }
-          MenuRow { theme: bar.theme; icon: bar.theme.icons.habit; text: "Habit to track"; onClicked: { insertMenu.close(); bar.editor.insertKind("habit", {}) } }
-          MenuRow { theme: bar.theme; icon: bar.theme.icons.time; text: "Time slot"; hint: "9:00 "; onClicked: { insertMenu.close(); bar.editor.insertKind("time", { label: Qt.formatTime(new Date(), "HH") + ":00" }) } }
-          MenuRow { theme: bar.theme; icon: bar.theme.icons.calendar; text: "Today's date"; hint: "Ctrl+;"; onClicked: { insertMenu.close(); bar.dateRequested() } }
+          MenuRow { theme: bar.theme; icon: bar.theme.icons.link; text: Lang.t("Link"); hint: Lang.t("Ctrl+K"); onClicked: { insertMenu.close(); bar.linkRequested(insertButton) } }
+          MenuRow { theme: bar.theme; icon: bar.theme.icons.image; text: Lang.t("Picture\u2026"); hint: Lang.t("or paste, or drop"); onClicked: { insertMenu.close(); bar.pictureRequested() } }
+          MenuRow { theme: bar.theme; icon: bar.theme.icons.sticky; text: Lang.t("Sticky note"); hint: "!! "; onClicked: { insertMenu.close(); bar.editor.insertKind("callout", { tone: "yellow" }) } }
+          MenuRow { theme: bar.theme; icon: bar.theme.icons.code; text: Lang.t("Code"); hint: "``` "; onClicked: { insertMenu.close(); bar.editor.insertKind("code") } }
+          MenuRow { theme: bar.theme; icon: bar.theme.icons.divider; text: Lang.t("Divider"); hint: "---"; onClicked: { insertMenu.close(); bar.editor.insertKind("divider", { style: "line" }) } }
+          MenuRow { theme: bar.theme; icon: bar.theme.icons.calendarMonth; text: Lang.t("Month calendar"); onClicked: { insertMenu.close(); bar.editor.insertKind("calendar", {}) } }
+          MenuRow { theme: bar.theme; icon: bar.theme.icons.habit; text: Lang.t("Habit to track"); onClicked: { insertMenu.close(); bar.editor.insertKind("habit", {}) } }
+          MenuRow { theme: bar.theme; icon: bar.theme.icons.time; text: Lang.t("Time slot"); hint: "9:00 "; onClicked: { insertMenu.close(); bar.editor.insertKind("time", { label: Qt.formatTime(new Date(), "HH") + ":00" }) } }
+          MenuRow { theme: bar.theme; icon: bar.theme.icons.calendar; text: Lang.t("Today's date"); hint: Lang.t("Ctrl+;"); onClicked: { insertMenu.close(); bar.dateRequested() } }
         }
       }
     }
     IconButton {
       id: paperButton
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.paper; tip: "Paper"
+      theme: bar.theme; icon: bar.theme.icons.paper; tip: Lang.t("Paper")
       onClicked: bar.paperRequested(paperButton)
     }
     IconButton {
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.pen; tip: "Draw  Ctrl+Shift+D"
+      theme: bar.theme; icon: bar.theme.icons.pen; tip: Lang.t("Draw  Ctrl+Shift+D")
       onClicked: bar.drawingRequested(true)
     }
   }
@@ -529,13 +530,13 @@ Item {
 
     IconButton {
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.check; label: "Done"; tip: "Back to writing  Esc"
+      theme: bar.theme; icon: bar.theme.icons.check; label: Lang.t("Done"); tip: Lang.t("Back to writing  Esc")
       onClicked: bar.drawingRequested(false)
     }
     Sep2 {}
     IconButton {
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.pen; tip: "Pen  P"
+      theme: bar.theme; icon: bar.theme.icons.pen; tip: Lang.t("Pen  P")
       checked: bar.inkTool === "pen"
       onClicked: {
         bar.inkToolPicked("pen")
@@ -544,7 +545,7 @@ Item {
     }
     IconButton {
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.marker; tip: "Highlighter  M"
+      theme: bar.theme; icon: bar.theme.icons.marker; tip: Lang.t("Highlighter  M")
       checked: bar.inkTool === "marker"
       onClicked: {
         bar.inkToolPicked("marker")
@@ -553,7 +554,7 @@ Item {
     }
     IconButton {
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: "\u{f01fe}"; tip: "Eraser  E"
+      theme: bar.theme; icon: "\u{f01fe}"; tip: Lang.t("Eraser  E")
       checked: bar.inkTool === "eraser"
       onClicked: bar.inkToolPicked("eraser")
     }
@@ -598,19 +599,19 @@ Item {
     Sep2 {}
     IconButton {
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.undo; tip: "Undo  Ctrl+Z"
+      theme: bar.theme; icon: bar.theme.icons.undo; tip: Lang.t("Undo  Ctrl+Z")
       active: bar.ink && bar.ink.canUndo
       onClicked: bar.ink.undo()
     }
     IconButton {
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.redo; tip: "Redo  Ctrl+Shift+Z"
+      theme: bar.theme; icon: bar.theme.icons.redo; tip: Lang.t("Redo  Ctrl+Shift+Z")
       active: bar.ink && bar.ink.canRedo
       onClicked: bar.ink.redo()
     }
     IconButton {
       anchors.verticalCenter: parent.verticalCenter
-      theme: bar.theme; icon: bar.theme.icons.trash; tip: "Clear the drawings on this page"
+      theme: bar.theme; icon: bar.theme.icons.trash; tip: Lang.t("Clear the drawings on this page")
       active: bar.ink && bar.ink.strokes.length > 0
       onClicked: bar.ink.clearAll()
     }

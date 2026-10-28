@@ -4,6 +4,7 @@ import QtMultimedia
 import "../Audio.js" as Audio
 import "../Docs.js" as Docs
 import "../Colors.js" as Colors
+import "../Lang.js" as Lang  // [fork] German
 
 // An audio note on a page in Pages: a card with a button to record (then
 // to stop, with the time and the level as it records), and once it's
@@ -249,7 +250,7 @@ Item {
         TapHandler { id: mainTap; gesturePolicy: TapHandler.ReleaseWithinBounds; onTapped: au.mainClicked() }
         ToolTip.visible: mainHover.hovered
         ToolTip.delay: 600
-        ToolTip.text: au.recordingHere ? "Stop  (Enter)" : au.hasFile ? (au.playing ? "Pause" : "Play") : au.recorder && !au.recorder.canRecord ? "Recording needs ffmpeg" : "Record"
+        ToolTip.text: au.recordingHere ? Lang.t("Stop  (Enter)") : au.hasFile ? (au.playing ? Lang.t("Pause") : Lang.t("Play")) : au.recorder && !au.recorder.canRecord ? Lang.t("Recording needs ffmpeg") : Lang.t("Record")
       }
 
       // Not recorded yet: what it is.
@@ -263,7 +264,7 @@ Item {
           width: parent.width
           elide: Text.ElideRight
           textFormat: Text.PlainText
-          text: au.readOnly ? "An audio note, not recorded" : "Record an audio note"
+          text: au.readOnly ? Lang.t("An audio note, not recorded") : Lang.t("Record an audio note")
           font.family: au.editor ? au.editor.uiFamily : ""
           font.pixelSize: 14
           font.weight: Font.DemiBold
@@ -273,7 +274,7 @@ Item {
           width: parent.width
           elide: Text.ElideRight
           textFormat: Text.PlainText
-          text: au.recorder && !au.recorder.canRecord ? "Recording needs ffmpeg"
+          text: au.recorder && !au.recorder.canRecord ? Lang.t("Recording needs ffmpeg")
             : au.canTranscribe ? "Click to start. What you say is written out under it (voxtype)" : "Click to start"
           font.family: au.editor ? au.editor.uiFamily : ""
           font.pixelSize: 12
@@ -304,7 +305,7 @@ Item {
         Text {
           anchors.verticalCenter: parent.verticalCenter
           textFormat: Text.PlainText
-          text: au.recordingHere && au.recorder.phase !== "recording" ? "Saving\u2026" : Audio.clock(au.recorder ? au.recorder.elapsed : 0)
+          text: au.recordingHere && au.recorder.phase !== "recording" ? Lang.t("Saving\u2026") : Audio.clock(au.recorder ? au.recorder.elapsed : 0)
           font.family: au.editor ? au.editor.uiFamily : ""
           font.pixelSize: 14
           font.weight: Font.DemiBold
@@ -349,7 +350,7 @@ Item {
           visible: au.missing && au.hasFile && !au.recordingHere
           anchors.centerIn: parent
           textFormat: Text.PlainText
-          text: "The recording isn't there any more"
+          text: Lang.t("The recording isn't there any more")
           font.family: au.editor ? au.editor.uiFamily : ""
           font.pixelSize: 12
           color: au.faint
@@ -393,7 +394,7 @@ Item {
           objectName: "audioCancel"
           visible: au.recordingHere && au.recorder.phase === "recording"
           theme: au.theme; icon: au.theme ? au.theme.icons.close : ""; size: 30; iconSize: 15; tint: au.words
-          tip: "Throw it away  (Esc)"
+          tip: Lang.t("Throw it away  (Esc)")
           onClicked: au.editor.audioAction(au.uid, "cancel")
         }
         // The speed.
@@ -420,22 +421,22 @@ Item {
           TapHandler { onTapped: au.speedAt = (au.speedAt + 1) % au.speeds.length }
           ToolTip.visible: speedHover.hovered
           ToolTip.delay: 600
-          ToolTip.text: "Speed"
+          ToolTip.text: Lang.t("Speed")
         }
         // A quiet recording (one made before "Make my voice louder"): louder.
         IconButton {
           objectName: "audioLouder"
           visible: au.hasFile && !au.recordingHere && (au.quiet || au.makingLouder) && !au.readOnly
           active: !au.makingLouder
-          theme: au.theme; icon: au.theme ? au.theme.icons.volume : ""; label: au.makingLouder ? "Making it louder\u2026" : "Louder"; size: 30; iconSize: 15; tint: au.words
-          tip: "It's quiet: make it louder (your voice evened out; Undo takes it back)"
+          theme: au.theme; icon: au.theme ? au.theme.icons.volume : ""; label: au.makingLouder ? Lang.t("Making it louder\u2026") : Lang.t("Louder"); size: 30; iconSize: 15; tint: au.words
+          tip: Lang.t("It's quiet: make it louder (your voice evened out; Undo takes it back)")
           onClicked: au.editor.audioAction(au.uid, "louder")
         }
         IconButton {
           objectName: "audioWriteOut"
           visible: au.hasFile && !au.recordingHere && au.audio.transcript === "" && !au.writingOut && au.canTranscribe && !au.readOnly
-          theme: au.theme; icon: au.theme ? au.theme.icons.transcript : ""; label: "Write it out"; size: 30; iconSize: 15; tint: au.words
-          tip: "Write out what was said (voxtype)"
+          theme: au.theme; icon: au.theme ? au.theme.icons.transcript : ""; label: Lang.t("Write it out"); size: 30; iconSize: 15; tint: au.words
+          tip: Lang.t("Write out what was said (voxtype)")
           onClicked: au.editor.audioAction(au.uid, "transcribe")
         }
         IconButton {
@@ -443,7 +444,7 @@ Item {
           visible: au.hasFile && !au.recordingHere && au.audio.transcript !== ""
           theme: au.theme; icon: au.theme ? au.theme.icons.transcript : ""; size: 30; iconSize: 15; tint: au.words
           checked: au.audio.open
-          tip: au.audio.open ? "Hide what was said" : "Show what was said"
+          tip: au.audio.open ? Lang.t("Hide what was said") : Lang.t("Show what was said")
           onClicked: au.change({ open: !au.audio.open })
         }
         IconButton {
@@ -451,7 +452,7 @@ Item {
           objectName: "audioColors"
           visible: !au.recordingHere && !au.readOnly && (au.pointerIn || au.trying !== null)
           theme: au.theme; icon: au.theme ? au.theme.icons.palette : ""; size: 30; iconSize: 15; tint: au.words
-          tip: "Its colors"
+          tip: Lang.t("Its colors")
           onClicked: au.askColors(colorButton)
         }
       }
@@ -475,7 +476,7 @@ Item {
           visible: au.writingOut && au.audio.transcript === ""
           anchors.verticalCenter: parent.verticalCenter
           textFormat: Text.PlainText
-          text: "Writing it out\u2026"
+          text: Lang.t("Writing it out\u2026")
           font.family: au.editor ? au.editor.uiFamily : ""
           font.pixelSize: 13
           font.italic: true

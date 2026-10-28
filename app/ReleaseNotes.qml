@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
 import "../MarkdownView.js" as MarkdownView
+import "../Lang.js" as Lang  // [fork] German
 
 // What's new: a newer version's release notes (or, up to date, the notes of
 // the one running, from CHANGELOG.md), read here in Uber Notebook. With a newer
@@ -73,7 +74,7 @@ Popup {
         width: parent.width
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: rn.updates ? (rn.updates.available && !rn.own ? "You have " + rn.updates.current + "." + rn.released : "Uber Notebook " + rn.updates.current + (rn.updates.status === "current" ? ", the newest." : rn.updates.available ? "; " + rn.updates.latest.version + " is available." : ".")) : ""
+        text: rn.updates ? (rn.updates.available && !rn.own ? Lang.t("You have ") + rn.updates.current + "." + rn.released : "Uber Notebook " + rn.updates.current + (rn.updates.status === "current" ? Lang.t(", the newest.") : rn.updates.available ? "; " + rn.updates.latest.version + Lang.t(" is available.") : ".")) : ""
         font.family: rn.theme.uiFont
         font.pixelSize: 13
         color: rn.theme.muted
@@ -164,7 +165,7 @@ Popup {
           anchors.verticalCenter: parent.verticalCenter
           theme: rn.theme
           icon: rn.copied ? rn.theme.icons.check : rn.theme.icons.copy
-          text: rn.copied ? "Copied" : "Copy"
+          text: rn.copied ? Lang.t("Copied") : Lang.t("Copy")
           onClicked: { if (rn.service && rn.service.store) rn.service.store.copyText(rn.updates.updateCommand); rn.copied = true }
         }
         TextButton {
@@ -174,7 +175,7 @@ Popup {
           anchors.verticalCenter: parent.verticalCenter
           theme: rn.theme
           icon: rn.theme.icons.openExternal
-          text: "On GitHub"
+          text: Lang.t("On GitHub")
           onClicked: if (rn.service && rn.service.store) rn.service.store.openUrl(rn.shown.url)
         }
       }
@@ -184,7 +185,7 @@ Popup {
         anchors.rightMargin: 28
         anchors.verticalCenter: footRow.verticalCenter
         theme: rn.theme
-        text: "Close"
+        text: Lang.t("Close")
         onClicked: rn.close()
       }
     }

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Shapes
+import "../Lang.js" as Lang  // [fork] German
 
 // A notebook's front cover: its material and color (shaders/cover.frag), its
 // title put on the way that material takes it (stamped in gold foil on
@@ -226,7 +227,7 @@ Item {
               anchors.left: parent.left
               anchors.bottom: parent.bottom
               anchors.bottomMargin: 2
-              text: modelData.label
+              text: Lang.t(modelData.label)
               font.family: "Adwaita Sans"
               font.pixelSize: Math.max(5, cover.unit * 0.028)
               font.letterSpacing: 0.6

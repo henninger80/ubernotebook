@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Docs.js" as Docs
+import "../Lang.js" as Lang  // [fork] German
 
 // A page's menu (⋯ at the top right): its font, small text, full width;
 // copying it as Markdown, printing it, exporting it (a PDF, a Word file,
@@ -45,7 +46,7 @@ Pop {
             Text {
               textFormat: Text.PlainText
               anchors.horizontalCenter: parent.horizontalCenter
-              text: modelData.label
+              text: Lang.t(modelData.label)
               font.family: menu.theme.uiFont
               font.pixelSize: 11
               color: menu.theme.muted
@@ -83,20 +84,20 @@ Pop {
         onToggled: function(on) { sw.toggled(on) }
       }
     }
-    Switch { text: "Small text"; checked: menu.format.size === "small"; onToggled: function(on) { menu.view.setFormat("size", on ? "small" : "normal") } }
-    Switch { text: "Full width"; checked: menu.format.width === "full"; onToggled: function(on) { menu.view.setFormat("width", on ? "full" : "normal") } }
+    Switch { text: Lang.t("Small text"); checked: menu.format.size === "small"; onToggled: function(on) { menu.view.setFormat("size", on ? "small" : "normal") } }
+    Switch { text: Lang.t("Full width"); checked: menu.format.width === "full"; onToggled: function(on) { menu.view.setFormat("width", on ? "full" : "normal") } }
     Rectangle { width: parent.width; height: 1; color: menu.theme.line }
 
-    Switch { text: "Lock the page"; checked: menu.format.locked === true; onToggled: function(on) { menu.view.setFormat("locked", on) } }
+    Switch { text: Lang.t("Lock the page"); checked: menu.format.locked === true; onToggled: function(on) { menu.view.setFormat("locked", on) } }
     Rectangle { width: parent.width; height: 1; color: menu.theme.line }
-    MenuRow { width: parent.width; theme: menu.theme; icon: menu.view && menu.view.favorite ? menu.theme.icons.star : menu.theme.icons.starOutline; text: menu.view && menu.view.favorite ? "Out of Favorites" : "Add to Favorites"; onClicked: { menu.close(); menu.view.toggleFavorite(menu.view.page.id) } }
-    MenuRow { width: parent.width; theme: menu.theme; icon: menu.theme.icons.agent; text: "Ask agent about this page"; hint: "Ctrl+J"; onClicked: { menu.close(); menu.view.openAgent("page") } }
-    MenuRow { width: parent.width; theme: menu.theme; icon: menu.theme.icons.history; text: "Page history"; onClicked: { menu.close(); menu.view.openHistory() } }
+    MenuRow { width: parent.width; theme: menu.theme; icon: menu.view && menu.view.favorite ? menu.theme.icons.star : menu.theme.icons.starOutline; text: menu.view && menu.view.favorite ? Lang.t("Out of Favorites") : Lang.t("Add to Favorites"); onClicked: { menu.close(); menu.view.toggleFavorite(menu.view.page.id) } }
+    MenuRow { width: parent.width; theme: menu.theme; icon: menu.theme.icons.agent; text: Lang.t("Ask agent about this page"); hint: Lang.t("Ctrl+J"); onClicked: { menu.close(); menu.view.openAgent("page") } }
+    MenuRow { width: parent.width; theme: menu.theme; icon: menu.theme.icons.history; text: Lang.t("Page history"); onClicked: { menu.close(); menu.view.openHistory() } }
     MenuRow {
       objectName: "makeProject"
       width: parent.width; theme: menu.theme; icon: menu.theme.icons.briefcase
       readonly property bool isProject: { var r = menu.view ? menu.view.revision : 0; return !!(menu.view && menu.view.page && menu.view.page.project) }
-      text: isProject ? "Not a project" : "Make it a project"
+      text: isProject ? Lang.t("Not a project") : Lang.t("Make it a project")
       active: menu.view && !menu.view.locked
       onClicked: { menu.close(); menu.view.makeProjectOf(menu.view.page.id, !isProject) }
     }
@@ -105,16 +106,16 @@ Pop {
       width: parent.width; theme: menu.theme
       readonly property bool inArchive: { var r = menu.view && menu.view.workspace ? menu.view.workspace.revision : 0; return !!(menu.view && menu.view.page && menu.view.workspace && menu.view.workspace.index.pages[menu.view.page.id] && menu.view.workspace.index.pages[menu.view.page.id].archived) }
       icon: inArchive ? menu.theme.icons.unarchive : menu.theme.icons.archive
-      text: inArchive ? "Out of the archive" : "Archive"
+      text: inArchive ? Lang.t("Out of the archive") : Lang.t("Archive")
       onClicked: { menu.close(); menu.view.archivePage(menu.view.page.id, !inArchive) }
     }
-    MenuRow { width: parent.width; theme: menu.theme; icon: menu.theme.icons.duplicate; text: "Duplicate"; onClicked: { menu.close(); menu.view.duplicatePage(menu.view.page.id) } }
+    MenuRow { width: parent.width; theme: menu.theme; icon: menu.theme.icons.duplicate; text: Lang.t("Duplicate"); onClicked: { menu.close(); menu.view.duplicatePage(menu.view.page.id) } }
     // A template: saved from it; or it is one (a page again); and what new pages inside it start from.
     MenuRow {
       objectName: "saveTemplate"
       readonly property string root: { var r = menu.view && menu.view.workspace ? menu.view.workspace.revision : 0; return menu.view && menu.view.page ? menu.view.templateRoot(menu.view.page.id) : "" }
       width: parent.width; theme: menu.theme; icon: menu.theme.icons.templates
-      text: root === "" ? "Save as template" : root === (menu.view.page ? menu.view.page.id : "") ? "Not a template (a page again)" : "Save as template"
+      text: root === "" ? Lang.t("Save as template") : root === (menu.view.page ? menu.view.page.id : "") ? Lang.t("Not a template (a page again)") : Lang.t("Save as template")
       visible: root === "" || (menu.view.page && root === menu.view.page.id)
       onClicked: { menu.close(); if (root === "") menu.view.saveAsTemplate(menu.view.page.id); else menu.view.untemplate(root) }
     }
@@ -122,15 +123,15 @@ Pop {
       objectName: "childTemplate"
       width: parent.width; theme: menu.theme; icon: menu.theme.icons.newPage
       readonly property string current: { var r = menu.view && menu.view.workspace ? menu.view.workspace.revision : 0; var e = menu.view && menu.view.page && menu.view.workspace ? menu.view.workspace.index.pages[menu.view.page.id] : null; return e && e.childTemplate && menu.view.workspace.index.pages[e.childTemplate] ? menu.view.workspace.index.pages[e.childTemplate].title || "Untitled" : "" }
-      text: "Pages inside start from\u2026"
+      text: Lang.t("Pages inside start from\u2026")
       hint: current
       onClicked: { menu.close(); menu.view.openTemplatePick("child", menu.view.page.id, null) }
     }
-    MenuRow { width: parent.width; theme: menu.theme; icon: menu.theme.icons.copy; text: "Copy as Markdown"; onClicked: { menu.close(); menu.view.copyMarkdown() } }
-    MenuRow { objectName: "printPage"; width: parent.width; theme: menu.theme; icon: menu.theme.icons.print; text: "Print\u2026"; onClicked: { menu.close(); menu.view.exportAs("print", false) } }
-    MenuRow { objectName: "exportPage"; width: parent.width; theme: menu.theme; icon: menu.theme.icons.export; text: "Export\u2026"; hint: "PDF, Word, Markdown"; onClicked: { menu.close(); menu.view.openExportMenu() } }
-    MenuRow { width: parent.width; theme: menu.theme; icon: menu.theme.icons.move; text: "Move to\u2026"; onClicked: { menu.close(); menu.view.movePageAsk(menu.view.page ? menu.view.page.id : "") } }
+    MenuRow { width: parent.width; theme: menu.theme; icon: menu.theme.icons.copy; text: Lang.t("Copy as Markdown"); onClicked: { menu.close(); menu.view.copyMarkdown() } }
+    MenuRow { objectName: "printPage"; width: parent.width; theme: menu.theme; icon: menu.theme.icons.print; text: Lang.t("Print\u2026"); onClicked: { menu.close(); menu.view.exportAs("print", false) } }
+    MenuRow { objectName: "exportPage"; width: parent.width; theme: menu.theme; icon: menu.theme.icons.export; text: Lang.t("Export\u2026"); hint: Lang.t("PDF, Word, Markdown"); onClicked: { menu.close(); menu.view.openExportMenu() } }
+    MenuRow { width: parent.width; theme: menu.theme; icon: menu.theme.icons.move; text: Lang.t("Move to\u2026"); onClicked: { menu.close(); menu.view.movePageAsk(menu.view.page ? menu.view.page.id : "") } }
     Rectangle { width: parent.width; height: 1; color: menu.theme.line }
-    MenuRow { width: parent.width; theme: menu.theme; icon: menu.theme.icons.trash; text: "Move to the trash"; danger: true; onClicked: { menu.close(); menu.view.trashPage(menu.view.page ? menu.view.page.id : "") } }
+    MenuRow { width: parent.width; theme: menu.theme; icon: menu.theme.icons.trash; text: Lang.t("Move to the trash"); danger: true; onClicked: { menu.close(); menu.view.trashPage(menu.view.page ? menu.view.page.id : "") } }
   }
 }

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import "../Board.js" as Board
 import "../Colors.js" as Colors
+import "../Lang.js" as Lang  // [fork] German
 
 // A board on a page in Pages (kanban): columns of cards. A click on a card
 // writes in it (Enter keeps it, Esc puts it back); + New under a column adds
@@ -62,7 +63,7 @@ DataCard {
   function colorInfo() {
     var s = colorScope
     var now = scopeColors()
-    var text = s.what === "card" ? (Board.card(info, s.id) || { text: "Card" }).text : s.what === "column" ? ((columnOf(s.id) || {}).name || "Column") : "Board"
+    var text = s.what === "card" ? (Board.card(info, s.id) || { text: Lang.t("Card") }).text : s.what === "column" ? ((columnOf(s.id) || {}).name || "Column") : "Board"
     return { text: text.slice(0, 24) || "Card", fill: now.background ? backOf(now.background) : paperHex, ownInk: now.color ? textOf(now.color) : "", pageInk: inkHex }
   }
   // The board with a color put on what's being colored: the whole of it.
@@ -285,7 +286,7 @@ DataCard {
                   anchors.verticalCenter: parent.verticalCenter
                   elide: Text.ElideRight
                   textFormat: Text.PlainText
-                  text: col.modelData.name || "Untitled"
+                  text: col.modelData.name || Lang.t("Untitled")
                   font.family: bd.editor ? bd.editor.uiFamily : ""
                   font.pixelSize: 13
                   font.weight: Font.DemiBold
@@ -327,7 +328,7 @@ DataCard {
                 }
                 ToolTip.visible: nameHover.hovered && !col.naming && !bd.readOnly
                 ToolTip.delay: 700
-                ToolTip.text: "Click to rename"
+                ToolTip.text: Lang.t("Click to rename")
               }
               Text {
                 visible: !col.naming
@@ -347,7 +348,7 @@ DataCard {
                 anchors.verticalCenter: parent.verticalCenter
                 visible: !bd.readOnly && !col.naming && (bd.pointerIn || colMenu.opened)
                 theme: bd.theme; icon: bd.theme ? bd.theme.icons.palette : ""; size: 24; iconSize: 13; tint: col.colInk
-                tip: "This column's colors"
+                tip: Lang.t("This column's colors")
                 onClicked: bd.colorsFor("column", col.colId, colPaint)
               }
               IconButton {
@@ -357,7 +358,7 @@ DataCard {
                 anchors.verticalCenter: parent.verticalCenter
                 visible: !bd.readOnly && (bd.pointerIn || colMenu.opened)
                 theme: bd.theme; icon: bd.theme ? bd.theme.icons.more : ""; size: 24; iconSize: 13; tint: col.colInk
-                tip: "Rename, color, move or delete"
+                tip: Lang.t("Rename, color, move or delete")
                 onClicked: colMenu.open()
                 Pop {
                   id: colMenu
@@ -367,11 +368,11 @@ DataCard {
                   y: colMore.height + 4
                   contentItem: Column {
                     spacing: 2
-                    MenuRow { objectName: "boardColumnRename"; width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.pen : ""; text: "Rename"; onClicked: { colMenu.close(); bd.startNaming(col.colId) } }
-                    MenuRow { width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.palette : ""; text: "Color\u2026"; onClicked: { colMenu.close(); bd.colorsFor("column", col.colId, colPaint) } }
-                    MenuRow { width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.left : ""; text: "Move left"; active: col.index > 0; onClicked: { colMenu.close(); bd.save(Board.moveColumn(bd.info, col.colId, -1)) } }
-                    MenuRow { width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.right : ""; text: "Move right"; active: col.index < bd.cols.length - 1; onClicked: { colMenu.close(); bd.save(Board.moveColumn(bd.info, col.colId, 1)) } }
-                    MenuRow { objectName: "boardColumnDelete"; width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.trash : ""; text: "Delete the column"; danger: true; active: bd.cols.length > 1; onClicked: { colMenu.close(); bd.save(Board.removeColumn(bd.info, col.colId)) } }
+                    MenuRow { objectName: "boardColumnRename"; width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.pen : ""; text: Lang.t("Rename"); onClicked: { colMenu.close(); bd.startNaming(col.colId) } }
+                    MenuRow { width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.palette : ""; text: Lang.t("Color\u2026"); onClicked: { colMenu.close(); bd.colorsFor("column", col.colId, colPaint) } }
+                    MenuRow { width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.left : ""; text: Lang.t("Move left"); active: col.index > 0; onClicked: { colMenu.close(); bd.save(Board.moveColumn(bd.info, col.colId, -1)) } }
+                    MenuRow { width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.right : ""; text: Lang.t("Move right"); active: col.index < bd.cols.length - 1; onClicked: { colMenu.close(); bd.save(Board.moveColumn(bd.info, col.colId, 1)) } }
+                    MenuRow { objectName: "boardColumnDelete"; width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.trash : ""; text: Lang.t("Delete the column"); danger: true; active: bd.cols.length > 1; onClicked: { colMenu.close(); bd.save(Board.removeColumn(bd.info, col.colId)) } }
                   }
                 }
               }
@@ -408,7 +409,7 @@ DataCard {
                     width: parent.width - 20 - (cardItem.modelData.page ? 18 : 0)
                     wrapMode: Text.Wrap
                     textFormat: Text.PlainText
-                    text: cardItem.modelData.text || "Untitled"
+                    text: cardItem.modelData.text || Lang.t("Untitled")
                     font.family: bd.editor ? bd.editor.family : ""
                     font.pixelSize: 14
                     color: cardItem.modelData.color ? bd.textOf(cardItem.modelData.color) : Qt.alpha(bd.inkOn(cardItem.modelData.background), cardItem.modelData.text ? 1 : 0.55)
@@ -498,14 +499,14 @@ DataCard {
                         id: cardPaint
                         objectName: "boardCardColors"
                         theme: bd.theme; icon: bd.theme ? bd.theme.icons.palette : ""; size: 22; iconSize: 12; tint: bd.inkOn(cardItem.modelData.background)
-                        tip: "This card's colors"
+                        tip: Lang.t("This card's colors")
                         onClicked: bd.colorsFor("card", cardItem.cardId, cardItem)
                       }
                       IconButton {
                         id: cardMore
                         objectName: "boardCardMore"
                         theme: bd.theme; icon: bd.theme ? bd.theme.icons.more : ""; size: 22; iconSize: 12; tint: bd.inkOn(cardItem.modelData.background)
-                        tip: "Rename, open as a page, delete"
+                        tip: Lang.t("Rename, open as a page, delete")
                         onClicked: cardMenu.open()
                       }
                     }
@@ -517,15 +518,15 @@ DataCard {
                       y: cardMore.height + 4
                       contentItem: Column {
                         spacing: 2
-                        MenuRow { width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.palette : ""; text: "Color\u2026"; onClicked: { cardMenu.close(); bd.colorsFor("card", cardItem.cardId, cardItem) } }
+                        MenuRow { width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.palette : ""; text: Lang.t("Color\u2026"); onClicked: { cardMenu.close(); bd.colorsFor("card", cardItem.cardId, cardItem) } }
                         MenuRow {
                           objectName: "boardCardPage"
                           width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.page : ""
-                          text: cardItem.modelData.page ? "Open page" : "Open as page"
+                          text: cardItem.modelData.page ? Lang.t("Open page") : Lang.t("Open as page")
                           onClicked: { cardMenu.close(); bd.act("openCard", { id: cardItem.cardId, text: cardItem.modelData.text, page: cardItem.modelData.page }) }
                         }
-                        MenuRow { objectName: "boardCardRename"; width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.pen : ""; text: "Rename"; onClicked: { cardMenu.close(); bd.startEdit(cardItem.cardId, true) } }
-                        MenuRow { objectName: "boardCardDelete"; width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.trash : ""; text: "Delete"; danger: true; onClicked: { cardMenu.close(); bd.save(Board.removeCard(bd.info, cardItem.cardId)) } }
+                        MenuRow { objectName: "boardCardRename"; width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.pen : ""; text: Lang.t("Rename"); onClicked: { cardMenu.close(); bd.startEdit(cardItem.cardId, true) } }
+                        MenuRow { objectName: "boardCardDelete"; width: parent.width; theme: bd.theme; icon: bd.theme ? bd.theme.icons.trash : ""; text: Lang.t("Delete"); danger: true; onClicked: { cardMenu.close(); bd.save(Board.removeCard(bd.info, cardItem.cardId)) } }
                       }
                     }
                   }
@@ -569,7 +570,7 @@ DataCard {
               TapHandler { onDoubleTapped: bd.fitColumn(col.colId) }
               ToolTip.visible: edgeHover.hovered && !edgeDrag.active
               ToolTip.delay: 700
-              ToolTip.text: "Drag to resize the column"
+              ToolTip.text: Lang.t("Drag to resize the column")
             }
 
             // A new card.
@@ -588,7 +589,7 @@ DataCard {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 6
                 Text { anchors.verticalCenter: parent.verticalCenter; textFormat: Text.PlainText; text: bd.theme ? bd.theme.icons.plus : ""; font.family: bd.theme ? bd.theme.iconFont : ""; font.pixelSize: 13; color: col.colFaint }
-                Text { anchors.verticalCenter: parent.verticalCenter; textFormat: Text.PlainText; text: "New"; font.family: bd.editor ? bd.editor.uiFamily : ""; font.pixelSize: 13; color: col.colFaint }
+                Text { anchors.verticalCenter: parent.verticalCenter; textFormat: Text.PlainText; text: Lang.t("New"); font.family: bd.editor ? bd.editor.uiFamily : ""; font.pixelSize: 13; color: col.colFaint }
               }
               HoverHandler { id: addHover; cursorShape: Qt.PointingHandCursor }
               TapHandler { onTapped: bd.newCard(col.colId) }
@@ -610,7 +611,7 @@ DataCard {
           TapHandler { onTapped: bd.addColumn() }
           ToolTip.visible: addColHover.hovered
           ToolTip.delay: 500
-          ToolTip.text: "Another column"
+          ToolTip.text: Lang.t("Another column")
         }
       }
     }
@@ -651,7 +652,7 @@ DataCard {
       TapHandler { onDoubleTapped: bd.fitHeight() }
       ToolTip.visible: heightHover.hovered && !heightDrag.active
       ToolTip.delay: 700
-      ToolTip.text: "Drag to resize the board"
+      ToolTip.text: Lang.t("Drag to resize the board")
     }
 
     // The board's own colors.
@@ -663,7 +664,7 @@ DataCard {
       anchors.top: parent.top
       anchors.margins: 2
       theme: bd.theme; icon: bd.theme ? bd.theme.icons.palette : ""; size: 26; iconSize: 13; tint: bd.ink
-      tip: "The whole board's colors (each card's and column's are on it)"
+      tip: Lang.t("The whole board's colors (each card's and column's are on it)")
       onClicked: bd.colorsFor("board", "", boardColors)
     }
   }

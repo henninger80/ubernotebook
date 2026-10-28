@@ -9,6 +9,7 @@ import "../Workspace.js" as Workspace
 import "../Equations.js" as Equations
 import "../Diagram.js" as Diagram
 import "../Notes.js" as Notes
+import "../Lang.js" as Lang  // [fork] German
 
 // One block of a page in Pages, the way Notion draws it: text in its kind's
 // size with space around it, a list's bullet or number, a to-do's box, a
@@ -346,7 +347,7 @@ Item {
       textFormat: Text.PlainText
       x: 14
       y: 9
-      text: (block.lang || "Plain text") + "  \u25be"
+      text: (block.lang || Lang.t("Plain text")) + "  \u25be"
       font.family: block.editor.uiFamily
       font.pixelSize: 12
       color: Qt.alpha(block.editor.ink, langHover.hovered ? 0.8 : 0.5)
@@ -366,7 +367,7 @@ Item {
         id: copyLabel
         textFormat: Text.PlainText
         anchors.centerIn: parent
-        text: "Copy"
+        text: Lang.t("Copy")
         font.family: block.editor.uiFamily
         font.pixelSize: 12
         color: Qt.alpha(block.editor.ink, 0.7)
@@ -628,7 +629,7 @@ Item {
     visible: block.emptyToggle
     x: block.bx + block.editor.docGutter
     y: block.textTop + block.textShift + Math.max(block.lineHeight, textEdit.contentHeight) + block.st.lineHeight * 0.8 - baselineOffset
-    text: "Empty toggle. Click to write inside it, or drop blocks in."
+    text: Lang.t("Empty toggle. Click to write inside it, or drop blocks in.")
     font.family: block.editor.family
     font.pixelSize: block.st.size
     color: Qt.alpha(block.editor.ink, 0.35)
@@ -674,7 +675,7 @@ Item {
       wrapMode: Text.Wrap
       textFormat: Text.PlainText
       // (Too big to draw: said instead of drawn.)
-      text: block.mathError !== "" && block.mathDrawing && !block.mathDrawing.svg ? block.mathError : "Drawing\u2026"
+      text: block.mathError !== "" && block.mathDrawing && !block.mathDrawing.svg ? block.mathError : Lang.t("Drawing\u2026")
       font.family: block.editor.uiFamily
       font.pixelSize: 12
       color: Qt.alpha(block.editor.ink, 0.45)
@@ -1232,7 +1233,7 @@ Item {
       anchors.verticalCenter: parent.verticalCenter
       width: Math.min(implicitWidth, parent.width - 36)
       elide: Text.ElideRight
-      text: pageRow.page ? (pageRow.page.title || "Untitled") : "A page that isn't here"
+      text: pageRow.page ? (pageRow.page.title || Lang.t("Untitled")) : Lang.t("A page that isn't here")
       font.family: block.editor.family
       font.pixelSize: block.st.size
       font.weight: Font.Medium
@@ -1279,7 +1280,7 @@ Item {
       Text {
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: pageRow.page ? "Change" : "Link to a page"
+        text: pageRow.page ? Lang.t("Change") : Lang.t("Link to a page")
         font.family: block.editor.uiFamily
         font.pixelSize: 12
         color: Qt.alpha(block.editor.ink, 0.6)
@@ -1300,7 +1301,7 @@ Item {
       visible: block.tocList.length === 0
       height: block.st.lineHeight
       verticalAlignment: Text.AlignVCenter
-      text: "Headings on this page show here."
+      text: Lang.t("Headings on this page show here.")
       font.family: block.editor.family
       font.pixelSize: block.st.size
       color: Qt.alpha(block.editor.ink, 0.4)
@@ -1317,7 +1318,7 @@ Item {
           anchors.verticalCenter: parent.verticalCenter
           width: parent.width - x
           elide: Text.ElideRight
-          text: modelData.text || "Untitled"
+          text: modelData.text || Lang.t("Untitled")
           font.family: block.editor.family
           font.pixelSize: block.st.size
           font.underline: tocHover.hovered

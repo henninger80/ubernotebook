@@ -3,6 +3,7 @@ import QtQuick.Controls
 import "../Workspace.js" as Workspace
 import "../Tags.js" as Tags
 import "../Html.js" as Html
+import "../Lang.js" as Lang  // [fork] German
 
 // A tag in Pages (a tag clicked, in a line or the sidebar): every block with
 // it, page by page, the page changed last first. A to-do ticks here; a click
@@ -110,7 +111,7 @@ Item {
             id: pillText
             anchors.centerIn: parent
             textFormat: Text.PlainText
-            text: tv.info.label
+            text: Lang.t(tv.info.label)
             font.family: tv.theme.uiFont
             font.pixelSize: 22
             font.weight: Font.DemiBold
@@ -123,7 +124,7 @@ Item {
           anchors.verticalCenter: pill.verticalCenter
           textFormat: Text.PlainText
           readonly property var colorFrom: { var k = tv.view ? tv.view.tagColorsKey : ""; return tv.workspace ? Workspace.tagColorOf(tv.workspace.index.tagColors || {}, tv.name).from : "" }
-          text: (tv.loading && tv.groups.length === 0 ? "" : tv.blockCount + (tv.blockCount === 1 ? " block" : " blocks") + " on " + tv.groups.length + (tv.groups.length === 1 ? " page" : " pages"))
+          text: (tv.loading && tv.groups.length === 0 ? "" : tv.blockCount + (tv.blockCount === 1 ? Lang.t(" block") : Lang.t(" blocks")) + Lang.t(" on ") + tv.groups.length + (tv.groups.length === 1 ? Lang.t(" page") : Lang.t(" pages")))
             + (tv.hideDone && tv.doneCount > 0 ? "  \u00b7  " + tv.doneCount + " done hidden" : "")  // [fork]
             + (colorFrom && colorFrom !== tv.name ? "  \u00b7  its color from #" + colorFrom : "")
           font.family: tv.theme.uiFont
@@ -140,24 +141,24 @@ Item {
             visible: tv.doneCount > 0 || tv.hideDone
             theme: tv.theme; icon: tv.hideDone ? tv.theme.icons.eyeOff : tv.theme.icons.eye
             checked: tv.hideDone
-            tip: tv.hideDone ? "Show the done to-dos" : "Hide the done to-dos"
+            tip: tv.hideDone ? Lang.t("Show the done to-dos") : Lang.t("Hide the done to-dos")
             onClicked: tv.hideDone = !tv.hideDone
           }
           IconButton {
             id: colorButton
             objectName: "tagColor"
-            theme: tv.theme; icon: tv.theme.icons.palette; tip: "The tag's color"
+            theme: tv.theme; icon: tv.theme.icons.palette; tip: Lang.t("The tag's color")
             onClicked: tv.colorRequested(colorButton)
           }
           IconButton {
             id: renameButton
             objectName: "tagRename"
-            theme: tv.theme; icon: tv.theme.icons.pen; tip: "Rename it everywhere"
+            theme: tv.theme; icon: tv.theme.icons.pen; tip: Lang.t("Rename it everywhere")
             onClicked: tv.renameRequested(renameButton)
           }
           IconButton {
             objectName: "tagRemove"
-            theme: tv.theme; icon: tv.theme.icons.trash; tip: "Take it off every page"
+            theme: tv.theme; icon: tv.theme.icons.trash; tip: Lang.t("Take it off every page")
             active: tv.blockCount > 0
             onClicked: tv.removeRequested()
           }
@@ -169,7 +170,7 @@ Item {
         width: parent.width
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: tv.groups.length > 0 ? "Everything with " + tv.info.label + " is done." : "No block has " + tv.info.label + " any more."  // [fork]
+        text: tv.groups.length > 0 ? Lang.t("Everything with ") + Lang.t(tv.info.label) + Lang.t(" is done.") : Lang.t("No block has ") + Lang.t(tv.info.label) + Lang.t(" any more.")  // [fork]
         font.family: tv.theme.uiFont
         font.pixelSize: 14
         color: tv.theme.muted
@@ -204,7 +205,7 @@ Item {
               width: parent.width - x - 8
               elide: Text.ElideRight
               textFormat: Text.PlainText
-              text: group.modelData.title || "Untitled"
+              text: group.modelData.title || Lang.t("Untitled")
               font.family: tv.theme.uiFont
               font.pixelSize: 14
               font.weight: Font.DemiBold

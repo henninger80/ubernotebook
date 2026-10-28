@@ -3,6 +3,7 @@ import QtQuick.Controls
 import "../Docs.js" as Docs
 import "../Colors.js" as Colors
 import "../Sketch.js" as Sketch
+import "../Lang.js" as Lang  // [fork] German
 
 // Colors in Pages: for text, or behind it. On the words selected ("words"),
 // on whole blocks ("blocks": their text, or their background), on a mind
@@ -175,7 +176,7 @@ Pop {
     TapHandler { gesturePolicy: TapHandler.ReleaseWithinBounds; onTapped: tile.picked() }
     ToolTip.visible: tileHover.hovered
     ToolTip.delay: 500
-    ToolTip.text: tile.plus ? "A color of your own\u2026" : tile.custom !== "" ? tile.custom + (back ? " background" : "")
+    ToolTip.text: tile.plus ? Lang.t("A color of your own\u2026") : tile.custom !== "" ? tile.custom + (back ? Lang.t(" background") : "")
       : (entry ? entry.label : pop.mode === "tag" ? (pop.noneLabel || "Gray") : pop.pen ? "The page's ink" : "Default") + (back ? " background" : "")
   }
 
@@ -193,7 +194,7 @@ Pop {
       font.weight: Font.DemiBold
       color: pop.theme.text
     }
-    Heading { text: pop.mode === "blocks" ? "Color" : pop.mode === "tag" ? "Tag color" : pop.pen ? "Ink" : "Text color" }
+    Heading { text: pop.mode === "blocks" ? Lang.t("Color") : pop.mode === "tag" ? Lang.t("Tag color") : pop.pen ? Lang.t("Ink") : Lang.t("Text color") }
     Flow {
       width: parent.width
       spacing: 4
@@ -218,7 +219,7 @@ Pop {
       }
       Tile { visible: pop.ownText; plus: true; onPicked: pop.openCustom("color") }
     }
-    Heading { visible: !pop.pen; text: "Background" }
+    Heading { visible: !pop.pen; text: Lang.t("Background") }
     Flow {
       visible: !pop.pen
       width: parent.width

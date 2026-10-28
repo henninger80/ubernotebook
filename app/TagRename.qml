@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Tags.js" as Tags
+import "../Lang.js" as Lang  // [fork] German
 
 // Renaming a tag everywhere (the tag view's pen): its new name, as it'll be
 // written. A name another tag has makes the two one.
@@ -34,7 +35,7 @@ Pop {
     spacing: 8
     Text {
       textFormat: Text.PlainText
-      text: "Rename " + pop.was
+      text: Lang.t("Rename ") + pop.was
       font.family: pop.theme.uiFont
       font.pixelSize: 13
       font.weight: Font.DemiBold
@@ -54,7 +55,7 @@ Pop {
       width: parent.width
       wrapMode: Text.Wrap
       textFormat: Text.PlainText
-      text: field.text.trim() && !pop.name ? "Letters, digits, - _ and /, and not only digits."
+      text: field.text.trim() && !pop.name ? Lang.t("Letters, digits, - _ and /, and not only digits.")
         : pop.merges ? Tags.label(field.text) + " is a tag already: they'll be one."
         : "On every page with it. Enter renames."
       font.family: pop.theme.uiFont

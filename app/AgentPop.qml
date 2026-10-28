@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Agent.js" as Agent
+import "../Lang.js" as Lang  // [fork] German
 
 // Ask your agent (Ctrl+J, "/agent", a block's menu, the toolbar over selected
 // words, the page's ⋯ menu): what you'd like done with this page, the blocks
@@ -132,7 +133,7 @@ Pop {
         anchors.left: headIcon.right
         anchors.leftMargin: 8
         anchors.verticalCenter: parent.verticalCenter
-        text: "Ask your agent"
+        text: Lang.t("Ask your agent")
         font.family: pop.theme.uiFont
         font.pixelSize: 15
         font.weight: Font.DemiBold
@@ -172,7 +173,7 @@ Pop {
                 id: modeText
                 anchors.centerIn: parent
                 textFormat: Text.PlainText
-                text: modeOption.modelData.label
+                text: Lang.t(modeOption.modelData.label)
                 font.family: pop.theme.uiFont
                 font.pixelSize: 12
                 font.weight: modeOption.on ? Font.DemiBold : Font.Normal
@@ -211,7 +212,7 @@ Pop {
       height: 40
       fontSize: 15
       maximumLength: 4000
-      placeholder: pop.mode === "new" ? "What should the new page be? A packing list for Lisbon\u2026" : "What would you like it to do?"
+      placeholder: pop.mode === "new" ? Lang.t("What should the new page be? A packing list for Lisbon\u2026") : Lang.t("What would you like it to do?")
       onAccepted: pop.send(field.text)
       onEscaped: pop.close()
     }
@@ -224,7 +225,7 @@ Pop {
         anchors.verticalCenter: parent.verticalCenter
         rightPadding: 2
         textFormat: Text.PlainText
-        text: "Goes"
+        text: Lang.t("Goes")
         font.family: pop.theme.uiFont
         font.pixelSize: 12
         color: pop.theme.muted
@@ -232,14 +233,14 @@ Pop {
       Chip {
         objectName: "askPlaceTop"
         theme: pop.theme
-        text: "At the top of Pages"
+        text: Lang.t("At the top of Pages")
         checked: pop.place === "top"
         onClicked: { pop.place = "top"; field.focusField() }
       }
       Chip {
         objectName: "askPlaceInside"
         theme: pop.theme
-        text: "Inside \u201c" + pop.shortTitle(pop.onPage ? pop.onPage.title : "") + "\u201d"
+        text: Lang.t("Inside \u201c") + pop.shortTitle(pop.onPage ? pop.onPage.title : "") + Lang.t("\u201d")
         checked: pop.place === "inside"
         onClicked: { pop.place = "inside"; field.focusField() }
       }
@@ -273,7 +274,7 @@ Pop {
         Text {
           textFormat: Text.PlainText
           anchors.verticalCenter: parent.verticalCenter
-          text: "Agent"
+          text: Lang.t("Agent")
           font.family: pop.theme.uiFont
           font.pixelSize: 12
           color: pop.theme.muted
@@ -296,7 +297,7 @@ Pop {
             Text {
               anchors.verticalCenter: parent.verticalCenter
               textFormat: Text.PlainText
-              text: !pop.known ? "\u2026" : pop.agent ? pop.labelOf(pop.agent) : "Choose one"
+              text: !pop.known ? "\u2026" : pop.agent ? pop.labelOf(pop.agent) : Lang.t("Choose one")
               font.family: pop.theme.uiFont
               font.pixelSize: 12
               font.weight: Font.DemiBold
@@ -327,7 +328,7 @@ Pop {
                 leftPadding: 10
                 topPadding: 2
                 bottomPadding: 6
-                text: "Your agent (Omarchy's default too)"
+                text: Lang.t("Your agent (Omarchy's default too)")
                 font.family: pop.theme.uiFont
                 font.pixelSize: 11
                 font.weight: Font.DemiBold
@@ -349,7 +350,7 @@ Pop {
                 leftPadding: 10
                 topPadding: 10
                 bottomPadding: 2
-                text: "In a terminal"
+                text: Lang.t("In a terminal")
                 font.family: pop.theme.uiFont
                 font.pixelSize: 11
                 font.weight: Font.DemiBold
@@ -362,7 +363,7 @@ Pop {
                   width: parent.width
                   theme: pop.theme
                   icon: pop.theme.icons.terminal
-                  text: modelData.label
+                  text: Lang.t(modelData.label)
                   checked: modelData.name === pop.agent
                   onClicked: pop.choose(modelData.name)
                 }
@@ -374,7 +375,7 @@ Pop {
                 textFormat: Text.PlainText
                 leftPadding: 10
                 rightPadding: 10
-                text: "No coding agent is installed. Omarchy installs one: omarchy default agent <name>."
+                text: Lang.t("No coding agent is installed. Omarchy installs one: omarchy default agent <name>.")
                 font.family: pop.theme.uiFont
                 font.pixelSize: 12
                 color: pop.theme.muted
@@ -403,7 +404,7 @@ Pop {
         anchors.verticalCenter: parent.verticalCenter
         theme: pop.theme
         icon: pop.theme.icons.terminal
-        tip: "Ask " + Agent.name(pop.agent) + " in a terminal instead, with all its own controls"
+        tip: Lang.t("Ask ") + Agent.name(pop.agent) + Lang.t(" in a terminal instead, with all its own controls")
         size: 30
         iconSize: 14
         active: field.text.trim() !== ""
@@ -415,7 +416,7 @@ Pop {
         anchors.verticalCenter: parent.verticalCenter
         theme: pop.theme
         icon: pop.theme.icons.agent
-        label: "Ask  \u23ce"
+        label: Lang.t("Ask  \u23ce")
         size: 30
         iconSize: 14
         active: field.text.trim() !== ""

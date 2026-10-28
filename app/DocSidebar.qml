@@ -10,6 +10,7 @@ import "../Sidebar.js" as Sidebar
 import "../Collection.js" as Collection
 import "../Tabs.js" as Tabs  // [fork]
 import "../Tasks.js" as Tasks  // [fork]
+import "../Lang.js" as Lang  // [fork] German
 
 // The sidebar of Pages. At the top, staying put: the switch back to
 // notebooks, the profile, search and a new page, then the calendar, the
@@ -42,7 +43,7 @@ Rectangle {
   function hide(id) {
     if (!id || !view.service) return
     view.service.setSetting("sidebarHidden", Sidebar.setIn(hidden, id, true))
-    view.toastUndo(Sidebar.label(id) + " is hidden. Settings \u2192 Appearance shows it again.", function() {
+    view.toastUndo(Lang.t(Sidebar.label(id)) + Lang.t(" is hidden. Settings \u2192 Appearance shows it again."), function() {
       if (bar.view.service) bar.view.service.setSetting("sidebarHidden", Sidebar.setIn(bar.hidden, id, false))
     })
   }
@@ -215,8 +216,8 @@ Rectangle {
   readonly property string tagSort: ["name", "nameDesc", "color", "colorDesc"].indexOf(view.settings.tagSort) >= 0 ? view.settings.tagSort : "name"
   // [fork] A–Z, Z–A, by color, by color the other way round, and round again.
   readonly property string nextTagSort: ({ name: "nameDesc", nameDesc: "color", color: "colorDesc", colorDesc: "name" })[tagSort]
-  readonly property var tagSortLabel: ({ name: "A\u2013Z", nameDesc: "Z\u2013A", color: "By color", colorDesc: "By color \u2193" })[tagSort]
-  readonly property var tagSortTip: ({ name: "Sorted A\u2013Z", nameDesc: "Sorted Z\u2013A", color: "Sorted by color", colorDesc: "Sorted by color, reversed" })[tagSort]
+  readonly property var tagSortLabel: Lang.t(({ name: "A\u2013Z", nameDesc: "Z\u2013A", color: "By color", colorDesc: "By color \u2193" })[tagSort])
+  readonly property var tagSortTip: Lang.t(({ name: "Sorted A\u2013Z", nameDesc: "Sorted Z\u2013A", color: "Sorted by color", colorDesc: "Sorted by color, reversed" })[tagSort])
   readonly property var tagList: {
     var r = view.workspace ? view.workspace.revision : 0
     var k = view.tagColorsKey
@@ -353,7 +354,7 @@ Rectangle {
       anchors.right: parent.right
       anchors.rightMargin: 10
       anchors.verticalCenter: parent.verticalCenter
-      text: r2.hint
+      text: Lang.t(r2.hint)
       font.family: bar.theme.uiFont
       font.pixelSize: 11
       color: bar.theme.faint
@@ -465,7 +466,7 @@ Rectangle {
       x: 12
       anchors.verticalCenter: parent.verticalCenter
       textFormat: Text.PlainText
-      text: sh.label
+      text: Lang.t(sh.label)
       font.family: bar.theme.uiFont
       font.pixelSize: 11
       font.weight: Font.DemiBold
@@ -611,7 +612,7 @@ Rectangle {
       anchors.verticalCenter: parent.verticalCenter
       width: parent.width - x - (treeHover.hovered ? 56 : projectInfo.item ? projectInfo.item.width + 14 : 8)
       elide: Text.ElideRight
-      text: rowItem.modelData.title || "Untitled"
+      text: rowItem.modelData.title || Lang.t("Untitled")
       font.family: bar.theme.uiFont
       font.pixelSize: 13
       font.weight: rowItem.current ? Font.DemiBold : Font.Normal
@@ -632,7 +633,7 @@ Rectangle {
         Text {
           anchors.verticalCenter: parent.verticalCenter
           textFormat: Text.PlainText
-          text: rowItem.due && rowItem.modelData.status !== "done" ? rowItem.due.label : ""
+          text: rowItem.due && rowItem.modelData.status !== "done" ? Lang.t(rowItem.due.label) : ""
           visible: text !== ""
           font.family: bar.theme.uiFont
           font.pixelSize: 11
@@ -672,11 +673,11 @@ Rectangle {
       anchors.verticalCenter: parent.verticalCenter
       sourceComponent: Row {
         IconButton {
-          theme: bar.theme; icon: bar.theme.icons.more; size: 24; iconSize: 14; tip: "Delete, move\u2026"
+          theme: bar.theme; icon: bar.theme.icons.more; size: 24; iconSize: 14; tip: Lang.t("Delete, move\u2026")
           onClicked: bar.view.openRowMenu(rowItem.modelData.id, rowItem)
         }
         IconButton {
-          theme: bar.theme; icon: bar.theme.icons.plus; size: 24; iconSize: 14; tip: "A page inside it"
+          theme: bar.theme; icon: bar.theme.icons.plus; size: 24; iconSize: 14; tip: Lang.t("A page inside it")
           onClicked: bar.view.newPage(rowItem.modelData.id)
         }
       }
@@ -687,7 +688,7 @@ Rectangle {
     TapHandler { acceptedButtons: Qt.MiddleButton; onTapped: bar.view.newTab(rowItem.modelData.id) }
     ToolTip.visible: rowItem.isProject && treeHover.hovered && bar.dragId === ""
     ToolTip.delay: 700
-    ToolTip.text: !rowItem.isProject ? "" : rowItem.status.label + (rowItem.due ? "  \u00b7  " + (rowItem.modelData.overdue ? rowItem.due.label : "due " + rowItem.due.label) : "")
+    ToolTip.text: !rowItem.isProject ? "" : Lang.t(rowItem.status.label) + (rowItem.due ? "  \u00b7  " + (rowItem.modelData.overdue ? Lang.t(rowItem.due.label) : Lang.t("due ") + Lang.t(rowItem.due.label)) : "")
       + "  \u00b7  " + rowItem.modelData.progress.done + " of " + rowItem.modelData.progress.total + " to-dos"
   }
 
@@ -722,7 +723,7 @@ Rectangle {
         icon: bar.theme.icons.hideSidebar
         size: 28
         iconSize: 15
-        tip: "Hide the sidebar  Ctrl+\\"
+        tip: Lang.t("Hide the sidebar  Ctrl+\\")
         onClicked: bar.view.sidebarShown = false
       }
     }
@@ -767,7 +768,7 @@ Rectangle {
         x: 38
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: "New page"
+        text: Lang.t("New page")
         font.family: bar.theme.uiFont
         font.pixelSize: 13
         font.weight: Font.DemiBold
@@ -778,7 +779,7 @@ Rectangle {
         anchors.rightMargin: 10
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: "Ctrl+N"
+        text: Lang.t("Ctrl+N")
         font.family: bar.theme.uiFont
         font.pixelSize: 11
         color: Qt.alpha(bar.theme.background, 0.7)
@@ -809,7 +810,7 @@ Rectangle {
         x: 32
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: "Search"
+        text: Lang.t("Search")
         font.family: bar.theme.uiFont
         font.pixelSize: 13
         color: bar.theme.muted
@@ -819,7 +820,7 @@ Rectangle {
         anchors.rightMargin: 10
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: "Ctrl+P"
+        text: Lang.t("Ctrl+P")
         font.family: bar.theme.uiFont
         font.pixelSize: 11
         color: bar.theme.faint
@@ -842,8 +843,8 @@ Rectangle {
         width: navRow.tileW
         itemId: "calendar"
         icon: bar.theme.icons.calendarMonth
-        text: "Calendar"
-        tip: Dates.SHORT_DAYS[new Date(bar.nowMs).getDay()] + " " + new Date(bar.nowMs).getDate() + (bar.todayLeft.length === 1 ? ", 1 event left today" : bar.todayLeft.length > 1 ? ", " + bar.todayLeft.length + " events left today" : "")
+        text: Lang.t("Calendar")
+        tip: Dates.SHORT_DAYS[new Date(bar.nowMs).getDay()] + " " + new Date(bar.nowMs).getDate() + (bar.todayLeft.length === 1 ? Lang.t(", 1 event left today") : bar.todayLeft.length > 1 ? ", " + bar.todayLeft.length + Lang.t(" events left today") : "")
         checked: bar.view.calendarShown
         onClicked: bar.view.openCalendar("")
       }
@@ -854,8 +855,8 @@ Rectangle {
         width: navRow.tileW
         itemId: "tasks"
         icon: bar.theme.icons.checks
-        text: "Tasks"
-        tip: bar.taskCount.open === 1 ? "1 open to-do" : bar.taskCount.open + " open to-dos" + (bar.taskCount.late ? ", " + bar.taskCount.late + " overdue" : "")
+        text: Lang.t("Tasks")
+        tip: bar.taskCount.open === 1 ? Lang.t("1 open to-do") : bar.taskCount.open + Lang.t(" open to-dos") + (bar.taskCount.late ? ", " + bar.taskCount.late + Lang.t(" overdue") : "")
         checked: bar.view.tasksShown
         onClicked: bar.view.openTasks(false)
       }
@@ -865,8 +866,8 @@ Rectangle {
         width: navRow.tileW
         itemId: "library"
         icon: bar.theme.icons.library
-        text: "Library"
-        tip: bar.libraryCount === 1 ? "1 item" : bar.libraryCount > 1 ? bar.libraryCount + " items" : "Nothing in it yet"
+        text: Lang.t("Library")
+        tip: bar.libraryCount === 1 ? Lang.t("1 item") : bar.libraryCount > 1 ? bar.libraryCount + Lang.t(" items") : Lang.t("Nothing in it yet")
         checked: bar.view.libraryShown
         onClicked: bar.view.openLibrary("")
       }
@@ -876,8 +877,8 @@ Rectangle {
         width: navRow.tileW
         itemId: "people"
         icon: bar.theme.icons.contacts
-        text: "People"
-        tip: bar.peopleCount === 1 ? "1 person" : bar.peopleCount > 1 ? bar.peopleCount + " people" : "No one yet"
+        text: Lang.t("People")
+        tip: bar.peopleCount === 1 ? Lang.t("1 person") : bar.peopleCount > 1 ? bar.peopleCount + Lang.t(" people") : Lang.t("No one yet")
         checked: bar.view.peopleShown
         onClicked: bar.view.openPeople("")
       }
@@ -915,7 +916,7 @@ Rectangle {
         id: todaySec
         objectName: "sidebarToday"
         visible: bar.shows("today") && bar.todayLeft.length > 0
-        SectionHead { fold: "today"; itemId: "today"; label: "Today"; count: String(bar.todayLeft.length) }
+        SectionHead { fold: "today"; itemId: "today"; label: Lang.t("Today"); count: String(bar.todayLeft.length) }
         Item { width: 1; height: 2 }
         Repeater {
           model: bar.isFolded("today") ? [] : bar.todayLeft.slice(0, 4)
@@ -938,7 +939,7 @@ Rectangle {
               // (Room for "12:00 pm" on a 12-hour clock.)
               width: bar.theme.twelveHour ? 54 : 44
               textFormat: Text.PlainText
-              text: (bar.theme.twelveHour, trow.modelData.allDay) ? "All day" : trow.now ? "Now" : Calendar.timeLabel(trow.modelData.start)
+              text: (bar.theme.twelveHour, trow.modelData.allDay) ? Lang.t("All day") : trow.now ? Lang.t("Now") : Calendar.timeLabel(trow.modelData.start)
               font.family: bar.theme.uiFont
               font.pixelSize: 11
               font.weight: trow.now || trow.soon <= 15 && !trow.modelData.allDay ? Font.DemiBold : Font.Normal
@@ -951,7 +952,7 @@ Rectangle {
               width: parent.width - x - 8
               elide: Text.ElideRight
               textFormat: Text.PlainText
-              text: (trow.modelData.title || "Untitled") + (!trow.modelData.allDay && !trow.now && trow.soon > 0 && trow.soon <= 60 ? "  \u00b7  in " + Math.max(1, Math.round(trow.soon)) + " min" : "")
+              text: (trow.modelData.title || Lang.t("Untitled")) + (!trow.modelData.allDay && !trow.now && trow.soon > 0 && trow.soon <= 60 ? Lang.t("  \u00b7  in ") + Math.max(1, Math.round(trow.soon)) + Lang.t(" min") : "")
               font.family: bar.theme.uiFont
               font.pixelSize: 13
               color: bar.theme.text
@@ -962,7 +963,7 @@ Rectangle {
         }
         Row2 {
           visible: !bar.isFolded("today") && bar.todayLeft.length > 4
-          text: (bar.todayLeft.length - 4) + " more today"
+          text: (bar.todayLeft.length - 4) + Lang.t(" more today")
           onClicked: bar.view.openCalendar("")
         }
       }
@@ -972,7 +973,7 @@ Rectangle {
         id: favSec
         objectName: "sidebarFavorites"
         visible: bar.shows("favorites") && bar.favIds.length > 0
-        SectionHead { fold: "favorites"; itemId: "favorites"; label: "Favorites"; count: String(bar.favIds.length) }
+        SectionHead { fold: "favorites"; itemId: "favorites"; label: Lang.t("Favorites"); count: String(bar.favIds.length) }
         Item { width: 1; height: 2 }
         Repeater {
           model: bar.isFolded("favorites") ? [] : bar.favIds
@@ -1000,7 +1001,7 @@ Rectangle {
               anchors.verticalCenter: parent.verticalCenter
               width: parent.width - x - 8
               elide: Text.ElideRight
-              text: favRow.e.title || "Untitled"
+              text: favRow.e.title || Lang.t("Untitled")
               font.family: bar.theme.uiFont
               font.pixelSize: 13
               font.weight: favRow.current ? Font.DemiBold : Font.Normal
@@ -1024,12 +1025,12 @@ Rectangle {
           objectName: "projectsHead"
           fold: "projects"
           itemId: "projects"
-          label: bar.dragId !== "" && projectModel.count > 0 && !(bar.view.workspace.index.pages[bar.dragId] || {}).project ? "Projects  \u00b7  drop to make it one" : "Projects"
+          label: bar.dragId !== "" && projectModel.count > 0 && !(bar.view.workspace.index.pages[bar.dragId] || {}).project ? Lang.t("Projects  \u00b7  drop to make it one") : Lang.t("Projects")
           count: String(bar.projectTops)
           lit: bar.drop !== null && bar.drop.where === "project"
           IconButton {
             objectName: "newProject"
-            theme: bar.theme; icon: bar.theme.icons.plus; size: 22; iconSize: 14; tint: bar.theme.muted; tip: "New project"
+            theme: bar.theme; icon: bar.theme.icons.plus; size: 22; iconSize: 14; tint: bar.theme.muted; tip: Lang.t("New project")
             onClicked: bar.view.newProject()
           }
         }
@@ -1057,7 +1058,7 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             width: parent.width - x - 8
             elide: Text.ElideRight
-            text: bar.dragId !== "" ? "Drop it here: a project" : "New project"
+            text: bar.dragId !== "" ? Lang.t("Drop it here: a project") : Lang.t("New project")
             font.family: bar.theme.uiFont
             font.pixelSize: 13
             color: bar.theme.muted
@@ -1081,7 +1082,7 @@ Rectangle {
         SectionHead {
           fold: "tags"
           itemId: "tags"
-          label: "Tags"
+          label: Lang.t("Tags")
           count: String(bar.tagChips.length)
           // By name or by color.
           Rectangle {
@@ -1106,7 +1107,7 @@ Rectangle {
               gesturePolicy: TapHandler.ReleaseWithinBounds
               onTapped: if (bar.view.service) bar.view.service.setSetting("tagSort", bar.nextTagSort)
             }
-            Tip { shown: sortHover.hovered; text: bar.tagSortTip + ": click to change" }
+            Tip { shown: sortHover.hovered; text: bar.tagSortTip + Lang.t(": click to change") }
           }
         }
         Item { width: 1; height: 4 }
@@ -1160,7 +1161,7 @@ Rectangle {
                       width: Math.min(implicitWidth, chipFlow.width - 64)
                       elide: Text.ElideRight
                       textFormat: Text.PlainText
-                      text: chip.modelData.label
+                      text: Lang.t(chip.modelData.label)
                       font.family: bar.theme.uiFont
                       font.pixelSize: 12
                       font.weight: chip.current ? Font.DemiBold : Font.Normal
@@ -1187,7 +1188,7 @@ Rectangle {
                         active: chipHover.hovered
                         sourceComponent: IconButton {
                           objectName: "tagMore"
-                          theme: bar.theme; icon: bar.theme.icons.more; size: 18; iconSize: 13; tint: bar.theme.muted; tip: "Color, rename\u2026"
+                          theme: bar.theme; icon: bar.theme.icons.more; size: 18; iconSize: 13; tint: bar.theme.muted; tip: Lang.t("Color, rename\u2026")
                           onClicked: bar.view.openTagMenu(chip.modelData.name, chip)
                         }
                       }
@@ -1218,7 +1219,7 @@ Rectangle {
             x: 8
             y: chipClip.height + 6
             textFormat: Text.PlainText
-            text: bar.allTags ? "Show fewer" : "Show all " + bar.tagChips.length
+            text: bar.allTags ? Lang.t("Show fewer") : Lang.t("Show all ") + bar.tagChips.length
             font.family: bar.theme.uiFont
             font.pixelSize: 11
             font.underline: moreHover.hovered
@@ -1237,7 +1238,7 @@ Rectangle {
           id: pagesHead
           objectName: "pagesHead"
           fold: "pages"
-          label: "Pages"
+          label: Lang.t("Pages")
           count: String(bar.pageTops)
           lit: bar.drop !== null && bar.drop.where === "end" && bar.drop.list === null
         }
@@ -1255,7 +1256,7 @@ Rectangle {
           topPadding: 4
           wrapMode: Text.Wrap
           textFormat: Text.PlainText
-          text: "No pages yet. Make one with New page."
+          text: Lang.t("No pages yet. Make one with New page.")
           font.family: bar.theme.uiFont
           font.pixelSize: 12
           color: bar.theme.muted
@@ -1330,7 +1331,7 @@ Rectangle {
       visible: bar.view.workspace !== null && bar.view.workspace.importing === true
       leftPadding: 12
       textFormat: Text.PlainText
-      text: "Importing\u2026 " + (bar.view.workspace ? bar.view.workspace.importCount : 0)
+      text: Lang.t("Importing\u2026 ") + (bar.view.workspace ? bar.view.workspace.importCount : 0)
       font.family: bar.theme.uiFont
       font.pixelSize: 12
       color: bar.theme.muted
@@ -1350,7 +1351,7 @@ Rectangle {
           visible: bar.shows("import")
           itemId: "import"
           icon: bar.theme.icons.export
-          tip: "Import\u2026"
+          tip: Lang.t("Import\u2026")
           onClicked: bar.view.openImport(importButton)
         }
         FootButton {
@@ -1359,7 +1360,7 @@ Rectangle {
           itemId: "templates"
           icon: bar.theme.icons.templates
           count: bar.templateCount
-          tip: "Templates"
+          tip: Lang.t("Templates")
           checked: bar.view.templatesShown
           onClicked: bar.view.openTemplates()
         }
@@ -1369,7 +1370,7 @@ Rectangle {
           itemId: "archive"
           icon: bar.theme.icons.archive
           count: bar.archiveCount
-          tip: "Archive"
+          tip: Lang.t("Archive")
           onClicked: bar.view.openArchive()
         }
         FootButton {
@@ -1378,7 +1379,7 @@ Rectangle {
           itemId: "trash"
           icon: bar.theme.icons.trash
           count: bar.trashCount
-          tip: "Trash"
+          tip: Lang.t("Trash")
           onClicked: bar.view.openTrash()
         }
       }
@@ -1389,13 +1390,13 @@ Rectangle {
         FootButton {
           objectName: "helpButton"
           icon: bar.theme.icons.help
-          tip: "Help  Ctrl+/"
+          tip: Lang.t("Help  Ctrl+/")
           onClicked: bar.view.helpRequested()
         }
         FootButton {
           objectName: "settingsButton"
           icon: bar.theme.icons.cog
-          tip: "Settings  Ctrl+,"
+          tip: Lang.t("Settings  Ctrl+,")
           onClicked: bar.view.settingsRequested()
         }
       }
@@ -1426,7 +1427,7 @@ Rectangle {
         width: parent.width
         theme: bar.theme
         icon: bar.theme.icons.eyeOff
-        text: "Hide " + Sidebar.label(bar.menuFor)
+        text: Lang.t("Hide ") + Lang.t(Sidebar.label(bar.menuFor))
         onClicked: { itemMenu.close(); bar.hide(bar.menuFor) }
       }
       MenuRow {
@@ -1434,7 +1435,7 @@ Rectangle {
         width: parent.width
         theme: bar.theme
         icon: bar.theme.icons.tune
-        text: "Choose what\u2019s in the sidebar\u2026"
+        text: Lang.t("Choose what\u2019s in the sidebar\u2026")
         onClicked: { itemMenu.close(); bar.view.sidebarChoicesRequested() }
       }
     }

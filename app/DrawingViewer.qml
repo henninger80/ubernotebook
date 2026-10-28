@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Equations.js" as Equations
+import "../Lang.js" as Lang  // [fork] German
 
 // A diagram or an equation, large, over everything: zoomed with Ctrl+scroll
 // or a pinch (round the pointer), + and − (or the buttons), moved by
@@ -271,7 +272,7 @@ Popup {
         x: 20
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: viewer.kind === "math" ? "Equation" : "Diagram"
+        text: viewer.kind === "math" ? Lang.t("Equation") : Lang.t("Diagram")
         font.family: viewer.theme.uiFont
         font.pixelSize: 14
         font.weight: Font.DemiBold
@@ -284,18 +285,18 @@ Popup {
         spacing: 4
         IconButton {
           objectName: "viewerCopy"
-          theme: viewer.theme; icon: viewer.theme.icons.copy; size: 32; iconSize: 16; tip: "Copy as a picture  Ctrl+C"
+          theme: viewer.theme; icon: viewer.theme.icons.copy; size: 32; iconSize: 16; tip: Lang.t("Copy as a picture  Ctrl+C")
           onClicked: viewer.copy()
         }
         IconButton {
           objectName: "viewerSave"
-          theme: viewer.theme; icon: viewer.theme.icons.download; size: 32; iconSize: 17; tip: "Save as a picture  Ctrl+S"
+          theme: viewer.theme; icon: viewer.theme.icons.download; size: 32; iconSize: 17; tip: Lang.t("Save as a picture  Ctrl+S")
           onClicked: viewer.save()
         }
         Item { width: 8; height: 1 }
         IconButton {
           objectName: "viewerZoomOut"
-          theme: viewer.theme; icon: viewer.theme.icons.zoomOut; size: 32; iconSize: 17; tip: "Smaller  \u2212"
+          theme: viewer.theme; icon: viewer.theme.icons.zoomOut; size: 32; iconSize: 17; tip: Lang.t("Smaller  \u2212")
           active: viewer.zoom > viewer.minZoom + 0.001
           onClicked: viewer.zoomBy(0.8)
         }
@@ -321,19 +322,19 @@ Popup {
         }
         IconButton {
           objectName: "viewerZoomIn"
-          theme: viewer.theme; icon: viewer.theme.icons.zoomIn; size: 32; iconSize: 17; tip: "Bigger  +"
+          theme: viewer.theme; icon: viewer.theme.icons.zoomIn; size: 32; iconSize: 17; tip: Lang.t("Bigger  +")
           active: viewer.zoom < viewer.maxZoom - 0.001
           onClicked: viewer.zoomBy(1.25)
         }
         IconButton {
           objectName: "viewerFit"
-          theme: viewer.theme; icon: viewer.theme.icons.fitScreen; size: 32; iconSize: 17; tip: "All of it  0"
+          theme: viewer.theme; icon: viewer.theme.icons.fitScreen; size: 32; iconSize: 17; tip: Lang.t("All of it  0")
           onClicked: viewer.fit()
         }
         Item { width: 8; height: 1 }
         IconButton {
           objectName: "viewerClose"
-          theme: viewer.theme; icon: viewer.theme.icons.close; size: 32; iconSize: 16; tip: "Close  Esc"
+          theme: viewer.theme; icon: viewer.theme.icons.close; size: 32; iconSize: 16; tip: Lang.t("Close  Esc")
           onClicked: viewer.close()
         }
       }
@@ -343,7 +344,7 @@ Popup {
       anchors.bottom: parent.bottom
       anchors.bottomMargin: 14
       textFormat: Text.PlainText
-      text: "Ctrl+scroll or pinch to zoom \u00b7 drag or scroll to move \u00b7 0 all of it \u00b7 1 as big as it is \u00b7 Esc to close"
+      text: Lang.t("Ctrl+scroll or pinch to zoom \u00b7 drag or scroll to move \u00b7 0 all of it \u00b7 1 as big as it is \u00b7 Esc to close")
       font.family: viewer.theme.uiFont
       font.pixelSize: 12
       color: viewer.theme.faint

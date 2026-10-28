@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "../Lang.js" as Lang  // [fork] German
 
 // One line in a menu: an icon, what it does, and its shortcut.
 Rectangle {
@@ -61,7 +62,7 @@ Rectangle {
     visible: rowItem.hint !== "" && width >= 24
     elide: Text.ElideRight
     horizontalAlignment: Text.AlignRight
-    text: rowItem.hint
+    text: Lang.t(rowItem.hint)
     font.family: rowItem.theme.uiFont
     font.pixelSize: 12
     color: rowItem.theme.faint
@@ -70,7 +71,7 @@ Rectangle {
   HoverHandler { id: hover; cursorShape: rowItem.active ? Qt.PointingHandCursor : Qt.ArrowCursor }
   ToolTip.visible: hover.hovered && (hintText.truncated || !hintText.visible) && rowItem.hint !== ""
   ToolTip.delay: 500
-  ToolTip.text: rowItem.hint
+  ToolTip.text: Lang.t(rowItem.hint)
   // (It takes the click for itself: nothing under the menu gets it too.)
   TapHandler { enabled: rowItem.active; gesturePolicy: TapHandler.ReleaseWithinBounds; onTapped: rowItem.clicked() }
 }

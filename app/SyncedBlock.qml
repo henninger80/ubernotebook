@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Workspace.js" as Workspace
+import "../Lang.js" as Lang  // [fork] German
 
 // A synced block on a page in Pages: blocks kept on a page of their own and
 // shown here, as they are, wherever else the same synced block is too;
@@ -80,7 +81,7 @@ DataCard {
       visible: sb.gone || !sb.pageId
       anchors.centerIn: parent
       textFormat: Text.PlainText
-      text: "This synced block's blocks aren't there any more"
+      text: Lang.t("This synced block's blocks aren't there any more")
       font.family: sb.editor ? sb.editor.uiFamily : ""
       font.pixelSize: 13
       font.italic: true
@@ -111,14 +112,14 @@ DataCard {
         anchors.verticalCenter: parent.verticalCenter
         rightPadding: 6
         textFormat: Text.PlainText
-        text: (sb.theme ? sb.theme.icons.synced + "  " : "") + "Synced" + (sb.places > 1 ? ", on " + sb.places + " pages" : "")
+        text: (sb.theme ? sb.theme.icons.synced + "  " : "") + Lang.t("Synced") + (sb.places > 1 ? Lang.t(", on ") + sb.places + Lang.t(" pages") : "")
         font.family: sb.editor ? sb.editor.uiFamily : ""
         font.pixelSize: 12
         color: sb.look.color ? sb.accent : "#c86f2a"
       }
-      IconButton { objectName: "syncedEdit"; theme: sb.theme; icon: sb.theme ? sb.theme.icons.edit : ""; label: "Edit"; size: 24; iconSize: 12; tint: sb.ink; tip: "Change its blocks (everywhere it is)"; onClicked: sb.act("edit", null) }
-      IconButton { objectName: "syncedUnsync"; theme: sb.theme; icon: sb.theme ? sb.theme.icons.unsync : ""; size: 24; iconSize: 13; tint: sb.ink; tip: "Unsync: its blocks this page's own, here"; onClicked: sb.act("unsync", null) }
-      IconButton { id: colorButton; objectName: "syncedColors"; theme: sb.theme; icon: sb.theme ? sb.theme.icons.palette : ""; size: 24; iconSize: 13; tint: sb.ink; tip: "Its colors"; onClicked: sb.askColors(colorButton) }
+      IconButton { objectName: "syncedEdit"; theme: sb.theme; icon: sb.theme ? sb.theme.icons.edit : ""; label: Lang.t("Edit"); size: 24; iconSize: 12; tint: sb.ink; tip: Lang.t("Change its blocks (everywhere it is)"); onClicked: sb.act("edit", null) }
+      IconButton { objectName: "syncedUnsync"; theme: sb.theme; icon: sb.theme ? sb.theme.icons.unsync : ""; size: 24; iconSize: 13; tint: sb.ink; tip: Lang.t("Unsync: its blocks this page's own, here"); onClicked: sb.act("unsync", null) }
+      IconButton { id: colorButton; objectName: "syncedColors"; theme: sb.theme; icon: sb.theme ? sb.theme.icons.palette : ""; size: 24; iconSize: 13; tint: sb.ink; tip: Lang.t("Its colors"); onClicked: sb.askColors(colorButton) }
     }
   }
 }

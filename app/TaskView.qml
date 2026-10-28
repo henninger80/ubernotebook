@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import "../Tasks.js" as Tasks
 import "../Tabs.js" as Tabs
+import "../Lang.js" as Lang  // [fork] German
 
 // (fork) Tasks in Pages (the Tasks tile in the sidebar): every open to-do on
 // your pages (Tasks.js), overdue first, then today's, the next 7 days',
@@ -90,8 +91,8 @@ Item {
       b.checked = on
     })
     var w = words.length > 40 ? words.slice(0, 39) + "…" : words
-    if (on && view) view.toastUndo("Done: " + w, function() { tv.tick(pageId, uid, false, words) })
-    else if (!on && view && tv.closedShown) view.toastUndo("Open again: " + w, function() { tv.tick(pageId, uid, true, words) })
+    if (on && view) view.toastUndo(Lang.t("Done: ") + w, function() { tv.tick(pageId, uid, false, words) })
+    else if (!on && view && tv.closedShown) view.toastUndo(Lang.t("Open again: ") + w, function() { tv.tick(pageId, uid, true, words) })
   }
   function fold(id) {
     var f = JSON.parse(JSON.stringify(folded))
@@ -122,7 +123,7 @@ Item {
         spacing: 14
         Text {
           textFormat: Text.PlainText
-          text: "Tasks"
+          text: Lang.t("Tasks")
           font.family: tv.theme.uiFont
           font.pixelSize: 26
           font.weight: Font.DemiBold
@@ -132,7 +133,7 @@ Item {
           objectName: "taskCount"
           topPadding: 12
           textFormat: Text.PlainText
-          text: tv.list.length + " " + ({ open: "open", todo: "to do", doing: "in progress", done: "done", cancelled: "cancelled" })[tv.status] + (tv.overdue ? "  ·  " + tv.overdue + " overdue" : "")
+          text: tv.list.length + " " + ({ open: "open", todo: "to do", doing: "in progress", done: "done", cancelled: "cancelled" })[tv.status] + (tv.overdue ? "  ·  " + tv.overdue + Lang.t(" overdue") : "")
           font.family: tv.theme.uiFont
           font.pixelSize: 13
           color: tv.overdue ? tv.red() : tv.theme.muted
@@ -149,7 +150,7 @@ Item {
             required property var modelData
             objectName: "taskStatus_" + modelData.id
             theme: tv.theme
-            text: modelData.label + (tv.counts[modelData.id] !== undefined ? "  " + tv.counts[modelData.id] : "")
+            text: Lang.t(modelData.label) + (tv.counts[modelData.id] !== undefined ? "  " + tv.counts[modelData.id] : "")
             checked: tv.status === modelData.id
             onClicked: tv.status = modelData.id
           }
@@ -161,7 +162,7 @@ Item {
         width: parent.width
         spacing: 6
         visible: tv.everyTag.length > 0
-        Chip { objectName: "taskTag_"; theme: tv.theme; text: "All"; checked: tv.tag === ""; onClicked: tv.tag = "" }
+        Chip { objectName: "taskTag_"; theme: tv.theme; text: Lang.t("All"); checked: tv.tag === ""; onClicked: tv.tag = "" }
         Repeater {
           model: tv.everyTag
           delegate: Chip {
@@ -180,7 +181,7 @@ Item {
         width: parent.width
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: tv.status !== "open" ? "None " + (tv.status === "todo" ? "to do" : tv.status === "doing" ? "in progress" : tv.status) + (tv.tag ? " with #" + tv.tag : "") + "." : tv.tag ? "No open to-do with #" + tv.tag + "." : "No open to-dos. Every to-do on your pages that isn't ticked is here, with its date (@ a day in its line) and #prio-hoch, #prio-niedrig or #in-arbeit."
+        text: tv.status !== "open" ? Lang.t("None ") + (tv.status === "todo" ? "to do" : tv.status === "doing" ? Lang.t("in progress") : tv.status) + (tv.tag ? Lang.t(" with #") + tv.tag : "") + "." : tv.tag ? Lang.t("No open to-do with #") + tv.tag + "." : Lang.t("No open to-dos. Every to-do on your pages that isn't ticked is here, with its date (@ a day in its line) and #prio-hoch, #prio-niedrig or #in-arbeit.")
         font.family: tv.theme.uiFont
         font.pixelSize: 14
         color: tv.theme.muted
@@ -207,7 +208,7 @@ Item {
               x: 8
               anchors.verticalCenter: parent.verticalCenter
               textFormat: Text.PlainText
-              text: (group.isFolded ? "▸  " : "▾  ") + group.modelData.label + "  " + (group.modelData.id === "closed" ? tv.list.length : group.modelData.tasks.length)
+              text: (group.isFolded ? "▸  " : "▾  ") + Lang.t(group.modelData.label) + "  " + (group.modelData.id === "closed" ? tv.list.length : group.modelData.tasks.length)
               font.family: tv.theme.uiFont
               font.pixelSize: 12
               font.weight: Font.DemiBold
@@ -281,7 +282,7 @@ Item {
                 Text {
                   visible: row.modelData.done === true && (row.modelData.e || "") !== ""
                   textFormat: Text.PlainText
-                  text: (row.modelData.c ? "cancelled " : "done ") + Tasks.when(row.modelData.e || "", new Date(tv.nowMs)).replace(/ days late$/, " days ago")
+                  text: (row.modelData.c ? Lang.t("cancelled ") : Lang.t("done ")) + Tasks.when(row.modelData.e || "", new Date(tv.nowMs)).replace(/ days late$/, " days ago")
                   font.family: tv.theme.uiFont
                   font.pixelSize: 12
                   color: tv.theme.muted
@@ -298,7 +299,7 @@ Item {
                 Text {
                   visible: row.modelData.p !== 0 || row.modelData.s !== ""
                   textFormat: Text.PlainText
-                  text: (row.modelData.p > 0 ? "! important" : row.modelData.p < 0 ? "low" : "") + (row.modelData.p !== 0 && row.modelData.s ? "  ·  " : "") + (row.modelData.s ? "in progress" : "")
+                  text: (row.modelData.p > 0 ? Lang.t("! important") : row.modelData.p < 0 ? "low" : "") + (row.modelData.p !== 0 && row.modelData.s ? "  ·  " : "") + (row.modelData.s ? Lang.t("in progress") : "")
                   font.family: tv.theme.uiFont
                   font.pixelSize: 12
                   color: row.modelData.p > 0 ? tv.red() : tv.theme.muted
@@ -334,13 +335,13 @@ Item {
                 IconButton {
                   objectName: "taskOpenTab"
                   theme: tv.theme; icon: "\u{f075c}"; size: 26; iconSize: 14; tint: tv.theme.muted
-                  tip: "Its page in a new tab  Ctrl+click"
+                  tip: Lang.t("Its page in a new tab  Ctrl+click")
                   onClicked: tv.openTask(row.modelData, "tab")
                 }
                 IconButton {
                   objectName: "taskOpenBeside"
                   theme: tv.theme; icon: "\u{f0bcc}"; size: 26; iconSize: 14; tint: tv.theme.muted
-                  tip: tv.view && tv.view.paneName === "split" ? "Its page in the first pane  Ctrl+Shift+click" : "Its page beside, in the other pane  Ctrl+Shift+click"
+                  tip: tv.view && tv.view.paneName === "split" ? Lang.t("Its page in the first pane  Ctrl+Shift+click") : Lang.t("Its page beside, in the other pane  Ctrl+Shift+click")
                   onClicked: tv.openTask(row.modelData, "split")
                 }
               }
@@ -359,7 +360,7 @@ Item {
               x: 34
               anchors.verticalCenter: parent.verticalCenter
               textFormat: Text.PlainText
-              text: "Show " + Math.min(100, tv.list.length - tv.most) + " more"
+              text: Lang.t("Show ") + Math.min(100, tv.list.length - tv.most) + Lang.t(" more")
               font.family: tv.theme.uiFont
               font.pixelSize: 13
               color: tv.theme.accent

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "../Lang.js" as Lang  // [fork] German
 
 // A table's row or column menu (its handle, clicked): a row or a column in
 // before or after it, moved, or taken out, and whether the first row is a
@@ -51,7 +52,7 @@ Pop {
       leftPadding: 10
       topPadding: 4
       bottomPadding: 4
-      text: (menu.row ? "Row " : "Column ") + (menu.index + 1)
+      text: (menu.row ? Lang.t("Row ") : Lang.t("Column ")) + (menu.index + 1)
       font.family: menu.theme.uiFont
       font.pixelSize: 11
       font.weight: Font.DemiBold
@@ -59,25 +60,25 @@ Pop {
     }
     MenuRow {
       visible: menu.row
-      theme: menu.theme; icon: menu.theme.icons.rowAbove; text: "Insert row above"
+      theme: menu.theme; icon: menu.theme.icons.rowAbove; text: Lang.t("Insert row above")
       width: parent.width
       onClicked: menu.act("above")
     }
     MenuRow {
       visible: menu.row
-      theme: menu.theme; icon: menu.theme.icons.rowBelow; text: "Insert row below"
+      theme: menu.theme; icon: menu.theme.icons.rowBelow; text: Lang.t("Insert row below")
       width: parent.width
       onClicked: menu.act("below")
     }
     MenuRow {
       visible: !menu.row
-      theme: menu.theme; icon: menu.theme.icons.colLeft; text: "Insert column left"
+      theme: menu.theme; icon: menu.theme.icons.colLeft; text: Lang.t("Insert column left")
       width: parent.width
       onClicked: menu.act("left")
     }
     MenuRow {
       visible: !menu.row
-      theme: menu.theme; icon: menu.theme.icons.colRight; text: "Insert column right"
+      theme: menu.theme; icon: menu.theme.icons.colRight; text: Lang.t("Insert column right")
       width: parent.width
       onClicked: menu.act("right")
     }
@@ -85,33 +86,33 @@ Pop {
     MenuRow {
       visible: menu.row
       active: menu.index > 0
-      theme: menu.theme; icon: menu.theme.icons.arrowUp; text: "Move up"
+      theme: menu.theme; icon: menu.theme.icons.arrowUp; text: Lang.t("Move up")
       width: parent.width
       onClicked: if (active) menu.act("up")
     }
     MenuRow {
       visible: menu.row
       active: menu.index < menu.last
-      theme: menu.theme; icon: menu.theme.icons.arrowDown; text: "Move down"
+      theme: menu.theme; icon: menu.theme.icons.arrowDown; text: Lang.t("Move down")
       width: parent.width
       onClicked: if (active) menu.act("down")
     }
     MenuRow {
       visible: !menu.row
       active: menu.index > 0
-      theme: menu.theme; icon: menu.theme.icons.arrowLeft; text: "Move left"
+      theme: menu.theme; icon: menu.theme.icons.arrowLeft; text: Lang.t("Move left")
       width: parent.width
       onClicked: if (active) menu.act("moveLeft")
     }
     MenuRow {
       visible: !menu.row
       active: menu.index < menu.last
-      theme: menu.theme; icon: menu.theme.icons.arrowRight; text: "Move right"
+      theme: menu.theme; icon: menu.theme.icons.arrowRight; text: Lang.t("Move right")
       width: parent.width
       onClicked: if (active) menu.act("moveRight")
     }
     MenuRow {
-      theme: menu.theme; icon: menu.theme.icons.palette; text: "Color"; hint: "\u203a"
+      theme: menu.theme; icon: menu.theme.icons.palette; text: Lang.t("Color"); hint: "\u203a"
       width: parent.width
       onClicked: {
         var t = menu.target
@@ -123,7 +124,7 @@ Pop {
       }
     }
     MenuRow {
-      theme: menu.theme; icon: menu.theme.icons.header; text: "Header row"
+      theme: menu.theme; icon: menu.theme.icons.header; text: Lang.t("Header row")
       checked: menu.target ? menu.target.table.header : false
       width: parent.width
       onClicked: menu.act("header")
@@ -132,7 +133,7 @@ Pop {
     MenuRow {
       active: menu.last > 0
       theme: menu.theme; icon: menu.row ? menu.theme.icons.rowRemove : menu.theme.icons.colRemove
-      text: menu.row ? "Delete row" : "Delete column"; danger: true
+      text: menu.row ? Lang.t("Delete row") : Lang.t("Delete column"); danger: true
       width: parent.width
       onClicked: if (active) menu.act("delete")
     }

@@ -1,5 +1,6 @@
 import QtQuick
 import "../Equations.js" as Equations
+import "../Lang.js" as Lang  // [fork] German
 
 // An equation in a line of text, changed: its LaTeX, and its drawing as
 // it's written. Enter (or Done) keeps it, Esc leaves it as it was, Remove
@@ -49,7 +50,7 @@ Pop {
       height: 36
       fontSize: 14
       maximumLength: Equations.MAX_TEX
-      placeholder: "LaTeX, like x^2 or \\frac{a}{b}"
+      placeholder: Lang.t("LaTeX, like x^2 or \\frac{a}{b}")
       onEdited: later.restart()
       onAccepted: pop.done()
       onEscaped: pop.close()
@@ -77,7 +78,7 @@ Pop {
         // (Too big to draw, or a mistake: what's wrong is said below.)
         visible: pop.sized === null && pop.error === ""
         textFormat: Text.PlainText
-        text: pop.shown ? "Drawing\u2026" : "Nothing yet"
+        text: pop.shown ? Lang.t("Drawing\u2026") : Lang.t("Nothing yet")
         font.family: pop.theme.uiFont
         font.pixelSize: 12
         color: pop.theme.faint
@@ -100,13 +101,13 @@ Pop {
       TextButton {
         objectName: "mathRemove"
         theme: pop.theme
-        text: "Remove"
+        text: Lang.t("Remove")
         onClicked: { pop.close(); pop.removed() }
       }
       TextButton {
         objectName: "mathDone"
         theme: pop.theme
-        text: "Done"
+        text: Lang.t("Done")
         onClicked: pop.done()
       }
     }

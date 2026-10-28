@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
 import "../Audio.js" as Audio
+import "../Lang.js" as Lang  // [fork] German
 
 // The quick note: a sticky note that pops up wherever you are. Write, then
 // Ctrl+Enter (or Esc) keeps it as a page in the Quick notes notebook, or in
@@ -163,7 +164,7 @@ Item {
       y: 7
       width: parent.width - 120
       elide: Text.ElideRight
-      text: note.problem || "Quick note"
+      text: note.problem || Lang.t("Quick note")
       font.family: note.problem ? (note.theme ? note.theme.uiFont : "sans-serif") : note.theme ? note.theme.markerFont : "sans-serif"
       font.pixelSize: note.problem ? 12 : 15
       color: note.problem ? "#b3261e" : "#7a6a1e"
@@ -179,7 +180,7 @@ Item {
       theme: note.theme
       tint: "#7a6a1e"
       icon: note.theme ? note.theme.icons.close : ""
-      tip: "Throw it away"
+      tip: Lang.t("Throw it away")
       onClicked: note.throwAway()
     }
 
@@ -214,7 +215,7 @@ Item {
           visible: note.dictating
           anchors.verticalCenter: parent.verticalCenter
           textFormat: Text.PlainText
-          text: note.recorder && note.recorder.phase === "transcribing" ? "Writing it down\u2026" : Audio.clock(note.recorder ? note.recorder.elapsed : 0)
+          text: note.recorder && note.recorder.phase === "transcribing" ? Lang.t("Writing it down\u2026") : Audio.clock(note.recorder ? note.recorder.elapsed : 0)
           font.family: note.theme ? note.theme.uiFont : "sans-serif"
           font.pixelSize: 12
           font.weight: Font.DemiBold
@@ -237,7 +238,7 @@ Item {
       }
       ToolTip.visible: micHover.hovered
       ToolTip.delay: 500
-      ToolTip.text: note.dictating ? "Done (or let go, if you're holding it)" : "Dictate: click, speak, click again; or hold it while you speak  Ctrl+Shift+D"
+      ToolTip.text: note.dictating ? Lang.t("Done (or let go, if you're holding it)") : Lang.t("Dictate: click, speak, click again; or hold it while you speak  Ctrl+Shift+D")
     }
 
     Flickable {
@@ -281,7 +282,7 @@ Item {
         Text {
           textFormat: Text.PlainText
           visible: edit.text === "" && !edit.inputMethodComposing
-          text: note.dictating ? "Listening\u2026" : "What's on your mind?"
+          text: note.dictating ? Lang.t("Listening\u2026") : Lang.t("What's on your mind?")
           font: edit.font
           color: Qt.rgba(0.15, 0.14, 0.08, 0.35)
         }
@@ -299,7 +300,7 @@ Item {
       Text {
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: "Ctrl+Enter keeps it in"
+        text: Lang.t("Ctrl+Enter keeps it in")
         font.family: note.theme ? note.theme.uiFont : "sans-serif"
         font.pixelSize: 11
         color: "#8a7a2e"
@@ -327,7 +328,7 @@ Item {
           Text {
             anchors.verticalCenter: parent.verticalCenter
             textFormat: Text.PlainText
-            text: note.toPages ? "your Pages Inbox" : "Quick notes"
+            text: note.toPages ? Lang.t("your Pages Inbox") : Lang.t("Quick notes")
             font.family: note.theme ? note.theme.uiFont : "sans-serif"
             font.pixelSize: 11
             font.weight: Font.DemiBold
@@ -351,7 +352,7 @@ Item {
         }
         ToolTip.visible: whereHover.hovered
         ToolTip.delay: 500
-        ToolTip.text: note.toPages ? "Keep quick notes in the Quick notes notebook instead" : "Keep quick notes in your Pages Inbox instead (Markdown works there)"
+        ToolTip.text: note.toPages ? Lang.t("Keep quick notes in the Quick notes notebook instead") : Lang.t("Keep quick notes in your Pages Inbox instead (Markdown works there)")
       }
     }
     Text {
@@ -360,7 +361,7 @@ Item {
       anchors.rightMargin: 18
       anchors.verticalCenter: foot.verticalCenter
       textFormat: Text.PlainText
-      text: "Markdown works"
+      text: Lang.t("Markdown works")
       font.family: note.theme ? note.theme.uiFont : "sans-serif"
       font.pixelSize: 11
       color: "#a2924a"

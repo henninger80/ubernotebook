@@ -3,6 +3,7 @@ import "Backups.js" as Backups
 import "Profiles.js" as Profiles
 import "Settings.js" as Settings
 import "Dates.js" as Dates
+import "Lang.js" as Lang  // [fork] German
 
 // Backups (Backups.js): a profile's notes, or every profile's, kept in one
 // .tar.gz in the backup folder; the ones there, listed; one put back, each
@@ -85,7 +86,7 @@ Item {
     warned = w
     var text = "Automatic backups stopped: " + folderShown + " can't keep them private (another account on this computer could read them there). Pick another folder (Settings, Backups)"
     if (typeof files.failed === "function") files.failed(text)
-    if (typeof files.notify === "function") files.notify("Backups stopped", text, "", "")
+    if (typeof files.notify === "function") files.notify(Lang.t("Backups stopped"), text, "", "")
   }
 
   // A backup: done({ ok, path, size, profiles, error }).

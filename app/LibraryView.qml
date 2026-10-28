@@ -4,6 +4,7 @@ import "../Workspace.js" as Workspace
 import "../Collection.js" as Collection
 import "../Dates.js" as Dates
 import "../Contacts.js" as Contacts
+import "../Lang.js" as Lang  // [fork] German
 
 // The Library (the sidebar's Library): everything put on the pages, newest
 // first: links (bookmark cards, and links written in text), files, videos,
@@ -50,7 +51,7 @@ Item {
     if (!workspace || !r.url) return
     var what = r.kind === "email" ? r.url.replace(/^mailto:/, "") : r.url
     workspace.files.copyText(what)
-    if (view) view.toast(r.kind === "email" ? "Copied " + what : "Copied the link")
+    if (view) view.toast(r.kind === "email" ? Lang.t("Copied ") + what : Lang.t("Copied the link"))
   }
   // A person's name and what's under it as People has them now.
   function personOf(r) { var x = workspace ? workspace.contactsRevision : 0; return r.kind === "person" && workspace ? workspace.contactById(r.person) : null }
@@ -86,7 +87,7 @@ Item {
         spacing: 4
         Text {
           textFormat: Text.PlainText
-          text: "Library"
+          text: Lang.t("Library")
           font.family: lv.theme.uiFont
           font.pixelSize: 28
           font.weight: Font.DemiBold
@@ -96,7 +97,7 @@ Item {
           width: parent.width
           wrapMode: Text.Wrap
           textFormat: Text.PlainText
-          text: lv.all.length === 0 ? "Everything you put on your pages, in one place."
+          text: lv.all.length === 0 ? Lang.t("Everything you put on your pages, in one place.")
             : "Everything you put on your pages: " + lv.all.length + (lv.all.length === 1 ? " thing" : " things") + " on " + lv.pageCount + (lv.pageCount === 1 ? " page" : " pages") + "."
           font.family: lv.theme.uiFont
           font.pixelSize: 13
@@ -110,7 +111,7 @@ Item {
         theme: lv.theme
         width: parent.width
         icon: lv.theme.icons.search
-        placeholder: "Find by name, link or page"
+        placeholder: Lang.t("Find by name, link or page")
         visible: lv.all.length > 0
         onEdited: function(text) { lv.query = text }
         onEscaped: { text = ""; lv.query = "" }
@@ -124,7 +125,7 @@ Item {
         Chip {
           objectName: "libraryAll"
           theme: lv.theme
-          text: "All  " + lv.counts.all
+          text: Lang.t("All  ") + lv.counts.all
           checked: lv.kind === ""
           onClicked: lv.kind = ""
         }
@@ -136,7 +137,7 @@ Item {
             readonly property string kindId: modelData.id
             theme: lv.theme
             icon: lv.theme.icons[modelData.icon] || ""
-            text: modelData.label + "  " + lv.counts[modelData.id]
+            text: Lang.t(modelData.label) + "  " + lv.counts[modelData.id]
             checked: lv.kind === modelData.id
             onClicked: lv.kind = lv.kind === modelData.id ? "" : modelData.id
           }
@@ -242,7 +243,7 @@ Item {
                 elide: Text.ElideRight
                 textFormat: Text.PlainText
                 readonly property string what: { var p = lv.personOf(row.modelData); return p && Contacts.subtitle(p) ? Contacts.subtitle(p) : Collection.detail(row.modelData) }
-                text: (what ? what + "  \u00b7  " : "") + "on " + (row.modelData.pageIcon ? row.modelData.pageIcon + " " : "") + (row.modelData.pageTitle || "Untitled")
+                text: (what ? what + "  \u00b7  " : "") + Lang.t("on ") + (row.modelData.pageIcon ? row.modelData.pageIcon + " " : "") + (row.modelData.pageTitle || Lang.t("Untitled"))
                 font.family: lv.theme.uiFont
                 font.pixelSize: 12
                 color: lv.theme.muted
@@ -270,14 +271,14 @@ Item {
                 objectName: "libraryCopy"
                 visible: row.hovered && (row.modelData.kind === "link" || (row.modelData.kind === "email" && row.modelData.url !== ""))
                 theme: lv.theme; icon: lv.theme.icons.copy; size: 30; iconSize: 15
-                tip: row.modelData.kind === "email" ? "Copy the email" : "Copy the link"
+                tip: row.modelData.kind === "email" ? Lang.t("Copy the email") : Lang.t("Copy the link")
                 onClicked: lv.copyLink(row.modelData)
               }
               IconButton {
                 objectName: "libraryOpen"
                 visible: row.hovered && lv.canOpen(row.modelData)
                 theme: lv.theme; icon: row.modelData.kind === "person" ? lv.theme.icons.contacts : row.modelData.kind === "email" ? lv.theme.icons.mail : lv.theme.icons.openExternal; size: 30; iconSize: 15
-                tip: row.modelData.kind === "link" ? "Open the link" : row.modelData.kind === "email" ? (row.modelData.src ? "Open it in your mail app" : "Email them") : row.modelData.kind === "person" ? "Open in People" : "Open it in its app"
+                tip: row.modelData.kind === "link" ? Lang.t("Open the link") : row.modelData.kind === "email" ? (row.modelData.src ? Lang.t("Open it in your mail app") : Lang.t("Email them")) : row.modelData.kind === "person" ? Lang.t("Open in People") : Lang.t("Open it in its app")
                 onClicked: lv.openOutside(row.modelData)
               }
             }
@@ -292,7 +293,7 @@ Item {
             }
             ToolTip.visible: rowHover.hovered && !tools.contains(tools.mapFromItem(row, rowHover.point.position.x, rowHover.point.position.y))
             ToolTip.delay: 900
-            ToolTip.text: row.modelData.url ? row.modelData.url : "Go to it on its page"
+            ToolTip.text: row.modelData.url ? row.modelData.url : Lang.t("Go to it on its page")
           }
         }
       }
@@ -301,7 +302,7 @@ Item {
         objectName: "libraryMore"
         visible: lv.shown.length > lv.limit
         theme: lv.theme
-        text: "Show more (" + (lv.shown.length - lv.limit) + ")"
+        text: Lang.t("Show more (") + (lv.shown.length - lv.limit) + ")"
         onClicked: lv.limit += 150
       }
     }

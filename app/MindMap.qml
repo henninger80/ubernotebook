@@ -3,6 +3,7 @@ import QtQuick.Shapes
 import "../Mindmap.js" as Mindmap
 import "../Docs.js" as Docs
 import "../Colors.js" as Colors
+import "../Lang.js" as Lang  // [fork] German
 
 // A mind map on a page in Pages: the topic in the middle, its ideas branching
 // out to both sides (or all to the right, when that fits better), each branch
@@ -493,7 +494,7 @@ Item {
         visible: input.length === 0
         anchors.horizontalCenter: parent.horizontalCenter
         textFormat: Text.PlainText
-        text: input.depth === 0 ? "Topic" : "Idea"
+        text: input.depth === 0 ? Lang.t("Topic") : Lang.t("Idea")
         font: input.font
         color: Qt.alpha(input.color, 0.4)
       }

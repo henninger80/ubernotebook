@@ -4,6 +4,7 @@ import "../Email.js" as Email
 import "../Files.js" as Files
 import "../Dates.js" as Dates
 import "../Collection.js" as Collection
+import "../Lang.js" as Lang  // [fork] German
 
 // An email on a page in Pages (/email, or an .eml dropped on it): its
 // subject, who it's from and to, when, its first lines and its attachments;
@@ -81,7 +82,7 @@ DataCard {
       Text {
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: eb.readOnly ? "An email, not added yet" : "Choose an email (.eml), or drop one on the page"
+        text: eb.readOnly ? Lang.t("An email, not added yet") : Lang.t("Choose an email (.eml), or drop one on the page")
         font.family: eb.editor ? eb.editor.uiFamily : ""
         font.pixelSize: 14
         color: eb.faint
@@ -118,7 +119,7 @@ DataCard {
           width: parent.width - x - dateText.width - (tools.visible ? tools.width + 4 : 0) - 12
           elide: Text.ElideRight
           textFormat: Text.PlainText
-          text: eb.info.subject || "(no subject)"
+          text: eb.info.subject || Lang.t("(no subject)")
           font.family: eb.editor ? eb.editor.uiFamily : ""
           font.pixelSize: 15
           font.weight: Font.DemiBold
@@ -144,14 +145,14 @@ DataCard {
           IconButton {
             objectName: "emailOpen"
             theme: eb.theme; icon: eb.theme ? eb.theme.icons.openExternal : ""; size: 26; iconSize: 13; tint: eb.words
-            tip: "Open it in your mail app"
+            tip: Lang.t("Open it in your mail app")
             onClicked: eb.act("open", null)
           }
           IconButton {
             id: paint
             objectName: "emailColors"
             theme: eb.theme; icon: eb.theme ? eb.theme.icons.palette : ""; size: 26; iconSize: 13; tint: eb.words
-            tip: "Its colors"
+            tip: Lang.t("Its colors")
             onClicked: eb.askColors(paint)
           }
         }
@@ -227,7 +228,7 @@ DataCard {
           width: parent.width
           wrapMode: Text.Wrap
           textFormat: Text.RichText
-          text: eb.reading && eb.body === "" ? "<i>Reading\u2026</i>" : eb.shownBody
+          text: eb.reading && eb.body === "" ? Lang.t("<i>Reading\u2026</i>") : eb.shownBody
           font.family: eb.editor ? eb.editor.family : ""
           font.pixelSize: 14
           lineHeight: 1.25
@@ -293,7 +294,7 @@ DataCard {
             TapHandler { onTapped: eb.act("attachment", chip.index) }
             ToolTip.visible: chipHover.hovered
             ToolTip.delay: 600
-            ToolTip.text: "Open it"
+            ToolTip.text: Lang.t("Open it")
           }
         }
       }
@@ -304,7 +305,7 @@ DataCard {
         x: 26
         topPadding: 10
         textFormat: Text.PlainText
-        text: eb.expanded ? "Hide email" : "Show email"
+        text: eb.expanded ? Lang.t("Hide email") : Lang.t("Show email")
         font.family: eb.editor ? eb.editor.uiFamily : ""
         font.pixelSize: 13
         font.weight: Font.Medium

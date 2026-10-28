@@ -18,6 +18,7 @@ import "../Highlight.js" as Highlight
 import "../Import.js" as Import
 import "../Equations.js" as Equations
 import "../Notes.js" as Notes
+import "../Lang.js" as Lang  // [fork] German
 
 // A page's writing: its blocks, one after another, and everything you can do
 // to them. Each text block is its own rich-text editor (Block.qml in a
@@ -2488,7 +2489,7 @@ FocusScope {
       var id = entry.kind === "create" ? makePage(entry.title) : entry.id
       if (!id) return
       href = "uber-notebook://page/" + id
-      text = pageLinkText(pageInfo(id) || { title: entry.title || entry.label, icon: entry.icon || "" })
+      text = pageLinkText(pageInfo(id) || { title: entry.title || Lang.t(entry.label), icon: entry.icon || "" })
     }
     closeBurst()
     beginOp()

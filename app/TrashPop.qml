@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Workspace.js" as Workspace
+import "../Lang.js" as Lang  // [fork] German
 
 // Pages in the trash (with the pages inside them): put one back where it
 // was, or throw it out of Pages for good (its file goes to .trash in your
@@ -27,7 +28,7 @@ Pop {
     Text {
       textFormat: Text.PlainText
       leftPadding: 6
-      text: "Trash"
+      text: Lang.t("Trash")
       font.family: pop.theme.uiFont
       font.pixelSize: 13
       font.weight: Font.DemiBold
@@ -64,14 +65,14 @@ Pop {
             textFormat: Text.PlainText
             width: parent.width
             elide: Text.ElideRight
-            text: parent.parent.e.title || "Untitled"
+            text: parent.parent.e.title || Lang.t("Untitled")
             font.family: pop.theme.uiFont
             font.pixelSize: 13
             color: pop.theme.text
           }
           Text {
             textFormat: Text.PlainText
-            text: "Thrown away " + Qt.formatDate(new Date(parent.parent.e.modified), "d MMM yyyy")
+            text: Lang.t("Thrown away ") + Qt.formatDate(new Date(parent.parent.e.modified), "d MMM yyyy")
             font.family: pop.theme.uiFont
             font.pixelSize: 11
             color: pop.theme.muted
@@ -81,8 +82,8 @@ Pop {
           anchors.right: parent.right
           anchors.rightMargin: 4
           anchors.verticalCenter: parent.verticalCenter
-          IconButton { theme: pop.theme; icon: pop.theme.icons.restore; size: 28; iconSize: 15; tip: "Put it back"; onClicked: pop.restoreRequested(modelData) }
-          IconButton { theme: pop.theme; icon: pop.theme.icons.deleteForever; size: 28; iconSize: 15; tint: pop.theme.urgent; tip: "Delete it from Pages"; onClicked: pop.deleteRequested(modelData) }
+          IconButton { theme: pop.theme; icon: pop.theme.icons.restore; size: 28; iconSize: 15; tip: Lang.t("Put it back"); onClicked: pop.restoreRequested(modelData) }
+          IconButton { theme: pop.theme; icon: pop.theme.icons.deleteForever; size: 28; iconSize: 15; tint: pop.theme.urgent; tip: Lang.t("Delete it from Pages"); onClicked: pop.deleteRequested(modelData) }
         }
         HoverHandler { id: rowHover }
       }
@@ -91,7 +92,7 @@ Pop {
         visible: list.count === 0
         x: 8
         y: 8
-        text: "Nothing in the trash."
+        text: Lang.t("Nothing in the trash.")
         font.family: pop.theme.uiFont
         font.pixelSize: 12
         color: pop.theme.muted

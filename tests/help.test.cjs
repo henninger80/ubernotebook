@@ -106,8 +106,10 @@ check("the skill and reminder details, where Settings and the panel name them", 
   const where = { "Enable Uber Notebook skill": "Settings → AI → ", "Show reminder details in notifications": "Settings → Notifications → " };
   for (const label of Object.keys(where)) {
     assert.ok(rows.some((x) => x.s === "settings" && x.r[0].indexOf(where[label] + label) === 0), label);
-    assert.ok(read("app/SettingsPanel.qml").indexOf('label: "' + label + '"') >= 0, "Settings: " + label);
-    assert.ok(read("app/SetupPanel.qml").indexOf('label: "' + label + '"') >= 0, "the panel: " + label);
+    // [fork] or as label: Lang.t("…") (Lang.js)
+    const named = (f) => read(f).indexOf('label: "' + label + '"') >= 0 || read(f).indexOf('label: Lang.t("' + label + '")') >= 0;
+    assert.ok(named("app/SettingsPanel.qml"), "Settings: " + label);
+    assert.ok(named("app/SetupPanel.qml"), "the panel: " + label);
   }
   assert.ok(/set agentSkill true\|false/.test(all) && /set reminderWords true\|false/.test(all));
   assert.ok(!/Show what reminders say|Settings → Writing → Times → Show|Settings → Privacy/.test(all), "not where it was");

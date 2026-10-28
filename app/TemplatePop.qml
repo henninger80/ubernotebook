@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Templates.js" as Templates
+import "../Lang.js" as Lang  // [fork] German
 
 // A new page from a template: planners for the day, the week and the month,
 // a habit tracker and a journal, and pages for lists, meetings, lectures,
@@ -98,7 +99,7 @@ Pop {
       y: pop.cardH + 8
       width: pop.cardW
       horizontalAlignment: Text.AlignHCenter
-      text: card.t.label
+      text: Lang.t(card.t.label)
       elide: Text.ElideRight
       font.family: pop.theme.uiFont
       font.pixelSize: 12
@@ -136,7 +137,7 @@ Pop {
         Text {
           id: heading
           textFormat: Text.PlainText
-          text: "New page"
+          text: Lang.t("New page")
           font.family: pop.theme.uiFont
           font.pixelSize: 15
           font.weight: Font.DemiBold
@@ -146,20 +147,20 @@ Pop {
           textFormat: Text.PlainText
           anchors.baseline: heading.baseline
           leftPadding: 8
-          text: pop.fills ? "on this blank page" : pop.view ? "after page " + (pop.view.pageIndex + 1) : ""
+          text: pop.fills ? Lang.t("on this blank page") : pop.view ? Lang.t("after page ") + (pop.view.pageIndex + 1) : ""
           font.family: pop.theme.uiFont
           font.pixelSize: 12
           color: pop.theme.muted
         }
       }
 
-      Heading { text: "Planners" }
+      Heading { text: Lang.t("Planners") }
       Row {
         spacing: pop.gap
         Repeater { model: pop.planners; delegate: Card {} }
       }
 
-      Heading { text: "Pages" }
+      Heading { text: Lang.t("Pages") }
       Grid {
         columns: 5
         spacing: pop.gap

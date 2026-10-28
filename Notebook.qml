@@ -3,6 +3,7 @@ import QtQuick.Dialogs
 import Quickshell
 import qs.Commons
 import "app"
+import "Lang.js" as Lang  // [fork] German
 
 // The notebook window, and the quick-note card. The Omarchy shell summons
 // this (`omarchy-shell shell toggle marcho78.uber-notebook`, the shortcut, the bar
@@ -187,7 +188,7 @@ Item {
     // and its folder watching can bring the whole shell down.
     FileDialog {
       id: importFiles
-      title: "Import notes"
+      title: Lang.t("Import notes")
       options: FileDialog.DontUseNativeDialog
       fileMode: FileDialog.OpenFiles
       nameFilters: ["Notes (*.md *.markdown *.txt *.html *.htm *.enex *.zip *.docx *.doc *.odt *.rtf *.epub *.org *.rst)", "All files (*)"]
@@ -198,7 +199,7 @@ Item {
 
     FolderDialog {
       id: importFolder
-      title: "Import a folder of notes"
+      title: Lang.t("Import a folder of notes")
       options: FolderDialog.DontUseNativeDialog
       currentFolder: "file://" + Quickshell.env("HOME") + "/Documents"
       onAccepted: root.importPicked([decodeURIComponent(String(selectedFolder).replace(/^file:\/\//, ""))])
@@ -215,7 +216,7 @@ Item {
 
     FolderDialog {
       id: exportPicker
-      title: "Export to"
+      title: Lang.t("Export to")
       options: FolderDialog.DontUseNativeDialog
       currentFolder: "file://" + Quickshell.env("HOME") + "/Documents"
       onAccepted: root.exportPicked(decodeURIComponent(String(selectedFolder).replace(/^file:\/\//, "")))
@@ -225,7 +226,7 @@ Item {
     // (Saving over a file that's there asks first: Qt's dialog does.)
     FileDialog {
       id: savePicker
-      title: "Save a copy"
+      title: Lang.t("Save a copy")
       options: FileDialog.DontUseNativeDialog
       fileMode: FileDialog.SaveFile
       currentFolder: "file://" + Quickshell.env("HOME") + "/Pictures"
@@ -251,7 +252,7 @@ Item {
 
     FileDialog {
       id: picturesPicker
-      title: "Choose pictures"
+      title: Lang.t("Choose pictures")
       options: FileDialog.DontUseNativeDialog
       fileMode: FileDialog.OpenFiles
       nameFilters: ["Pictures (*.png *.jpg *.jpeg *.gif *.webp *.bmp *.svg)"]
@@ -262,7 +263,7 @@ Item {
 
     FileDialog {
       id: picker
-      title: "Choose a picture"
+      title: Lang.t("Choose a picture")
       options: FileDialog.DontUseNativeDialog
       nameFilters: ["Pictures (*.png *.jpg *.jpeg *.gif *.webp *.bmp *.svg)"]
       currentFolder: "file://" + Quickshell.env("HOME") + "/Pictures"
@@ -320,7 +321,7 @@ Item {
 
   FloatingWindow {
     id: quickWindow
-    title: "Uber Notebook Quick Note"
+    title: Lang.t("Uber Notebook Quick Note")
     visible: false
     color: "transparent"
     implicitWidth: 520

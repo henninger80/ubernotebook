@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
+import "../Lang.js" as Lang  // [fork] German
 
 // Asks before doing something that's hard to take back.
 Popup {
@@ -47,7 +48,7 @@ Popup {
     Row {
       anchors.right: parent.right
       spacing: 8
-      IconButton { theme: dialog.theme; label: "Cancel"; onClicked: dialog.close() }
+      IconButton { theme: dialog.theme; label: Lang.t("Cancel"); onClicked: dialog.close() }
       Rectangle {
         width: actionLabel.implicitWidth + 32
         height: 34

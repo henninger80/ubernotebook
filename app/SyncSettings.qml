@@ -1,4 +1,5 @@
 import QtQuick
+import "../Lang.js" as Lang  // [fork] German
 
 // Settings → Accounts & sync (fork): Office 365 and Google signed in to,
 // their calendars (synced or not, the default one for events made here,
@@ -65,7 +66,7 @@ Column {
       leftPadding: 2
       wrapMode: Text.Wrap
       textFormat: Text.PlainText
-      text: grp.note
+      text: Lang.t(grp.note)
       font.family: page.theme.uiFont
       font.pixelSize: 12
       lineHeight: 1.15
@@ -100,8 +101,8 @@ Column {
       anchors.rightMargin: 16
       anchors.verticalCenter: parent.verticalCenter
       spacing: 3
-      Text { textFormat: Text.PlainText; width: parent.width; text: line.label; wrapMode: Text.WordWrap; font.family: page.theme.uiFont; font.pixelSize: line.labelSize; color: page.theme.text }
-      Text { textFormat: Text.PlainText; visible: line.note !== ""; width: parent.width; text: line.note; wrapMode: Text.WordWrap; font.family: page.theme.uiFont; font.pixelSize: 12; lineHeight: 1.1; color: line.noteColor }
+      Text { textFormat: Text.PlainText; width: parent.width; text: Lang.t(line.label); wrapMode: Text.WordWrap; font.family: page.theme.uiFont; font.pixelSize: line.labelSize; color: page.theme.text }
+      Text { textFormat: Text.PlainText; visible: line.note !== ""; width: parent.width; text: Lang.t(line.note); wrapMode: Text.WordWrap; font.family: page.theme.uiFont; font.pixelSize: 12; lineHeight: 1.1; color: line.noteColor }
     }
     Item {
       id: slot
@@ -117,19 +118,19 @@ Column {
 
   Group {
     objectName: "syncAccounts"
-    title: "Accounts"
-    note: "Sign-ins are kept in ~/.local/state/uber-notebook-sync, readable by you alone. Google needs a client of your own: in Google Cloud Console, a project with the Calendar and Tasks APIs on, an OAuth client of the kind Desktop app, and the consent screen set to In production (in Testing, Google's sign-ins run out after 7 days)."
+    title: Lang.t("Accounts")
+    note: Lang.t("Sign-ins are kept in ~/.local/state/uber-notebook-sync, readable by you alone. Google needs a client of your own: in Google Cloud Console, a project with the Calendar and Tasks APIs on, an OAuth client of the kind Desktop app, and the consent screen set to In production (in Testing, Google's sign-ins run out after 7 days).")
 
     // Office 365.
     Line {
       visible: !(page.ms && page.ms.code)
       label: "Office 365"
-      note: page.ms && page.ms.problem ? page.ms.problem : page.sync && page.sync.signedInMs ? "Signed in" : "Not signed in"
+      note: page.ms && page.ms.problem ? page.ms.problem : page.sync && page.sync.signedInMs ? Lang.t("Signed in") : Lang.t("Not signed in")
       noteColor: page.ms && page.ms.problem ? page.theme.urgent : page.theme.muted
       TextButton {
         theme: page.theme
         primary: !(page.sync && page.sync.signedInMs)
-        text: page.sync && page.sync.signedInMs ? "Sign out" : "Sign in"
+        text: page.sync && page.sync.signedInMs ? Lang.t("Sign out") : Lang.t("Sign in")
         onClicked: if (page.sync) { if (page.sync.signedInMs) page.sync.signOut("o365"); else page.sync.signInMs() }
       }
     }
@@ -137,12 +138,12 @@ Column {
       visible: !!(page.ms && page.ms.code)
       label: page.ms && page.ms.code ? page.ms.code : ""
       labelSize: 22
-      note: page.ms && page.ms.uri ? "Office 365: type this code at " + page.ms.uri.replace(/^https:\/\//, "") + " and sign in. This waits till you have." : ""
+      note: page.ms && page.ms.uri ? Lang.t("Office 365: type this code at ") + page.ms.uri.replace(/^https:\/\//, "") + " and sign in. This waits till you have." : ""
       Row {
         spacing: 8
-        TextButton { theme: page.theme; icon: page.theme.icons.copy || ""; text: "Copy"; onClicked: if (page.sync.files) page.sync.files.exec(["/usr/bin/wl-copy", "--", page.ms.code], null, { keepChildren: true }) }
-        TextButton { theme: page.theme; icon: page.theme.icons.openExternal || ""; text: "Open page"; onClicked: page.sync.files.openUrl(page.ms.uri) }
-        TextButton { theme: page.theme; text: "Cancel"; onClicked: page.sync.cancelSignIn("o365") }
+        TextButton { theme: page.theme; icon: page.theme.icons.copy || ""; text: Lang.t("Copy"); onClicked: if (page.sync.files) page.sync.files.exec(["/usr/bin/wl-copy", "--", page.ms.code], null, { keepChildren: true }) }
+        TextButton { theme: page.theme; icon: page.theme.icons.openExternal || ""; text: Lang.t("Open page"); onClicked: page.sync.files.openUrl(page.ms.uri) }
+        TextButton { theme: page.theme; text: Lang.t("Cancel"); onClicked: page.sync.cancelSignIn("o365") }
       }
     }
 
@@ -150,17 +151,17 @@ Column {
     Line {
       visible: !!page.sync && page.sync.googleClient && !page.editingClient
       label: "Google"
-      note: page.gg && page.gg.problem ? page.gg.problem : page.gg && page.gg.waiting ? "Sign in on Google's page in your browser…" : page.sync && page.sync.signedInGoogle ? "Signed in" : "Not signed in"
+      note: page.gg && page.gg.problem ? page.gg.problem : page.gg && page.gg.waiting ? Lang.t("Sign in on Google's page in your browser…") : page.sync && page.sync.signedInGoogle ? Lang.t("Signed in") : Lang.t("Not signed in")
       noteColor: page.gg && page.gg.problem ? page.theme.urgent : page.theme.muted
       Row {
         spacing: 8
-        TextButton { visible: !(page.sync && page.sync.signedInGoogle); theme: page.theme; text: "Client"; onClicked: { clientId.text = page.sync.config.google.clientId; clientSecret.text = page.sync.config.google.clientSecret; page.editingClient = true } }
-        TextButton { visible: !!(page.gg && page.gg.waiting); theme: page.theme; text: "Cancel"; onClicked: page.sync.cancelSignIn("google") }
+        TextButton { visible: !(page.sync && page.sync.signedInGoogle); theme: page.theme; text: Lang.t("Client"); onClicked: { clientId.text = page.sync.config.google.clientId; clientSecret.text = page.sync.config.google.clientSecret; page.editingClient = true } }
+        TextButton { visible: !!(page.gg && page.gg.waiting); theme: page.theme; text: Lang.t("Cancel"); onClicked: page.sync.cancelSignIn("google") }
         TextButton {
           visible: !(page.gg && page.gg.waiting)
           theme: page.theme
           primary: !(page.sync && page.sync.signedInGoogle)
-          text: page.sync && page.sync.signedInGoogle ? "Sign out" : "Sign in"
+          text: page.sync && page.sync.signedInGoogle ? Lang.t("Sign out") : Lang.t("Sign in")
           onClicked: if (page.sync.signedInGoogle) page.sync.signOut("google"); else page.sync.signInGoogle()
         }
       }
@@ -177,18 +178,18 @@ Column {
         width: parent.width - 32
         spacing: 8
         Text { textFormat: Text.PlainText; text: "Google"; font.family: page.theme.uiFont; font.pixelSize: 14; color: page.theme.text }
-        Text { textFormat: Text.PlainText; width: parent.width; wrapMode: Text.Wrap; text: "Your OAuth client from Google Cloud Console (Desktop app): its client ID and its secret."; font.family: page.theme.uiFont; font.pixelSize: 12; color: page.theme.muted }
-        Field { id: clientId; width: parent.width; theme: page.theme; placeholder: "Client ID (….apps.googleusercontent.com)"; maximumLength: 300 }
-        Field { id: clientSecret; width: parent.width; theme: page.theme; placeholder: "Client secret"; maximumLength: 300; input.echoMode: TextInput.Password }
+        Text { textFormat: Text.PlainText; width: parent.width; wrapMode: Text.Wrap; text: Lang.t("Your OAuth client from Google Cloud Console (Desktop app): its client ID and its secret."); font.family: page.theme.uiFont; font.pixelSize: 12; color: page.theme.muted }
+        Field { id: clientId; width: parent.width; theme: page.theme; placeholder: Lang.t("Client ID (….apps.googleusercontent.com)"); maximumLength: 300 }
+        Field { id: clientSecret; width: parent.width; theme: page.theme; placeholder: Lang.t("Client secret"); maximumLength: 300; input.echoMode: TextInput.Password }
         Row {
           spacing: 8
           TextButton {
             theme: page.theme
             primary: true
-            text: "Save"
+            text: Lang.t("Save")
             onClicked: { page.sync.setGoogleClient(clientId.text, clientSecret.text); page.editingClient = false }
           }
-          TextButton { visible: page.editingClient; theme: page.theme; text: "Cancel"; onClicked: page.editingClient = false }
+          TextButton { visible: page.editingClient; theme: page.theme; text: Lang.t("Cancel"); onClicked: page.editingClient = false }
         }
       }
     }
@@ -199,15 +200,15 @@ Column {
   Group {
     objectName: "syncCalendars"
     visible: !!page.sync && page.sync.calendars.length > 0
-    title: "Calendars"
-    note: "The calendars synced with yours. An event made here goes to the default one, unless you give it another (in the event, or \u201cHere only\u201d). Turned off, a calendar's events leave yours; they come back when it's on again."
+    title: Lang.t("Calendars")
+    note: Lang.t("The calendars synced with yours. An event made here goes to the default one, unless you give it another (in the event, or \u201cHere only\u201d). Turned off, a calendar's events leave yours; they come back when it's on again.")
     Repeater {
       model: page.sync ? page.sync.calendars : []
       Line {
         required property var modelData
         dot: modelData.color ? modelData.color : "transparent"
         label: modelData.name
-        note: (modelData.provider === "o365" ? "Office 365" : "Google") + (modelData.writable ? "" : " · read only") + (modelData.isDefault ? " · default" : "")
+        note: (modelData.provider === "o365" ? "Office 365" : "Google") + (modelData.writable ? "" : Lang.t(" · read only")) + (modelData.isDefault ? Lang.t(" · default") : "")
         Row {
           spacing: 10
           TextButton {
@@ -215,7 +216,7 @@ Column {
             anchors.verticalCenter: parent.verticalCenter
             theme: page.theme
             primary: modelData.isDefault
-            text: "Default"
+            text: Lang.t("Default")
             onClicked: page.sync.setDefault(modelData.isDefault ? "" : modelData.key)
           }
           Toggle { anchors.verticalCenter: parent.verticalCenter; theme: page.theme; checked: modelData.on; onToggled: function(on) { page.sync.setCalendarOn(modelData.key, on) } }
@@ -228,20 +229,20 @@ Column {
 
   Group {
     objectName: "syncSync"
-    title: "Sync"
-    note: "Both ways: an event added, changed or deleted on one side is on the other at the next sync; changed on both, the later change wins. Synced are the title, the time, all-day, the place and repeats that come from there (those the calendar can't repeat, as single events). Events from one calendar never go to another. Only the profile first synced is synced."
+    title: Lang.t("Sync")
+    note: Lang.t("Both ways: an event added, changed or deleted on one side is on the other at the next sync; changed on both, the later change wins. Synced are the title, the time, all-day, the place and repeats that come from there (those the calendar can't repeat, as single events). Events from one calendar never go to another. Only the profile first synced is synced.")
     Line {
-      label: "Sync calendars"
-      note: page.sync && !page.sync.signedInMs && !page.sync.signedInGoogle ? "Sign in first" : ""
+      label: Lang.t("Sync calendars")
+      note: page.sync && !page.sync.signedInMs && !page.sync.signedInGoogle ? Lang.t("Sign in first") : ""
       Toggle { theme: page.theme; checked: !!(page.sync && page.sync.syncOn); onToggled: function(on) { page.sync.setConfig({ enabled: on }) } }
     }
     Line {
-      label: "Google ⇄ Office 365, unseen"
-      note: "Keeps Google's main calendar and Office 365's the same behind the scenes (new, changed and deleted single events, both ways). Google's calendar isn't shown here; only Office 365's is. Repeating events stay where they are."
+      label: Lang.t("Google ⇄ Office 365, unseen")
+      note: Lang.t("Keeps Google's main calendar and Office 365's the same behind the scenes (new, changed and deleted single events, both ways). Google's calendar isn't shown here; only Office 365's is. Repeating events stay where they are.")
       Toggle { theme: page.theme; checked: !!(page.sync && page.sync.bridgeOn); onToggled: function(on) { page.sync.setBridge(on) } }
     }
     Line {
-      label: "Every"
+      label: Lang.t("Every")
       Row {
         spacing: 6
         Repeater {
@@ -250,20 +251,20 @@ Column {
             required property int modelData
             theme: page.theme
             primary: !!(page.sync && page.sync.interval === modelData)
-            text: modelData + " min"
+            text: modelData + Lang.t(" min")
             onClicked: page.sync.setConfig({ interval: modelData })
           }
         }
       }
     }
     Line {
-      label: "Sync now"
+      label: Lang.t("Sync now")
       note: page.summary()
       noteColor: page.last && !page.last.ok && !(page.sync && page.sync.running) ? page.theme.urgent : page.theme.muted
       TextButton {
         theme: page.theme
         icon: page.theme.icons.refresh || ""
-        text: page.sync && page.sync.running ? "Syncing…" : "Sync now"
+        text: page.sync && page.sync.running ? Lang.t("Syncing…") : Lang.t("Sync now")
         onClicked: if (page.sync) page.sync.syncNow()
       }
     }

@@ -11,6 +11,7 @@ import "Agent.js" as Agent
 import "QuickQueue.js" as QuickQueue
 import "Dates.js" as Dates
 import "Updates.js" as Updates
+import "Lang.js" as Lang  // [fork] German
 
 // Uber Notebook: notebooks that look and feel like paper, and pages made of
 // blocks (Pages), on Omarchy.
@@ -160,7 +161,7 @@ Item {
   // can't be, said where you'll see it (it goes on trying).
   function windowClosed() {
     storeItem.retryUnsaved(function(left) {
-      if (left > 0) storeItem.notify("Not saved yet", (left === 1 ? "A change" : left + " changes") + " to your notes couldn't be saved (is the disk full?). Uber Notebook keeps trying.", "", "")
+      if (left > 0) storeItem.notify(Lang.t("Not saved yet"), (left === 1 ? Lang.t("A change") : left + Lang.t(" changes")) + Lang.t(" to your notes couldn't be saved (is the disk full?). Uber Notebook keeps trying."), "", "")
     })
   }
 

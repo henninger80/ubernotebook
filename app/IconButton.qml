@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "../Lang.js" as Lang  // [fork] German
 
 // A button with an icon (and a label, if it has one), a hover and pressed
 // state, an on state, and a tooltip that names its shortcut.
@@ -48,7 +49,7 @@ Item {
     Text {
       textFormat: Text.PlainText
       visible: button.label !== ""
-      text: button.label
+      text: Lang.t(button.label)
       font.family: button.theme ? button.theme.uiFont : "sans-serif"
       font.pixelSize: 13
       font.weight: Font.Medium

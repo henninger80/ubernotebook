@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import "../Workspace.js" as Workspace
 import "../Tags.js" as Tags
+import "../Lang.js" as Lang  // [fork] German
 
 // Search in Pages (Ctrl+P): recent pages, or every page with the words you
 // type in its title or on it, with the words around them; "#" and a tag's
@@ -114,7 +115,7 @@ Pop {
       height: 40
       fontSize: 15
       icon: pop.theme.icons.search
-      placeholder: "Search your pages"
+      placeholder: Lang.t("Search your pages")
       onEdited: function(text) { pop.query = text; searchTimer.restart() }
       onAccepted: pop.take(pop.current)
       onEscaped: pop.close()
@@ -124,7 +125,7 @@ Pop {
     Text {
       textFormat: Text.PlainText
       leftPadding: 6
-      text: pop.query.trim() ? (pop.searching ? "Looking\u2026" : pop.results.length ? "Pages" : "Nothing found") : "Recent"
+      text: pop.query.trim() ? (pop.searching ? Lang.t("Looking\u2026") : pop.results.length ? Lang.t("Pages") : Lang.t("Nothing found")) : Lang.t("Recent")
       font.family: pop.theme.uiFont
       font.pixelSize: 11
       font.weight: Font.DemiBold
@@ -166,7 +167,7 @@ Pop {
           y: 7
           width: parent.width - x - 10
           elide: Text.ElideRight
-          text: (modelData.title || "Untitled") + (where ? "  \u2014  " + where : "")
+          text: (modelData.title || Lang.t("Untitled")) + (where ? "  \u2014  " + where : "")
           font.family: pop.theme.uiFont
           font.pixelSize: 13
           color: pop.theme.text

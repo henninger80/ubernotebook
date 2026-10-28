@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Docs.js" as Docs
+import "../Lang.js" as Lang  // [fork] German
 
 // An emoji for a page's icon or a callout's: a few hundred by kind, a random
 // one, or none.
@@ -23,14 +24,14 @@ Pop {
       spacing: 6
       Chip {
         theme: pop.theme
-        text: "Random"
+        text: Lang.t("Random")
         icon: pop.theme.icons.random
         onClicked: { pop.close(); pop.picked(Docs.randomEmoji()) }
       }
       Chip {
         visible: pop.removable
         theme: pop.theme
-        text: "Remove"
+        text: Lang.t("Remove")
         icon: pop.theme.icons.trash
         onClicked: { pop.close(); pop.removed() }
       }
@@ -53,7 +54,7 @@ Pop {
             spacing: 2
             Text {
               textFormat: Text.PlainText
-              text: modelData.label
+              text: Lang.t(modelData.label)
               font.family: pop.theme.uiFont
               font.pixelSize: 11
               font.weight: Font.DemiBold

@@ -1,5 +1,6 @@
 import QtQuick
 import "../Agent.js" as Agent
+import "../Lang.js" as Lang  // [fork] German
 
 // The model and the effort an agent works with in Uber Notebook (Claude
 // Code, Grok, Codex): two buttons, each a list to pick from. The models are
@@ -73,7 +74,7 @@ Row {
   DropButton {
     id: modelButton
     objectName: ac.namePrefix + "Model"
-    text: ac.current ? ac.current.name : ac.model ? ac.model : "Default model"
+    text: ac.current ? ac.current.name : ac.model ? ac.model : Lang.t("Default model")
     onClicked: modelMenu.opened ? modelMenu.close() : modelMenu.open()
     Pop {
       id: modelMenu
@@ -88,8 +89,8 @@ Row {
           width: parent.width
           theme: ac.theme
           icon: ac.theme.icons.agent
-          text: "Default"
-          hint: "as " + ac.agentLabel + " is set up"
+          text: Lang.t("Default")
+          hint: "as " + ac.agentLabel + Lang.t(" is set up")
           checked: ac.model === ""
           onClicked: ac.pickModel("")
         }
@@ -115,7 +116,7 @@ Row {
     id: effortButton
     objectName: ac.namePrefix + "Effort"
     visible: ac.efforts.length > 0
-    text: ac.effort ? Agent.effortLabel(ac.effort) + " effort" : "Default effort"
+    text: ac.effort ? Agent.effortLabel(ac.effort) + Lang.t(" effort") : Lang.t("Default effort")
     onClicked: effortMenu.opened ? effortMenu.close() : effortMenu.open()
     Pop {
       id: effortMenu
@@ -130,7 +131,7 @@ Row {
           width: parent.width
           theme: ac.theme
           icon: ac.theme.icons.time
-          text: "Default"
+          text: Lang.t("Default")
           hint: ac.current && ac.current.effort ? Agent.effortLabel(ac.current.effort) : ""
           checked: ac.effort === ""
           onClicked: ac.pickEffort("")
@@ -143,7 +144,7 @@ Row {
             width: parent.width
             theme: ac.theme
             icon: ac.theme.icons.time
-            text: modelData.label
+            text: Lang.t(modelData.label)
             checked: ac.effort === modelData.id
             onClicked: ac.pickEffort(modelData.id)
           }

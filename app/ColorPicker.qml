@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Colors.js" as Colors
+import "../Lang.js" as Lang  // [fork] German
 
 // A color of your own, for a mind map's idea: a square of saturation and
 // brightness for the hue picked on the strip under it, its hex to type or
@@ -101,7 +102,7 @@ Pop {
   contentItem: Column {
     spacing: 12
 
-    Heading { text: picker.kind === "background" ? "Background of your own" : "Text color of your own" }
+    Heading { text: picker.kind === "background" ? Lang.t("Background of your own") : Lang.t("Text color of your own") }
 
     // Saturation across, brightness down, for the hue below.
     Item {
@@ -216,7 +217,7 @@ Pop {
           horizontalAlignment: Text.AlignHCenter
           elide: Text.ElideRight
           textFormat: Text.PlainText
-          text: picker.info.text || "Idea"
+          text: picker.info.text || Lang.t("Idea")
           font.family: picker.theme.uiFont
           font.pixelSize: 14
           font.weight: Font.DemiBold
@@ -248,7 +249,7 @@ Pop {
       width: parent.width
       textFormat: Text.PlainText
       readonly property string rating: Colors.rating(picker.ratio)
-      text: "Contrast " + picker.ratio.toFixed(1) + ":1 \u00b7 "
+      text: Lang.t("Contrast ") + picker.ratio.toFixed(1) + ":1 \u00b7 "
         + (rating === "good" ? "easy to read" : rating === "fair" ? "readable, not at small sizes" : "hard to read")
       font.family: picker.theme.uiFont
       font.pixelSize: 12
@@ -260,7 +261,7 @@ Pop {
       visible: picker.recent.length > 0
       width: parent.width
       spacing: 6
-      Heading { text: "Recent" }
+      Heading { text: Lang.t("Recent") }
       Flow {
         width: parent.width
         spacing: 6
@@ -288,7 +289,7 @@ Pop {
     Row {
       anchors.right: parent.right
       spacing: 8
-      Chip { theme: picker.theme; text: "Cancel"; onClicked: picker.close() }
+      Chip { theme: picker.theme; text: Lang.t("Cancel"); onClicked: picker.close() }
       Rectangle {
         id: applyButton
         width: applyText.implicitWidth + 28
@@ -299,7 +300,7 @@ Pop {
           id: applyText
           anchors.centerIn: parent
           textFormat: Text.PlainText
-          text: "Apply"
+          text: Lang.t("Apply")
           font.family: picker.theme.uiFont
           font.pixelSize: 13
           font.weight: Font.DemiBold

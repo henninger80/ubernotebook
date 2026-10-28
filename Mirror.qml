@@ -3,6 +3,7 @@ import "Mirror.js" as Mirror
 import "Markdown.js" as Markdown
 import "Workspace.js" as Workspace
 import "Sketch.js" as Sketch
+import "Lang.js" as Lang  // [fork] German
 
 // The Markdown copy of your notes (Mirror.js says what it is), kept up to
 // date a few seconds after anything changes while it's on: Pages' pages, the
@@ -142,7 +143,7 @@ Item {
     var shown = home && dir.indexOf(home + "/") === 0 ? "~" + dir.slice(home.length) : dir
     var text = "The Markdown copy stopped: " + shown + " can't keep it private (another account on this computer could read it there). Pick another folder (Settings, Writing)"
     if (typeof store.failed === "function") store.failed(text)
-    if (typeof store.notify === "function") store.notify("Markdown copy stopped", text, "", "")
+    if (typeof store.notify === "function") store.notify(Lang.t("Markdown copy stopped"), text, "", "")
   }
   function copyInto(dir, gen, from, stale) {
     loadManifest(dir, function() {

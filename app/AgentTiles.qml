@@ -1,5 +1,6 @@
 import QtQuick
 import "../Agent.js" as Agent
+import "../Lang.js" as Lang  // [fork] German
 
 // The agents that work right here, in a panel on the page (Agent.HERE):
 // Claude, Grok and Codex, side by side, each with who makes it; yours
@@ -81,7 +82,7 @@ Row {
         Text {
           objectName: "agentTileStatus"
           textFormat: Text.PlainText
-          text: tile.there ? "Works here" : "Not installed"
+          text: tile.there ? Lang.t("Works here") : Lang.t("Not installed")
           font.family: tiles.theme.uiFont
           font.pixelSize: 11
           color: tiles.theme.faint

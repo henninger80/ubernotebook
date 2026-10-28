@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Tabs.js" as Tabs
+import "../Lang.js" as Lang  // [fork] German
 
 // (fork) The tabs above the page (Tabs.js): a click goes to one, the middle
 // button or its × closes it, + opens a new one (on what's shown), and one's
@@ -88,7 +89,7 @@ Item {
             anchors.verticalCenterOffset: 2
             visible: (tab.current || tabHover.hovered) && (strip.ids.length > 1 || strip.view.paneName === "split")
             theme: strip.theme; icon: strip.theme.icons.close; size: 20; iconSize: 12; tint: strip.theme.muted
-            tip: strip.ids.length > 1 ? "Close the tab  Ctrl+W" : "Close this pane  Ctrl+W"
+            tip: strip.ids.length > 1 ? Lang.t("Close the tab  Ctrl+W") : Lang.t("Close this pane  Ctrl+W")
             onClicked: strip.view.closeTab(tab.index)
           }
           HoverHandler { id: tabHover; cursorShape: Qt.PointingHandCursor }
@@ -131,7 +132,7 @@ Item {
     anchors.verticalCenter: parent.verticalCenter
     anchors.verticalCenterOffset: 2
     theme: strip.theme; icon: strip.theme.icons.plus; size: 26; iconSize: 14
-    tip: "A new tab  Ctrl+T"
+    tip: Lang.t("A new tab  Ctrl+T")
     onClicked: strip.view.newTab("")
   }
 }

@@ -7,6 +7,7 @@ import "../Docs.js" as Docs
 import "../Colors.js" as Colors
 import "../Daily.js" as Daily  // [fork]
 import "../Tasks.js" as Tasks  // [fork]
+import "../Lang.js" as Lang  // [fork] German
 
 // The calendar, in place of a page (the sidebar's Calendar): your events,
 // and the dates in your notes (reminders, projects' due dates), by month,
@@ -195,7 +196,7 @@ Item {
     var ev = workspace.eventById(o.id)
     if (!ev) return
     var mine = occMoved(o, start, end)
-    function done() { cv.view.toastUndo("Moved \u201c" + (o.title || "the event") + "\u201d", function() { cv.workspace.undoCalendar() }) }
+    function done() { cv.view.toastUndo(Lang.t("Moved \u201c") + (o.title || Lang.t("the event")) + Lang.t("\u201d"), function() { cv.workspace.undoCalendar() }) }
     if (!o.repeats) {
       var e1 = JSON.parse(JSON.stringify(ev))
       e1.start = mine.start
@@ -204,9 +205,9 @@ Item {
       done()
       return
     }
-    view.ask("\u201c" + (o.title || "The event") + "\u201d repeats", [
+    view.ask("\u201c" + (o.title || Lang.t("The event")) + Lang.t("\u201d repeats"), [
       { label: "Just this one", value: "one" },
-      { label: "Every one", value: "all" }
+      { label: Lang.t("Every one"), value: "all" }
     ], function(what) {
       var cal = cv.workspace.calendar
       if (what === "one") cv.workspace.setCalendar(Calendar.detach(cal, o.id, o.day, mine)[0])
@@ -302,11 +303,11 @@ Item {
       id: leftRow
       y: (40 - height) / 2
       spacing: 6
-      Chip { objectName: "calToday"; theme: cv.theme; text: "Today"; onClicked: cv.show(cv.today(), "") }
-      IconButton { objectName: "calBack"; theme: cv.theme; icon: cv.theme.icons.left; size: 30; iconSize: 17; tip: "Back  \u2190"; onClicked: cv.go(-1) }
-      IconButton { objectName: "calOn"; theme: cv.theme; icon: cv.theme.icons.right; size: 30; iconSize: 17; tip: "On  \u2192"; onClicked: cv.go(1) }
+      Chip { objectName: "calToday"; theme: cv.theme; text: Lang.t("Today"); onClicked: cv.show(cv.today(), "") }
+      IconButton { objectName: "calBack"; theme: cv.theme; icon: cv.theme.icons.left; size: 30; iconSize: 17; tip: Lang.t("Back  \u2190"); onClicked: cv.go(-1) }
+      IconButton { objectName: "calOn"; theme: cv.theme; icon: cv.theme.icons.right; size: 30; iconSize: 17; tip: Lang.t("On  \u2192"); onClicked: cv.go(1) }
       // [fork] The daily note (Daily.js).
-      IconButton { objectName: "calDaily"; theme: cv.theme; icon: cv.theme.icons.journal; size: 30; iconSize: 17; tip: "Daily note  Ctrl+Shift+T"; onClicked: cv.view.openDaily(cv.dailyDay()) }
+      IconButton { objectName: "calDaily"; theme: cv.theme; icon: cv.theme.icons.journal; size: 30; iconSize: 17; tip: Lang.t("Daily note  Ctrl+Shift+T"); onClicked: cv.view.openDaily(cv.dailyDay()) }
       Text {
         objectName: "calTitle"
         anchors.verticalCenter: parent.verticalCenter
@@ -333,7 +334,7 @@ Item {
           objectName: "calMode_" + modelData.id
           visible: !bar.tight
           theme: cv.theme
-          text: modelData.label
+          text: Lang.t(modelData.label)
           checked: cv.mode === modelData.id
           onClicked: cv.setMode(modelData.id)
         }
@@ -361,7 +362,7 @@ Item {
                 objectName: "calModeItem_" + modelData.id
                 width: parent.width
                 theme: cv.theme
-                text: modelData.label
+                text: Lang.t(modelData.label)
                 hint: modelData.key
                 checked: cv.mode === modelData.id
                 onClicked: { modesMenu.close(); cv.setMode(modelData.id) }
@@ -374,14 +375,14 @@ Item {
       IconButton {
         id: newButton
         objectName: "calNew"
-        theme: cv.theme; icon: cv.theme.icons.plus; label: bar.tight ? "" : "New event"; size: 32; iconSize: 15
-        tip: "A new event  N"
+        theme: cv.theme; icon: cv.theme.icons.plus; label: bar.tight ? "" : Lang.t("New event"); size: 32; iconSize: 15
+        tip: Lang.t("A new event  N")
         onClicked: cv.addAt(cv.newDay(), -1, newButton)
       }
       IconButton {
         id: calMore
         objectName: "calMore"
-        theme: cv.theme; icon: cv.theme.icons.more; size: 32; iconSize: 16; tip: "Export, undo"
+        theme: cv.theme; icon: cv.theme.icons.more; size: 32; iconSize: 16; tip: Lang.t("Export, undo")
         onClicked: calMenu.open()
         Pop {
           id: calMenu
@@ -392,10 +393,10 @@ Item {
           y: calMore.height + 6
           contentItem: Column {
             spacing: 2
-            MenuRow { objectName: "calendarImport"; width: parent.width; theme: cv.theme; icon: cv.theme.icons.plus; text: "Import .ics\u2026"; hint: "events from another calendar"; onClicked: { calMenu.close(); cv.view.importIcs() } }
-            MenuRow { width: parent.width; theme: cv.theme; icon: cv.theme.icons.export; text: "Export as .ics\u2026"; hint: "for another calendar"; onClicked: { calMenu.close(); cv.view.exportCalendar() } }
-            MenuRow { width: parent.width; theme: cv.theme; icon: cv.theme.icons.undo; text: "Undo"; hint: "Ctrl+Z"; active: cv.workspace && cv.workspace.calendarUndo.length > 0; onClicked: { calMenu.close(); cv.workspace.undoCalendar() } }
-            MenuRow { width: parent.width; theme: cv.theme; icon: cv.theme.icons.redo; text: "Redo"; hint: "Ctrl+Shift+Z"; active: cv.workspace && cv.workspace.calendarRedo.length > 0; onClicked: { calMenu.close(); cv.workspace.redoCalendar() } }
+            MenuRow { objectName: "calendarImport"; width: parent.width; theme: cv.theme; icon: cv.theme.icons.plus; text: Lang.t("Import .ics\u2026"); hint: Lang.t("events from another calendar"); onClicked: { calMenu.close(); cv.view.importIcs() } }
+            MenuRow { width: parent.width; theme: cv.theme; icon: cv.theme.icons.export; text: Lang.t("Export as .ics\u2026"); hint: Lang.t("for another calendar"); onClicked: { calMenu.close(); cv.view.exportCalendar() } }
+            MenuRow { width: parent.width; theme: cv.theme; icon: cv.theme.icons.undo; text: Lang.t("Undo"); hint: Lang.t("Ctrl+Z"); active: cv.workspace && cv.workspace.calendarUndo.length > 0; onClicked: { calMenu.close(); cv.workspace.undoCalendar() } }
+            MenuRow { width: parent.width; theme: cv.theme; icon: cv.theme.icons.redo; text: Lang.t("Redo"); hint: Lang.t("Ctrl+Shift+Z"); active: cv.workspace && cv.workspace.calendarRedo.length > 0; onClicked: { calMenu.close(); cv.workspace.redoCalendar() } }
           }
         }
       }
@@ -434,7 +435,7 @@ Item {
       width: parent.width - x - 4
       elide: Text.ElideRight
       textFormat: Text.PlainText
-      text: (cv.theme.twelveHour, entry.occ) ? (entry.allDay ? "" : Calendar.timeLabel(entry.occ.start) + " ") + (entry.occ.title || "Untitled")
+      text: (cv.theme.twelveHour, entry.occ) ? (entry.allDay ? "" : Calendar.timeLabel(entry.occ.start) + " ") + (entry.occ.title || Lang.t("Untitled"))
         : entry.note ? Daily.noteLabel(entry.note, "month") : ""  // [fork] its label in Daily.js
       font.family: cv.theme.uiFont
       font.pixelSize: entry.fontPx
@@ -584,7 +585,7 @@ Item {
               visible: cell.total > cell.room
               leftPadding: 6
               textFormat: Text.PlainText
-              text: "+" + (cell.total - Math.max(0, cell.room - 1)) + " more"
+              text: "+" + (cell.total - Math.max(0, cell.room - 1)) + Lang.t(" more")
               font.family: cv.theme.uiFont
               font.pixelSize: 11
               font.weight: Font.DemiBold
@@ -626,7 +627,7 @@ Item {
       width: parent.width - 20
       elide: Text.ElideRight
       textFormat: Text.PlainText
-      text: cv.dragOcc ? cv.dragOcc.title || "Untitled" : ""
+      text: cv.dragOcc ? cv.dragOcc.title || Lang.t("Untitled") : ""
       font.family: cv.theme.uiFont
       font.pixelSize: 12
       color: cv.theme.text
@@ -855,7 +856,7 @@ Item {
                     width: parent.width
                     elide: Text.ElideRight
                     textFormat: Text.PlainText
-                    text: block.o.title || "Untitled"
+                    text: block.o.title || Lang.t("Untitled")
                     font.family: cv.theme.uiFont
                     font.pixelSize: 12
                     font.weight: Font.DemiBold
@@ -1133,7 +1134,7 @@ Item {
           id: dayName
           objectName: "calAgendaDay"
           textFormat: Text.PlainText
-          text: (cv.same(dayBlock.modelData.day, cv.todayDay) ? "Today  \u00b7  " : cv.same(dayBlock.modelData.day, cv.addDays(cv.todayDay, 1)) ? "Tomorrow  \u00b7  " : "")
+          text: (cv.same(dayBlock.modelData.day, cv.todayDay) ? Lang.t("Today  \u00b7  ") : cv.same(dayBlock.modelData.day, cv.addDays(cv.todayDay, 1)) ? Lang.t("Tomorrow  \u00b7  ") : "")
             + Qt.locale().dayName(dayBlock.modelData.day.getDay()) + " " + dayBlock.modelData.day.getDate() + " " + Qt.locale().monthName(dayBlock.modelData.day.getMonth())
           font.family: cv.theme.uiFont
           font.pixelSize: dayBlock.lead ? 16 : 13
@@ -1148,7 +1149,7 @@ Item {
           anchors.verticalCenter: dayName.verticalCenter
           visible: dayBlock.lead || dayHover.hovered
           theme: cv.theme; icon: cv.theme.icons.plus; size: 26; iconSize: 14
-          tip: "An event on this day"
+          tip: Lang.t("An event on this day")
           onClicked: cv.addAt(dayBlock.modelData.day, -1, dayAdd)
         }
       }
@@ -1158,7 +1159,7 @@ Item {
         topPadding: 4
         bottomPadding: 6
         textFormat: Text.PlainText
-        text: "Nothing on."
+        text: Lang.t("Nothing on.")
         font.family: cv.theme.uiFont
         font.pixelSize: 13
         color: cv.theme.muted
@@ -1194,7 +1195,7 @@ Item {
             width: parent.width - x - 12
             elide: Text.ElideRight
             textFormat: Text.PlainText
-            text: (arow.modelData.title || "Untitled") + (arow.modelData.place ? "  \u00b7  " + arow.modelData.place : "") + (arow.modelData.repeats ? "  \u21bb" : "")
+            text: (arow.modelData.title || Lang.t("Untitled")) + (arow.modelData.place ? "  \u00b7  " + arow.modelData.place : "") + (arow.modelData.repeats ? "  \u21bb" : "")
             font.family: cv.theme.uiFont
             font.pixelSize: 14
             color: cv.theme.text
@@ -1218,7 +1219,7 @@ Item {
             width: cv.spanW
             anchors.verticalCenter: parent.verticalCenter
             textFormat: Text.PlainText
-            text: (cv.theme.twelveHour, nrow.modelData.time) ? Calendar.timeLabel(nrow.modelData.at) : nrow.modelData.kind === "due" ? "Due" : "All day"
+            text: (cv.theme.twelveHour, nrow.modelData.time) ? Calendar.timeLabel(nrow.modelData.at) : nrow.modelData.kind === "due" ? Lang.t("Due") : Lang.t("All day")
             font.family: cv.theme.uiFont
             font.pixelSize: 12
             color: cv.theme.faint
@@ -1245,7 +1246,7 @@ Item {
       width: agenda.width
       wrapMode: Text.Wrap
       textFormat: Text.PlainText
-      text: "Nothing on in the next 60 days. N, or + New event, adds one; reminders and projects' due dates show here too."
+      text: Lang.t("Nothing on in the next 60 days. N, or + New event, adds one; reminders and projects' due dates show here too.")
       font.family: cv.theme.uiFont
       font.pixelSize: 14
       color: cv.theme.muted

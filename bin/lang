@@ -1,0 +1,202 @@
+#!/usr/bin/env python3
+# [fork] Lang.js's helper. From the repo:
+#   bin/lang wrap     puts Lang.t(...) around the English texts the app shows
+#                     (string literals in display properties such as text:,
+#                     tip:, hint:, and in toast()-like calls) that Lang_de.js
+#                     has, and the import where it's missing. Run it again
+#                     after a merge from upstream or after adding words.
+#   bin/lang missing  lists the shown texts Lang_de.js doesn't have yet.
+# docs/lang.md says more.
+import re, sys, glob, json, os
+
+repo = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+cmd = sys.argv[1] if len(sys.argv) > 1 else ""
+if cmd not in ("wrap", "missing"):
+    sys.exit("usage: bin/lang wrap | bin/lang missing")
+dry = cmd == "missing"
+def decode(body):
+    try:
+        return json.loads('"' + body + '"')
+    except Exception:
+        return body
+
+KEY_RE = re.compile(r'^  "((?:[^"\\]|\\.)*)": ')
+words = set(decode(m.group(1)) for m in (KEY_RE.match(l) for l in open(os.path.join(repo, "Lang_de.js"))) if m)
+
+PROPS = r'(?:text|tip|hint|label|note|noneLabel|createLabel|busyText|placeholder|placeholderText|ToolTip\.text|title|description|subtitle|caption|heading|confirmText|okText|question|emptyText|detail|message|blurb)'
+PROP_RE = re.compile(r'^(\s*(?:[A-Za-z_][\w.]*\s*\{\s*)?(?:[\w.]+\s*;\s*)*?)(' + PROPS + r')\s*:\s*')
+CALL_RE = re.compile(r'\b(toast|toastUndo|toastAction|notify|confirmRequested|ask|pickFolder)\s*\(')
+MEMBER_RE = re.compile(r'\b((?:[A-Za-z_]\w*\.)+(?:label|hint|group|note))\b(?!\s*[\(\w=])')
+SKIP_FILES = {"Api.qml", "Answers.qml"}
+
+
+def scan_expr(line, start, call_mode):
+    """Positions of literals to wrap in line[start:], the expression that
+    begins there. Returns (list of (s,e) for literals incl quotes, end)."""
+    out = []
+    stack = []  # "call" or "group"
+    i = start
+    n = len(line)
+    while i < n:
+        c = line[i]
+        if c == '/' and i + 1 < n and line[i + 1] == '/':
+            break
+        if c == '"':
+            j = i + 1
+            while j < n and line[j] != '"':
+                j += 2 if line[j] == '\\' else 1
+            if all(s == "group" for s in stack):
+                out.append((i, j + 1))
+            i = j + 1
+            continue
+        if c == "'":
+            j = i + 1
+            while j < n and line[j] != "'":
+                j += 2 if line[j] == '\\' else 1
+            i = j + 1
+            continue
+        if c == '(':
+            k = i - 1
+            while k >= 0 and line[k] == ' ':
+                k -= 1
+            is_call = k >= 0 and (line[k].isalnum() or line[k] in '_]')
+            # `if (`, `return (` and the like are groups
+            if is_call:
+                m = re.search(r'(\w+)\s*$', line[:i])
+                if m and m.group(1) in ("if", "return", "while", "typeof"):
+                    is_call = False
+            stack.append("call" if is_call else "group")
+        elif c == ')':
+            if not stack:
+                return out, i
+            stack.pop()
+        elif c == '[':
+            stack.append("call")
+        elif c == ']':
+            if stack: stack.pop()
+        elif c == '{':
+            if not stack and not call_mode:
+                # a block binding `text: { ... }`: not handled here
+                return [], i
+            if line[i:].lstrip('{ ').startswith(('function', 'var')) or True:
+                stack.append("call")
+        elif c == '}':
+            if not stack:
+                return out, i
+            stack.pop()
+        elif c == ';' and not stack:
+            return out, i
+        elif c == ',' and not stack and call_mode:
+            pass
+        elif line.startswith('function', i) and (i == 0 or not line[i - 1].isalnum()):
+            if call_mode:
+                return out, i
+        i += 1
+    return out, i
+
+
+missing = {}
+
+
+def ok_literal(line, s, e):
+    body = decode(line[s + 1:e - 1])
+    if body not in words:
+        if re.search(r'[A-Za-z]{3,}', body) and not re.match(r'^[\w.-]+$', body):
+            missing.setdefault(body, current[0])
+        return False
+    before = line[:s].rstrip()
+    after = line[e:].lstrip()
+    if re.search(r'(===|!==|==|!=|\bin|\bcase)$', before):
+        return False
+    if re.match(r'(===|!==|==|!=|\bin\b)', after):
+        return False
+    if after.startswith(':') and re.search(r'[{,]$', before):
+        return False  # an object's key
+    if before.endswith('Lang.t('):
+        return False
+    return True
+
+
+current = [""]
+
+
+def process(path):
+    current[0] = os.path.relpath(path, repo)
+    src = open(path).read().split('\n')
+    changed = 0
+    for li, line in enumerate(src):
+        stripped = line.lstrip()
+        if stripped.startswith(('//', '*', 'import ', 'property var', 'signal ')):
+            continue
+        edits = []
+        if stripped.rstrip().endswith(',') or stripped.rstrip().endswith('[') :
+            # a line of an object or array literal: data, not a binding
+            line_is_data = True
+        else:
+            line_is_data = False
+        # property bindings, possibly after `Item { ` or `x: 1; `
+        for m in re.finditer(r'(?:^\s*|[{;]\s*)(' + PROPS + r')\s*:\s*', line):
+            # not an object literal key inside an expression like `{ title: ... }` in JS
+            pre = line[:m.start(1)]
+            if line_is_data:
+                continue
+            if re.search(r'(=|\(|,|return)\s*\{?\s*$', pre) and '{' in pre[-3:]:
+                continue
+            if re.search(r'\bproperty\s+\w+\s+$', pre):
+                pass
+            lits, end = scan_expr(line, m.end(), False)
+            for s, e in lits:
+                if ok_literal(line, s, e):
+                    edits.append((s, e, 'lit'))
+            # a member like modelData.label in it
+            expr = line[m.end():end]
+            for mm in MEMBER_RE.finditer(expr):
+                s = m.end() + mm.start(1); e = m.end() + mm.end(1)
+                if not line[:s].endswith('Lang.t('):
+                    edits.append((s, e, 'mem'))
+        for m in CALL_RE.finditer(line):
+            lits, end = scan_expr(line, m.end(), True)
+            for s, e in lits:
+                if ok_literal(line, s, e):
+                    edits.append((s, e, 'lit'))
+        if not edits:
+            continue
+        edits = sorted(set(edits), key=lambda x: -x[0])
+        # drop overlapping
+        new = line
+        last = None
+        for s, e, kind in edits:
+            if last is not None and e > last:
+                continue
+            new = new[:s] + 'Lang.t(' + new[s:e] + ')' + new[e:]
+            last = s
+            changed += 1
+        src[li] = new
+    if changed:
+        text = '\n'.join(src)
+        if 'as Lang' not in text:
+            rel = '../Lang.js' if os.path.basename(os.path.dirname(path)) == 'app' else 'Lang.js'
+            lines = text.split('\n')
+            idx = max(i for i, l in enumerate(lines[:60]) if l.startswith('import '))
+            lines.insert(idx + 1, 'import "%s" as Lang  // [fork] German' % rel)
+            text = '\n'.join(lines)
+        if not dry:
+            open(path, 'w').write(text)
+    return changed
+
+
+total = 0
+files = sorted(glob.glob(repo + '/app/*.qml') + glob.glob(repo + '/*.qml'))
+for f in files:
+    if os.path.basename(f) in SKIP_FILES:
+        continue
+    n = process(f)
+    if n and not dry:
+        print(n, os.path.relpath(f, repo))
+    total += n
+if dry:
+    for text, where in sorted(missing.items(), key=lambda x: (x[1], x[0])):
+        print("%s\t%s" % (where, json.dumps(text, ensure_ascii=False)))
+    print("%d shown texts without German" % len(missing), file=sys.stderr)
+else:
+    print("wrapped", total)

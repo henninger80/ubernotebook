@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "../Lang.js" as Lang  // [fork] German
 
 // A gallery on a page in Pages (/gallery): pictures side by side, 2, 3 or 4
 // to a row, each with its caption if it has one. A click on one shows it
@@ -77,7 +78,7 @@ DataCard {
       }
       Text {
         textFormat: Text.PlainText
-        text: gb.readOnly ? "A gallery, no pictures yet" : "Add pictures, or drop them here"
+        text: gb.readOnly ? Lang.t("A gallery, no pictures yet") : Lang.t("Add pictures, or drop them here")
         font.family: gb.editor ? gb.editor.uiFamily : ""
         font.pixelSize: 14
         color: gb.faint
@@ -212,7 +213,7 @@ DataCard {
             Text {
               visible: captionEdit.text === ""
               textFormat: Text.PlainText
-              text: "A caption"
+              text: Lang.t("A caption")
               font: captionEdit.font
               color: gb.faint
             }
@@ -239,7 +240,7 @@ DataCard {
       Text {
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: "Add pictures"
+        text: Lang.t("Add pictures")
         font.family: gb.editor ? gb.editor.uiFamily : ""
         font.pixelSize: 12
         color: addHover.hovered ? gb.words : gb.faint
@@ -352,7 +353,7 @@ DataCard {
       TapHandler { onDoubleTapped: gb.fitHeight() }
       ToolTip.visible: edgeHover.hovered && !edgeDrag.active
       ToolTip.delay: 700
-      ToolTip.text: "Drag to make the pictures taller or shorter"
+      ToolTip.text: Lang.t("Drag to make the pictures taller or shorter")
     }
   }
 }

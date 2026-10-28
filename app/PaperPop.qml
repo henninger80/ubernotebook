@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Papers.js" as Papers
+import "../Lang.js" as Lang  // [fork] German
 
 // The paper: its pattern, color and line spacing, for this page or the whole
 // notebook. Each choice shows as a scrap of the paper it makes.
@@ -42,7 +43,7 @@ Pop {
   contentItem: Column {
     spacing: 10
 
-    Heading { text: "Pattern" }
+    Heading { text: Lang.t("Pattern") }
     Grid {
       columns: 6
       spacing: 6
@@ -74,7 +75,7 @@ Pop {
             textFormat: Text.PlainText
             width: 58
             horizontalAlignment: Text.AlignHCenter
-            text: modelData.label
+            text: Lang.t(modelData.label)
             elide: Text.ElideRight
             font.family: pop.theme.uiFont
             font.pixelSize: 11
@@ -84,7 +85,7 @@ Pop {
       }
     }
 
-    Heading { text: "Paper" }
+    Heading { text: Lang.t("Paper") }
     Flow {
       width: parent.width
       spacing: 4
@@ -96,13 +97,13 @@ Pop {
           size: 28
           color: Papers.resolve({ color: modelData.id }, pop.colors).paper
           checked: pop.current.color === modelData.id
-          tip: modelData.label
+          tip: Lang.t(modelData.label)
           onClicked: pop.pick({ color: modelData.id })
         }
       }
     }
 
-    Heading { text: "Lines" }
+    Heading { text: Lang.t("Lines") }
     Row {
       spacing: 6
       Repeater {
@@ -110,7 +111,7 @@ Pop {
         delegate: Chip {
           required property var modelData
           theme: pop.theme
-          text: modelData.label
+          text: Lang.t(modelData.label)
           checked: pop.current.spacing === modelData.id
           onClicked: pop.pick({ spacing: modelData.id })
         }
@@ -120,8 +121,8 @@ Pop {
     Rectangle { width: parent.width; height: 1; color: pop.theme.line }
     Row {
       spacing: 6
-      Chip { theme: pop.theme; text: "This page"; checked: !pop.wholeNotebook; onClicked: pop.wholeNotebook = false }
-      Chip { theme: pop.theme; text: "Every page"; checked: pop.wholeNotebook; onClicked: { pop.wholeNotebook = true; pop.view.setPaper(pop.current, true) } }
+      Chip { theme: pop.theme; text: Lang.t("This page"); checked: !pop.wholeNotebook; onClicked: pop.wholeNotebook = false }
+      Chip { theme: pop.theme; text: Lang.t("Every page"); checked: pop.wholeNotebook; onClicked: { pop.wholeNotebook = true; pop.view.setPaper(pop.current, true) } }
     }
   }
 }

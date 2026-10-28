@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Contacts.js" as Contacts
+import "../Lang.js" as Lang  // [fork] German
 
 // Someone's card on a page in Pages (/contact): who from People, their
 // numbers and emails (a click copies one; Email opens your mail app), their
@@ -74,7 +75,7 @@ DataCard {
           theme: cb.theme
           width: chooser.width - 30
           height: 34
-          placeholder: "Who? A name, an email or a number in People"
+          placeholder: Lang.t("Who? A name, an email or a number in People")
           onEdited: function(text) { cb.query = text }
           onAccepted: { if (cb.found.length) cb.choose(cb.found[0]); else if (text.trim()) cb.makeNew(text) }
           onEscaped: { cb.choosing = false; cb.query = "" }
@@ -84,7 +85,7 @@ DataCard {
         visible: cb.picked && !cb.person && !cb.choosing
         leftPadding: 30
         textFormat: Text.PlainText
-        text: (cb.info.name ? cb.info.name + " isn't" : "They aren't") + " in People any more."
+        text: (cb.info.name ? cb.info.name + Lang.t(" isn't") : Lang.t("They aren't")) + Lang.t(" in People any more.")
         font.family: cb.editor ? cb.editor.uiFamily : ""
         font.pixelSize: 13
         color: cb.faint
@@ -122,7 +123,7 @@ DataCard {
           x: 12
           anchors.verticalCenter: parent.verticalCenter
           textFormat: Text.PlainText
-          text: "+  New contact \u201c" + cb.query.trim() + "\u201d"
+          text: Lang.t("+  New contact \u201c") + cb.query.trim() + Lang.t("\u201d")
           font.family: cb.editor ? cb.editor.uiFamily : ""
           font.pixelSize: 13
           color: cb.accent
@@ -212,7 +213,7 @@ DataCard {
               anchors.verticalCenter: parent.verticalCenter
               visible: !wayHover.hovered
               textFormat: Text.PlainText
-              text: way.modelData.label
+              text: Lang.t(way.modelData.label)
               font.family: cb.editor ? cb.editor.uiFamily : ""
               font.pixelSize: 12
               color: cb.faint
@@ -225,13 +226,13 @@ DataCard {
               IconButton {
                 visible: way.modelData.email || way.modelData.web === true
                 theme: cb.theme; icon: cb.theme ? (way.modelData.email ? cb.theme.icons.mail : cb.theme.icons.openExternal) : ""; size: 26; iconSize: 13; tint: cb.words
-                tip: way.modelData.email ? "Email them" : "Open it"
+                tip: way.modelData.email ? Lang.t("Email them") : Lang.t("Open it")
                 onClicked: cb.act(way.modelData.email ? "email" : "web", way.modelData.value)
               }
               IconButton {
                 objectName: "contactCopy"
                 theme: cb.theme; icon: cb.theme ? cb.theme.icons.copy : ""; size: 26; iconSize: 13; tint: cb.words
-                tip: "Copy it"
+                tip: Lang.t("Copy it")
                 onClicked: cb.act("copy", way.modelData.value)
               }
             }
@@ -255,20 +256,20 @@ DataCard {
         objectName: "contactOpen"
         visible: cb.person !== null
         theme: cb.theme; icon: cb.theme ? cb.theme.icons.contacts : ""; size: 28; iconSize: 14; tint: cb.words
-        tip: "Open in People (to change them)"
+        tip: Lang.t("Open in People (to change them)")
         onClicked: cb.act("openPerson", cb.info.contact)
       }
       IconButton {
         objectName: "contactChange"
         theme: cb.theme; icon: cb.theme ? cb.theme.icons.swap : ""; size: 28; iconSize: 14; tint: cb.words
-        tip: "Someone else"
+        tip: Lang.t("Someone else")
         onClicked: cb.focusPick()
       }
       IconButton {
         id: paint
         objectName: "contactColors"
         theme: cb.theme; icon: cb.theme ? cb.theme.icons.palette : ""; size: 28; iconSize: 14; tint: cb.words
-        tip: "Its colors"
+        tip: Lang.t("Its colors")
         onClicked: cb.askColors(paint)
       }
     }

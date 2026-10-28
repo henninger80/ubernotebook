@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Bookmark.js" as Bookmark
+import "../Lang.js" as Lang  // [fork] German
 
 // A link on a page in Pages, as a card: its page's title, a line about it,
 // the site, and its picture (fetched once, when it's added, and kept in
@@ -64,7 +65,7 @@ DataCard {
         theme: bk.theme
         width: card.width - 60
         height: 34
-        placeholder: bk.editingLink ? "The new link, then Enter (Esc keeps it as it is)" : "Paste a link and press Enter (https://...)"
+        placeholder: bk.editingLink ? Lang.t("The new link, then Enter (Esc keeps it as it is)") : Lang.t("Paste a link and press Enter (https://...)")
         onAccepted: {
           var u = text.trim()
           if (!u) return
@@ -78,7 +79,7 @@ DataCard {
         visible: bk.fetching || bk.readOnly
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: bk.fetching ? "Getting the page\u2026" : "A bookmark, not added"
+        text: bk.fetching ? Lang.t("Getting the page\u2026") : Lang.t("A bookmark, not added")
         font.family: bk.editor ? bk.editor.uiFamily : ""
         font.pixelSize: 13
         font.italic: true
@@ -143,7 +144,7 @@ DataCard {
         objectName: "bookmarkRead"
         visible: bk.unread && !bk.readOnly && !bk.fetching
         textFormat: Text.PlainText
-        text: "Get its title and picture"
+        text: Lang.t("Get its title and picture")
         font.family: bk.editor ? bk.editor.uiFamily : ""
         font.pixelSize: 12
         font.underline: readHover.hovered
@@ -194,10 +195,10 @@ DataCard {
           id: toolRow
           x: 2
           anchors.verticalCenter: parent.verticalCenter
-          IconButton { objectName: "bookmarkEdit"; theme: bk.theme; icon: bk.theme ? bk.theme.icons.edit : ""; size: 28; iconSize: 14; tint: bk.ink; tip: "Change the link"; onClicked: bk.editLink() }
-          IconButton { objectName: "bookmarkRefresh"; theme: bk.theme; icon: bk.theme ? bk.theme.icons.refresh : ""; size: 28; iconSize: 14; tint: bk.ink; tip: bk.unread ? "Get the page" : "Get the page again"; onClicked: bk.act("fetch", { url: bk.info.url }) }
-          IconButton { objectName: "bookmarkCopy"; theme: bk.theme; icon: bk.theme ? bk.theme.icons.copy : ""; size: 28; iconSize: 14; tint: bk.ink; tip: "Copy the link"; onClicked: bk.act("copy", null) }
-          IconButton { id: colorButton; objectName: "bookmarkColors"; theme: bk.theme; icon: bk.theme ? bk.theme.icons.palette : ""; size: 28; iconSize: 14; tint: bk.ink; tip: "Its colors"; onClicked: bk.askColors(colorButton) }
+          IconButton { objectName: "bookmarkEdit"; theme: bk.theme; icon: bk.theme ? bk.theme.icons.edit : ""; size: 28; iconSize: 14; tint: bk.ink; tip: Lang.t("Change the link"); onClicked: bk.editLink() }
+          IconButton { objectName: "bookmarkRefresh"; theme: bk.theme; icon: bk.theme ? bk.theme.icons.refresh : ""; size: 28; iconSize: 14; tint: bk.ink; tip: bk.unread ? Lang.t("Get the page") : Lang.t("Get the page again"); onClicked: bk.act("fetch", { url: bk.info.url }) }
+          IconButton { objectName: "bookmarkCopy"; theme: bk.theme; icon: bk.theme ? bk.theme.icons.copy : ""; size: 28; iconSize: 14; tint: bk.ink; tip: Lang.t("Copy the link"); onClicked: bk.act("copy", null) }
+          IconButton { id: colorButton; objectName: "bookmarkColors"; theme: bk.theme; icon: bk.theme ? bk.theme.icons.palette : ""; size: 28; iconSize: 14; tint: bk.ink; tip: Lang.t("Its colors"); onClicked: bk.askColors(colorButton) }
         }
       }
     }

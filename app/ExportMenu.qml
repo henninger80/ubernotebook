@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "../Lang.js" as Lang  // [fork] German
 
 // Export… in a page's menu: the page as a PDF, a Word file or Markdown, and
 // whether the pages inside it go too (when it has some).
@@ -26,15 +27,15 @@ Pop {
       objectName: "exportPdf"
       width: parent.width; theme: menu.theme; icon: menu.theme.icons.pdf
       text: "PDF"
-      hint: menu.tools && !menu.tools.browser ? "needs Chromium" : ""
+      hint: menu.tools && !menu.tools.browser ? Lang.t("needs Chromium") : ""
       active: !menu.tools || !!menu.tools.browser
       onClicked: { menu.close(); menu.view.exportAs("pdf", menu.hasPages && menu.withPages) }
     }
     MenuRow {
       objectName: "exportWord"
       width: parent.width; theme: menu.theme; icon: menu.theme.icons.word
-      text: "Word (.docx)"
-      hint: menu.tools && !menu.tools.office ? "needs LibreOffice" : ""
+      text: Lang.t("Word (.docx)")
+      hint: menu.tools && !menu.tools.office ? Lang.t("needs LibreOffice") : ""
       active: !menu.tools || !!menu.tools.office
       onClicked: { menu.close(); menu.view.exportAs("docx", menu.hasPages && menu.withPages) }
     }
@@ -42,7 +43,7 @@ Pop {
       objectName: "exportMarkdown"
       width: parent.width; theme: menu.theme; icon: menu.theme.icons.markdown
       text: "Markdown"
-      hint: "a folder, with its pages"
+      hint: Lang.t("a folder, with its pages")
       onClicked: { menu.close(); menu.view.exportPage() }
     }
     Rectangle { visible: menu.hasPages; width: parent.width; height: 1; color: menu.theme.line }
@@ -50,7 +51,7 @@ Pop {
       objectName: "exportWithPages"
       visible: menu.hasPages
       width: parent.width; theme: menu.theme; icon: menu.theme.icons.tree
-      text: "With the pages inside it"
+      text: Lang.t("With the pages inside it")
       checked: menu.withPages
       onClicked: menu.withPages = !menu.withPages
     }

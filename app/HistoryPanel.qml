@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
 import "../Workspace.js" as Workspace
+import "../Lang.js" as Lang  // [fork] German
 
 // A page's history (the page's ⋯ menu): the versions Uber Notebook kept of it,
 // newest first, and the one picked shown as it was. "Restore this version"
@@ -133,7 +134,7 @@ Popup {
         spacing: 4
         Text {
           textFormat: Text.PlainText
-          text: "Page history"
+          text: Lang.t("Page history")
           font.family: panel.theme.uiFont
           font.pixelSize: 15
           font.weight: Font.DemiBold
@@ -143,7 +144,7 @@ Popup {
           textFormat: Text.PlainText
           width: parent.width
           wrapMode: Text.Wrap
-          text: "Kept every ten minutes while you write, and before an agent changes the page."
+          text: Lang.t("Kept every ten minutes while you write, and before an agent changes the page.")
           font.family: panel.theme.uiFont
           font.pixelSize: 11
           color: panel.theme.faint
@@ -213,7 +214,7 @@ Popup {
         width: parent.width - 36
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: "No earlier versions of this page yet. Uber Notebook keeps one every ten minutes while you write, and one before an agent or a command changes it."
+        text: Lang.t("No earlier versions of this page yet. Uber Notebook keeps one every ten minutes while you write, and one before an agent or a command changes it.")
         font.family: panel.theme.uiFont
         font.pixelSize: 12
         lineHeight: 1.2
@@ -251,7 +252,7 @@ Popup {
             textFormat: Text.PlainText
             width: parent.width
             elide: Text.ElideRight
-            text: panel.shown ? (panel.shown.page.icon ? panel.shown.page.icon + "  " : "") + (panel.shown.page.title || "Untitled") : ""
+            text: panel.shown ? (panel.shown.page.icon ? panel.shown.page.icon + "  " : "") + (panel.shown.page.title || Lang.t("Untitled")) : ""
             font.family: panel.theme.uiFont
             font.pixelSize: 15
             font.weight: Font.DemiBold
@@ -271,7 +272,7 @@ Popup {
           anchors.right: parent.right
           anchors.verticalCenter: parent.verticalCenter
           spacing: 8
-          IconButton { theme: panel.theme; label: "Cancel"; onClicked: panel.close() }
+          IconButton { theme: panel.theme; label: Lang.t("Cancel"); onClicked: panel.close() }
           Rectangle {
             id: restoreButton
             readonly property bool can: panel.shown !== null && !(panel.view && panel.view.locked)
@@ -284,7 +285,7 @@ Popup {
               id: restoreLabel
               textFormat: Text.PlainText
               anchors.centerIn: parent
-              text: "Restore this version"
+              text: Lang.t("Restore this version")
               font.family: panel.theme.uiFont
               font.pixelSize: 13
               font.weight: Font.DemiBold
@@ -340,7 +341,7 @@ Popup {
         visible: panel.reading && panel.shown === null
         anchors.centerIn: previewScroll
         textFormat: Text.PlainText
-        text: "Reading\u2026"
+        text: Lang.t("Reading\u2026")
         font.family: panel.theme.uiFont
         font.pixelSize: 13
         color: panel.theme.faint

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Effects
+import "../Lang.js" as Lang  // [fork] German
 
 // Find on this page: every match marked, the current one brighter; Enter for
 // the next, Shift+Enter for the one before, Esc to put it away.
@@ -92,7 +93,7 @@ Item {
       height: 32
       anchors.verticalCenter: parent.verticalCenter
       icon: bar.theme.icons.search
-      placeholder: "Find on this page"
+      placeholder: Lang.t("Find on this page")
       color: "transparent"
       border.width: 0
       onEdited: bar.refresh()
@@ -105,13 +106,13 @@ Item {
       width: 58
       anchors.verticalCenter: parent.verticalCenter
       horizontalAlignment: Text.AlignRight
-      text: field.text === "" ? "" : bar.count === 0 ? "None" : (bar.current + 1) + " of " + bar.count
+      text: field.text === "" ? "" : bar.count === 0 ? Lang.t("None") : (bar.current + 1) + Lang.t(" of ") + bar.count
       font.family: bar.theme.uiFont
       font.pixelSize: 12
       color: bar.theme.muted
     }
-    IconButton { theme: bar.theme; icon: bar.theme.icons.up; size: 30; tip: "Previous  Shift+Enter"; active: bar.count > 0; onClicked: bar.step(-1); anchors.verticalCenter: parent.verticalCenter }
-    IconButton { theme: bar.theme; icon: bar.theme.icons.down; size: 30; tip: "Next  Enter"; active: bar.count > 0; onClicked: bar.step(1); anchors.verticalCenter: parent.verticalCenter }
-    IconButton { theme: bar.theme; icon: bar.theme.icons.close; size: 30; tip: "Close  Esc"; onClicked: bar.close(); anchors.verticalCenter: parent.verticalCenter }
+    IconButton { theme: bar.theme; icon: bar.theme.icons.up; size: 30; tip: Lang.t("Previous  Shift+Enter"); active: bar.count > 0; onClicked: bar.step(-1); anchors.verticalCenter: parent.verticalCenter }
+    IconButton { theme: bar.theme; icon: bar.theme.icons.down; size: 30; tip: Lang.t("Next  Enter"); active: bar.count > 0; onClicked: bar.step(1); anchors.verticalCenter: parent.verticalCenter }
+    IconButton { theme: bar.theme; icon: bar.theme.icons.close; size: 30; tip: Lang.t("Close  Esc"); onClicked: bar.close(); anchors.verticalCenter: parent.verticalCenter }
   }
 }

@@ -1,4 +1,5 @@
 import QtQuick
+import "../Lang.js" as Lang  // [fork] German
 
 // The foot of Pages' sidebar, and the shelf's corner: when there's a newer
 // Uber Notebook, a line that says so (a click: what's new in it, and updating);
@@ -43,7 +44,7 @@ Column {
       anchors.verticalCenter: parent.verticalCenter
       elide: Text.ElideRight
       textFormat: Text.PlainText
-      text: sf.updates && sf.updates.latest ? "Version " + sf.updates.latest.version + " is available" : ""
+      text: sf.updates && sf.updates.latest ? Lang.t("Version ") + sf.updates.latest.version + Lang.t(" is available") : ""
       font.family: sf.theme.uiFont
       font.pixelSize: 12
       font.weight: Font.Medium
@@ -81,7 +82,7 @@ Column {
         anchors.verticalCenter: parent.verticalCenter
         elide: Text.ElideRight
         textFormat: Text.PlainText
-        text: sf.service ? "Updated to " + sf.service.version + " \u00b7 What's new" : ""
+        text: sf.service ? Lang.t("Updated to ") + sf.service.version + Lang.t(" \u00b7 What's new") : ""
         font.family: sf.theme.uiFont
         font.pixelSize: 12
         font.weight: Font.Medium
@@ -101,7 +102,7 @@ Column {
       size: 24
       iconSize: 12
       tint: sf.theme.muted
-      tip: "Dismiss"
+      tip: Lang.t("Dismiss")
       onClicked: sf.service.updateSeen()
     }
   }
@@ -126,7 +127,7 @@ Column {
       Text {
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: "Follow me on X"
+        text: Lang.t("Follow me on X")
         font.family: sf.theme.uiFont
         font.pixelSize: 11
         color: xHover.hovered ? sf.theme.muted : sf.theme.faint

@@ -4,6 +4,7 @@ import "../Calendar.js" as Calendar
 import "../Dates.js" as Dates
 import "../Docs.js" as Docs
 import "../Colors.js" as Colors
+import "../Lang.js" as Lang  // [fork] German
 
 // An event, to change: its title, when (all day, or a start and an end,
 // typed as "fri", "oct 12", "9:30"), how it repeats, its alert, its color,
@@ -157,17 +158,17 @@ Pop {
     var title = ev.title || "The event"
     var id = eventId
     var dayKey = day
-    function done() { pop.view.toastUndo("\u201c" + title + "\u201d is off the calendar", function() { pop.workspace.undoCalendar() }) }
+    function done() { pop.view.toastUndo("\u201c" + title + Lang.t("\u201d is off the calendar"), function() { pop.workspace.undoCalendar() }) }
     if (!repeats || !dayKey) {
       close()
       workspace.setCalendar(Calendar.without(workspace.calendar, id))
       done()
       return
     }
-    view.ask("\u201c" + title + "\u201d repeats", [
+    view.ask("\u201c" + title + Lang.t("\u201d repeats"), [
       { label: "Just this one", value: "one" },
       { label: "This one and the ones after", value: "after" },
-      { label: "Every one", value: "all" }
+      { label: Lang.t("Every one"), value: "all" }
     ], function(what) {
       pop.close()
       var cal = pop.workspace.calendar
@@ -224,7 +225,7 @@ Pop {
         TapHandler { gesturePolicy: TapHandler.ReleaseWithinBounds; onTapped: pop.view.openEventColors(pop.eventId, colorDot) }
         ToolTip.visible: dotHover.hovered
         ToolTip.delay: 600
-        ToolTip.text: "Its color"
+        ToolTip.text: Lang.t("Its color")
       }
       Field {
         id: titleField
@@ -232,7 +233,7 @@ Pop {
         theme: pop.theme
         width: parent.width - colorDot.width - 8
         height: 36
-        placeholder: "What is it?"
+        placeholder: Lang.t("What is it?")
         onAccepted: pop.change({ title: text })
         onEscaped: pop.close()
       }
@@ -243,7 +244,7 @@ Pop {
       width: parent.width
       wrapMode: Text.Wrap
       textFormat: Text.PlainText
-      text: Calendar.repeatLabel(pop.ev ? pop.ev.repeat : null) + ": what's changed here is for every one"
+      text: Calendar.repeatLabel(pop.ev ? pop.ev.repeat : null) + Lang.t(": what's changed here is for every one")
       font.family: pop.theme.uiFont
       font.pixelSize: 12
       color: pop.theme.muted
@@ -254,14 +255,14 @@ Pop {
       visible: pop.repeats && pop.day !== ""
       theme: pop.theme
       icon: pop.theme.icons.page
-      text: "Change just this one (" + pop.dayLabel(pop.day) + ")"
+      text: Lang.t("Change just this one (") + pop.dayLabel(pop.day) + ")"
       onClicked: pop.justThisOne()
     }
 
     // When.
     Row {
       spacing: 8
-      Label2 { anchors.verticalCenter: parent.verticalCenter; text: "All day"; width: 64 }
+      Label2 { anchors.verticalCenter: parent.verticalCenter; text: Lang.t("All day"); width: 64 }
       Toggle {
         objectName: "eventAllDay"
         anchors.verticalCenter: parent.verticalCenter
@@ -272,7 +273,7 @@ Pop {
     }
     Row {
       spacing: 6
-      Label2 { anchors.verticalCenter: parent.verticalCenter; text: "Starts"; width: 64 }
+      Label2 { anchors.verticalCenter: parent.verticalCenter; text: Lang.t("Starts"); width: 64 }
       Field { id: startDay; objectName: "eventStartDay"; theme: pop.theme; width: 130; height: 32; placeholder: "fri, oct 12"; onAccepted: pop.setStart(); input.onActiveFocusChanged: if (!input.activeFocus && pop.opened && text !== pop.dayLabel(pop.ev.start)) pop.setStart() }
       Field {
         id: startTime
@@ -303,8 +304,8 @@ Pop {
     }
     Row {
       spacing: 6
-      Label2 { anchors.verticalCenter: parent.verticalCenter; text: "Ends"; width: 64 }
-      Field { id: endDay; objectName: "eventEndDay"; theme: pop.theme; width: 130; height: 32; placeholder: "the same day"; onAccepted: pop.setEnd(); input.onActiveFocusChanged: if (!input.activeFocus && pop.opened && text !== pop.dayLabel(pop.ev.end)) pop.setEnd() }
+      Label2 { anchors.verticalCenter: parent.verticalCenter; text: Lang.t("Ends"); width: 64 }
+      Field { id: endDay; objectName: "eventEndDay"; theme: pop.theme; width: 130; height: 32; placeholder: Lang.t("the same day"); onAccepted: pop.setEnd(); input.onActiveFocusChanged: if (!input.activeFocus && pop.opened && text !== pop.dayLabel(pop.ev.end)) pop.setEnd() }
       Field {
         id: endTime
         objectName: "eventEndTime"
@@ -336,7 +337,7 @@ Pop {
     Column {
       spacing: 6
       width: parent.width
-      Label2 { text: "Repeats" }
+      Label2 { text: Lang.t("Repeats") }
       Flow {
         width: parent.width
         spacing: 5
@@ -346,7 +347,7 @@ Pop {
             required property var modelData
             objectName: "eventRepeat_" + (modelData.id || "no")
             theme: pop.theme
-            text: modelData.label
+            text: Lang.t(modelData.label)
             checked: pop.ev ? (pop.ev.repeat ? pop.ev.repeat.freq : "") === modelData.id : false
             onClicked: pop.setRepeat(modelData.id)
           }
@@ -355,7 +356,7 @@ Pop {
       Row {
         visible: pop.repeats
         spacing: 6
-        Label2 { anchors.verticalCenter: parent.verticalCenter; text: "Every" }
+        Label2 { anchors.verticalCenter: parent.verticalCenter; text: Lang.t("Every") }
         Field {
           id: everyField
           objectName: "eventEvery"
@@ -374,7 +375,7 @@ Pop {
           theme: pop.theme
           width: 120
           height: 30
-          placeholder: "for good"
+          placeholder: Lang.t("for good")
           function keep() {
             var r = JSON.parse(JSON.stringify(pop.ev.repeat))
             r.until = text.trim() ? pop.dayOf(text) : ""
@@ -391,7 +392,7 @@ Pop {
     Column {
       spacing: 6
       width: parent.width
-      Label2 { text: "Alert" }
+      Label2 { text: Lang.t("Alert") }
       Flow {
         width: parent.width
         spacing: 5
@@ -401,7 +402,7 @@ Pop {
             required property var modelData
             objectName: "eventAlert_" + modelData.m
             theme: pop.theme
-            text: modelData.label
+            text: Lang.t(modelData.label)
             checked: pop.ev ? pop.ev.alert === modelData.m : false
             onClicked: pop.change({ alert: modelData.m })
           }
@@ -415,7 +416,7 @@ Pop {
       theme: pop.theme
       width: parent.width
       height: 32
-      placeholder: "Where (a room, an address, a link)"
+      placeholder: Lang.t("Where (a room, an address, a link)")
       onAccepted: pop.change({ place: text })
       input.onActiveFocusChanged: if (!input.activeFocus && pop.opened && pop.ev && text !== pop.ev.place) pop.change({ place: text })
     }
@@ -445,7 +446,7 @@ Pop {
         Text {
           visible: detailEdit.text === "" && !detailEdit.activeFocus
           textFormat: Text.PlainText
-          text: "A few words"
+          text: Lang.t("A few words")
           font: detailEdit.font
           color: pop.theme.faint
         }
@@ -463,15 +464,15 @@ Pop {
           objectName: "eventNotes"
           theme: pop.theme
           icon: pop.theme.icons.page
-          label: pop.ev && pop.ev.page && pop.workspace.index.pages[pop.ev.page] ? "Open notes" : "Notes for it"
+          label: pop.ev && pop.ev.page && pop.workspace.index.pages[pop.ev.page] ? Lang.t("Open notes") : Lang.t("Notes for it")
           size: 32; iconSize: 15
-          tip: pop.ev && pop.ev.page ? "Its page of notes" : "A page of notes for it (from your meeting template), linked to it"
+          tip: pop.ev && pop.ev.page ? Lang.t("Its page of notes") : Lang.t("A page of notes for it (from your meeting template), linked to it")
           onClicked: { var id = pop.eventId; var d = pop.day; pop.close(); pop.view.notesForEvent(id, d) }
         }
         IconButton {
           id: deleteButton
           objectName: "eventDelete"
-          theme: pop.theme; icon: pop.theme.icons.trash; size: 32; iconSize: 15; tip: "Take it off the calendar"
+          theme: pop.theme; icon: pop.theme.icons.trash; size: 32; iconSize: 15; tip: Lang.t("Take it off the calendar")
           onClicked: pop.remove()
         }
       }
@@ -480,7 +481,7 @@ Pop {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         theme: pop.theme
-        text: "Done"
+        text: Lang.t("Done")
         checked: true
         onClicked: pop.close()
       }

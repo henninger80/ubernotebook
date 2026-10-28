@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
 import "../Help.js" as Help
+import "../Lang.js" as Lang  // [fork] German
 
 // Help (Ctrl+/, or Help at the sidebar's foot): every key and where it
 // works, what you can type, every block, every feature where you meet it,
@@ -129,7 +130,7 @@ Popup {
         x: 22
         y: 22
         textFormat: Text.PlainText
-        text: "Help"
+        text: Lang.t("Help")
         font.family: panel.theme.uiFont
         font.pixelSize: 19
         font.weight: Font.DemiBold
@@ -144,7 +145,7 @@ Popup {
         height: 34
         theme: panel.theme
         icon: panel.theme.icons.search
-        placeholder: "Search Help"
+        placeholder: Lang.t("Search Help")
         onEdited: function(text) { panel.query = text }
         onEscaped: { if (panel.query) { text = ""; panel.query = "" } else panel.close() }
       }
@@ -185,7 +186,7 @@ Popup {
                 anchors.verticalCenter: parent.verticalCenter
                 elide: Text.ElideRight
                 textFormat: Text.PlainText
-                text: navRow.modelData.label
+                text: Lang.t(navRow.modelData.label)
                 font.family: panel.theme.uiFont
                 font.pixelSize: 13
                 font.weight: navRow.chosen ? Font.DemiBold : Font.Normal
@@ -214,7 +215,7 @@ Popup {
         width: parent.width
         elide: Text.ElideRight
         textFormat: Text.PlainText
-        text: panel.searching ? (panel.found.length === 0 ? "Nothing found" : panel.found.length + " found for “" + panel.query.trim() + "”") : panel.current.label
+        text: panel.searching ? (panel.found.length === 0 ? Lang.t("Nothing found") : panel.found.length + Lang.t(" found for “") + panel.query.trim() + Lang.t("”")) : Lang.t(panel.current.label)
         font.family: panel.theme.uiFont
         font.pixelSize: 20
         font.weight: Font.DemiBold
@@ -224,7 +225,7 @@ Popup {
         width: parent.width
         wrapMode: Text.Wrap
         textFormat: Text.PlainText
-        text: panel.searching ? (panel.found.length === 0 ? "Try other words, or fewer." : "") : panel.current.note
+        text: panel.searching ? (panel.found.length === 0 ? Lang.t("Try other words, or fewer.") : "") : Lang.t(panel.current.note)
         visible: text !== ""
         font.family: panel.theme.uiFont
         font.pixelSize: 13

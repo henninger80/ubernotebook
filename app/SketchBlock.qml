@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Shapes
 import "../Sketch.js" as Sketch
 import "../Colors.js" as Colors
+import "../Lang.js" as Lang  // [fork] German
 
 // A sketch on a page in Pages: a sheet to draw on with a pen or a
 // highlighter, on plain paper, dots or a grid. Click it to draw: its tools
@@ -326,7 +327,7 @@ Item {
       Text {
         anchors.horizontalCenter: parent.horizontalCenter
         textFormat: Text.PlainText
-        text: sk.readOnly ? "An empty sketch" : "Click to draw"
+        text: sk.readOnly ? Lang.t("An empty sketch") : Lang.t("Click to draw")
         font.family: sk.editor ? sk.editor.uiFamily : "sans-serif"
         font.pixelSize: 13
         color: Qt.alpha(sk.ink, 0.45)
@@ -347,7 +348,7 @@ Item {
         id: hint
         anchors.centerIn: parent
         textFormat: Text.PlainText
-        text: "Click to draw"
+        text: Lang.t("Click to draw")
         font.family: sk.editor ? sk.editor.uiFamily : "sans-serif"
         font.pixelSize: 11
         color: Qt.alpha(sk.ink, 0.6)
@@ -443,25 +444,25 @@ Item {
       }
 
       IconButton {
-        theme: sk.theme; icon: sk.theme ? sk.theme.icons.check : ""; label: "Done"; tip: "Stop drawing  Esc"
+        theme: sk.theme; icon: sk.theme ? sk.theme.icons.check : ""; label: Lang.t("Done"); tip: Lang.t("Stop drawing  Esc")
         onClicked: sk.stopDrawing()
       }
       Sep {}
       IconButton {
         objectName: "penTool"
-        theme: sk.theme; icon: sk.theme ? sk.theme.icons.pen : ""; tip: "Pen  P"
+        theme: sk.theme; icon: sk.theme ? sk.theme.icons.pen : ""; tip: Lang.t("Pen  P")
         checked: sk.tool === "pen"
         onClicked: sk.pickTool("pen")
       }
       IconButton {
         objectName: "markerTool"
-        theme: sk.theme; icon: sk.theme ? sk.theme.icons.marker : ""; tip: "Highlighter  M"
+        theme: sk.theme; icon: sk.theme ? sk.theme.icons.marker : ""; tip: Lang.t("Highlighter  M")
         checked: sk.tool === "marker"
         onClicked: sk.pickTool("marker")
       }
       IconButton {
         objectName: "eraserTool"
-        theme: sk.theme; icon: sk.theme ? sk.theme.icons.eraser : ""; tip: "Eraser: lifts whole strokes  E"
+        theme: sk.theme; icon: sk.theme ? sk.theme.icons.eraser : ""; tip: Lang.t("Eraser: lifts whole strokes  E")
         checked: sk.tool === "eraser"
         onClicked: sk.pickTool("eraser")
       }
@@ -534,34 +535,34 @@ Item {
       }
       Sep {}
       IconButton {
-        theme: sk.theme; icon: "\u{f0763}"; tip: "Plain paper"
+        theme: sk.theme; icon: "\u{f0763}"; tip: Lang.t("Plain paper")
         checked: sk.sketch.background === "plain"
         onClicked: sk.setBackground("plain")
       }
       IconButton {
-        theme: sk.theme; icon: sk.theme ? sk.theme.icons.dots : ""; tip: "Dots"
+        theme: sk.theme; icon: sk.theme ? sk.theme.icons.dots : ""; tip: Lang.t("Dots")
         checked: sk.sketch.background === "dots"
         onClicked: sk.setBackground("dots")
       }
       IconButton {
-        theme: sk.theme; icon: sk.theme ? sk.theme.icons.grid : ""; tip: "Grid"
+        theme: sk.theme; icon: sk.theme ? sk.theme.icons.grid : ""; tip: Lang.t("Grid")
         checked: sk.sketch.background === "grid"
         onClicked: sk.setBackground("grid")
       }
       Sep {}
       IconButton {
-        theme: sk.theme; icon: sk.theme ? sk.theme.icons.undo : ""; tip: "Undo  Ctrl+Z"
+        theme: sk.theme; icon: sk.theme ? sk.theme.icons.undo : ""; tip: Lang.t("Undo  Ctrl+Z")
         active: sk.editor.canUndo
         onClicked: { sk.editor.undo(); keys.forceActiveFocus() }
       }
       IconButton {
-        theme: sk.theme; icon: sk.theme ? sk.theme.icons.redo : ""; tip: "Redo  Ctrl+Shift+Z"
+        theme: sk.theme; icon: sk.theme ? sk.theme.icons.redo : ""; tip: Lang.t("Redo  Ctrl+Shift+Z")
         active: sk.editor.canRedo
         onClicked: { sk.editor.redo(); keys.forceActiveFocus() }
       }
       IconButton {
         objectName: "clearSketch"
-        theme: sk.theme; icon: sk.theme ? sk.theme.icons.trash : ""; tip: "Clear the sketch"
+        theme: sk.theme; icon: sk.theme ? sk.theme.icons.trash : ""; tip: Lang.t("Clear the sketch")
         active: sk.sketch.strokes.length > 0
         onClicked: sk.clearAll()
       }

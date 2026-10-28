@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Library.js" as Library
+import "../Lang.js" as Lang  // [fork] German
 
 // Pictures to choose, shown as pictures: a folder's (Pictures to start
 // with; then the last one), its folders first, the newest pictures first.
@@ -131,7 +132,7 @@ Rectangle {
       Text {
         anchors.verticalCenter: parent.verticalCenter
         textFormat: Text.PlainText
-        text: pk.multiple ? "Choose pictures" : "Choose a picture"
+        text: pk.multiple ? Lang.t("Choose pictures") : Lang.t("Choose a picture")
         font.family: pk.theme ? pk.theme.uiFont : ""
         font.pixelSize: 16
         font.weight: Font.DemiBold
@@ -152,7 +153,7 @@ Rectangle {
             onClicked: pk.open(pk.home() + modelData[1])
           }
         }
-        IconButton { theme: pk.theme; icon: pk.theme ? pk.theme.icons.close : ""; size: 30; iconSize: 15; tip: "Cancel  Esc"; onClicked: pk.close() }
+        IconButton { theme: pk.theme; icon: pk.theme ? pk.theme.icons.close : ""; size: 30; iconSize: 15; tip: Lang.t("Cancel  Esc"); onClicked: pk.close() }
       }
     }
     // Where: up a folder, the folder.
@@ -165,7 +166,7 @@ Rectangle {
       IconButton {
         objectName: "pickerUp"
         theme: pk.theme; icon: pk.theme ? pk.theme.icons.back : ""; size: 28; iconSize: 14
-        tip: "Up a folder  Backspace"
+        tip: Lang.t("Up a folder  Backspace")
         active: pk.folder !== "/"
         onClicked: pk.up()
       }
@@ -283,7 +284,7 @@ Rectangle {
         anchors.centerIn: parent
         anchors.verticalCenterOffset: pk.entries.length ? grid.contentHeight / 2 + 30 : 0
         textFormat: Text.PlainText
-        text: "No pictures here"
+        text: Lang.t("No pictures here")
         font.family: pk.theme ? pk.theme.uiFont : ""
         font.pixelSize: 13
         color: pk.theme ? pk.theme.muted : "gray"
@@ -305,7 +306,7 @@ Rectangle {
           visible: pk.multiple && pk.pictures.length > 0
           anchors.verticalCenter: parent.verticalCenter
           textFormat: Text.PlainText
-          text: pk.chosen.length === pk.pictures.length ? "Choose none" : "Select all"
+          text: pk.chosen.length === pk.pictures.length ? Lang.t("Choose none") : Lang.t("Select all")
           font.family: pk.theme ? pk.theme.uiFont : ""
           font.pixelSize: 13
           color: allHover.hovered ? pk.theme.text : pk.theme.muted
@@ -316,7 +317,7 @@ Rectangle {
           visible: pk.multiple
           anchors.verticalCenter: parent.verticalCenter
           textFormat: Text.PlainText
-          text: pk.chosen.length ? pk.chosen.length + " chosen  ·  Shift+click for a run of them" : "Click pictures to choose them"
+          text: pk.chosen.length ? pk.chosen.length + Lang.t(" chosen  ·  Shift+click for a run of them") : Lang.t("Click pictures to choose them")
           font.family: pk.theme ? pk.theme.uiFont : ""
           font.pixelSize: 12
           color: pk.theme ? pk.theme.faint : "gray"
@@ -331,21 +332,21 @@ Rectangle {
           anchors.verticalCenter: parent.verticalCenter
           rightPadding: 6
           textFormat: Text.PlainText
-          text: "The file dialog…"
+          text: Lang.t("The file dialog…")
           font.family: pk.theme ? pk.theme.uiFont : ""
           font.pixelSize: 12
           color: dialogHover.hovered ? pk.theme.text : pk.theme.muted
           HoverHandler { id: dialogHover; cursorShape: Qt.PointingHandCursor }
           TapHandler { gesturePolicy: TapHandler.ReleaseWithinBounds; onTapped: { var f = pk.fallback; pk.close(); if (f) f() } }
         }
-        TextButton { theme: pk.theme; text: "Cancel"; onClicked: pk.close() }
+        TextButton { theme: pk.theme; text: Lang.t("Cancel"); onClicked: pk.close() }
         TextButton {
           objectName: "pickerAdd"
           visible: pk.multiple
           theme: pk.theme
           primary: true
           opacity: pk.chosen.length ? 1 : 0.45
-          text: pk.chosen.length > 1 ? "Add " + pk.chosen.length + " pictures" : "Add picture"
+          text: pk.chosen.length > 1 ? Lang.t("Add ") + pk.chosen.length + Lang.t(" pictures") : Lang.t("Add picture")
           onClicked: if (pk.chosen.length) pk.finish(pk.chosen)
         }
       }

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "../Lang.js" as Lang  // [fork] German
 
 // The profile open, and a click away the others (at the top of Pages'
 // sidebar, and of the shelf): each profile, a new one, the demo, and
@@ -63,7 +64,7 @@ Rectangle {
       width: ps.wide ? Math.min(implicitWidth, ps.width - 66) : Math.min(implicitWidth, ps.maxName)
       elide: Text.ElideRight
       textFormat: Text.PlainText
-      text: ps.current ? ps.current.name : "No profile"
+      text: ps.current ? ps.current.name : Lang.t("No profile")
       font.family: ps.theme.uiFont
       font.pixelSize: 13
       font.weight: Font.Medium
@@ -84,7 +85,7 @@ Rectangle {
   TapHandler { id: tap; onTapped: menu.open() }
   ToolTip.visible: hover.hovered && !menu.opened
   ToolTip.delay: 600
-  ToolTip.text: "Switch profile"
+  ToolTip.text: Lang.t("Switch profile")
 
   // The profiles.
   Pop {
@@ -99,7 +100,7 @@ Rectangle {
         textFormat: Text.PlainText
         leftPadding: 8
         bottomPadding: 4
-        text: "Profiles"
+        text: Lang.t("Profiles")
         font.family: ps.theme.uiFont
         font.pixelSize: 12
         color: ps.theme.muted
@@ -124,7 +125,7 @@ Rectangle {
         width: parent.width
         theme: ps.theme
         icon: ps.theme.icons.plus
-        text: "New profile…"
+        text: Lang.t("New profile…")
         onClicked: ps.newProfile()
       }
       MenuRow {
@@ -133,8 +134,8 @@ Rectangle {
         width: parent.width
         theme: ps.theme
         icon: ps.theme.icons.library
-        text: "Explore the demo"
-        hint: "example pages"
+        text: Lang.t("Explore the demo")
+        hint: Lang.t("example pages")
         onClicked: { menu.close(); ps.profiles.openDemo() }
       }
       MenuRow {
@@ -142,7 +143,7 @@ Rectangle {
         width: parent.width
         theme: ps.theme
         icon: ps.theme.icons.info
-        text: "Start screen\u2026"
+        text: Lang.t("Start screen\u2026")
         onClicked: { menu.close(); ps.profiles.openStart() }
       }
       MenuRow {
@@ -150,7 +151,7 @@ Rectangle {
         width: parent.width
         theme: ps.theme
         icon: ps.theme.icons.cog
-        text: "Manage profiles…"
+        text: Lang.t("Manage profiles…")
         onClicked: { menu.close(); ps.manageRequested() }
       }
     }
@@ -168,7 +169,7 @@ Rectangle {
       spacing: 12
       Text {
         textFormat: Text.PlainText
-        text: "New profile"
+        text: Lang.t("New profile")
         font.family: ps.theme.uiFont
         font.pixelSize: 15
         font.weight: Font.DemiBold
