@@ -20,6 +20,8 @@
 .import "Bookmark.js" as Bookmark
 .import "Board.js" as Board
 .import "Email.js" as Email
+// [fork] A query block's data (QueryData.js).
+.import "QueryData.js" as QueryData
 
 // Every kind of block. `rows` is how many ruled lines one line of its text
 // takes (a big heading takes two, so the text below stays on the lines).
@@ -82,7 +84,9 @@ var KINDS = {
   email:   { label: "Email",       text: false, rows: 1 },
   // Pictures side by side in a grid (Pages only): each in Pages/assets, with
   // a caption; how many to a row, and how tall.
-  gallery: { label: "Gallery",     text: false, rows: 1 }
+  gallery: { label: "Gallery",     text: false, rows: 1 },
+  // [fork] The pages a search finds, as a list or a table (Query.js).
+  query:   { label: "Query",       text: false, rows: 1 }
 }
 
 // Colors a block (or its background) can have in Pages: "blue" is blue text,
@@ -297,7 +301,7 @@ function clean(raw, options) {
 
 // ---- what the newer Pages blocks keep ---------------------------------------------------
 
-var DATA_KINDS = ["button", "file", "video", "bookmark", "board", "synced", "contact", "email", "gallery"]
+var DATA_KINDS = ["button", "file", "video", "bookmark", "board", "synced", "contact", "email", "gallery", "query"]  // [fork] query
 
 // A gallery's: its pictures (at most 200, each in assets, with a caption),
 // 2, 3 or 4 to a row, how tall each is (0: three quarters as tall as wide,
@@ -331,6 +335,7 @@ function cleanData(type, raw) {
   if (type === "synced") return { page: UUID_.test(r.page) ? r.page : "", color: Files.cleanColor(r.color), background: Files.cleanColor(r.background) }
   if (type === "email") return Email.clean(r)
   if (type === "gallery") return cleanGallery(r)
+  if (type === "query") return QueryData.clean(r)  // [fork]
   if (type === "contact") return { contact: typeof r.contact === "string" && /^[A-Za-z0-9_-]{1,40}$/.test(r.contact) ? r.contact : "", name: cleanLine(r.name, 120),
     color: Files.cleanColor(r.color), background: Files.cleanColor(r.background) }
   return {}

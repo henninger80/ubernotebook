@@ -28,6 +28,8 @@
 .import "Email.js" as Email
 .import "Equations.js" as Equations
 .import "Notes.js" as Notes
+// [fork] A query block's data (QueryData.js).
+.import "QueryData.js" as QueryData
 
 // Characters that would otherwise be read as Markdown.
 function escapeText(text) {
@@ -406,6 +408,9 @@ function fromDocPage(page, lookup, options) {
     else if (b.type === "file" || b.type === "video") line = Files.toMarkdown(b.data, opts.assetPrefix)
     else if (b.type === "bookmark") line = Bookmark.toMarkdown(b.data)
     else if (b.type === "board") line = Board.toMarkdown(b.data)
+    // [fork] A query block: for an agent, what it looks for (it writes one so); else in a line.
+    else if (opts.fences && b.type === "query") line = "```query\n" + QueryData.toFence(b.data) + "\n```"
+    else if (b.type === "query") line = "*(A query in Uber Notebook" + (b.data && b.data.q ? ": " + escapeText(b.data.q) : "") + ")*"
     else if (b.type === "button") line = ""
     else if (b.type === "synced") line = syncedLines(b)
     else if (b.type === "contact") line = contactLines(b)

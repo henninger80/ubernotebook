@@ -566,6 +566,9 @@ Item {
       readonly property string link: textEdit.linkAt(hover.point.position.x, hover.point.position.y)
       cursorShape: (link !== "" && (hover.point.modifiers & Qt.ControlModifier)) || Html.pageOf(link) !== "" || Html.isTag(link) || Html.contactOf(link) !== ""
         ? Qt.PointingHandCursor : Qt.IBeamCursor
+      // [fork] Resting on a link to a page: a look at it (PagePreview.qml).
+      onLinkChanged: block.editor.pageHovered(hovered ? Html.pageOf(link) : "", textEdit, point.position.x, point.position.y)
+      onHoveredChanged: if (!hovered) block.editor.pageHovered("", textEdit, 0, 0)
     }
     TapHandler {
       acceptedModifiers: Qt.ControlModifier
@@ -916,7 +919,7 @@ Item {
     y: block.st.above + block.boxTop
     sourceComponent: block.type === "button" ? buttonComp : block.type === "file" ? fileComp : block.type === "video" ? videoComp
       : block.type === "bookmark" ? bookmarkComp : block.type === "board" ? boardComp : block.type === "contact" ? contactComp : block.type === "email" ? emailComp
-      : block.type === "gallery" ? galleryComp : null
+      : block.type === "gallery" ? galleryComp : block.type === "query" ? queryComp : null  // [fork] query
     // (A synced block has an editor of its own, of these blocks: by name, so
     // the types aren't each other's when they're compiled.)
     source: block.type === "synced" ? "SyncedBlock.qml" : ""
@@ -935,6 +938,7 @@ Item {
   Component { id: emailComp; EmailBlock { editor: block.editor; uid: block.uid; source: block.extra; ink: block.inkColor; available: block.width - block.bx - block.boxRight } }
   Component { id: contactComp; ContactBlock { editor: block.editor; uid: block.uid; source: block.extra; ink: block.inkColor; available: block.width - block.bx - block.boxRight } }
   Component { id: bookmarkComp; BookmarkBlock { editor: block.editor; uid: block.uid; source: block.extra; ink: block.inkColor; available: block.width - block.bx - block.boxRight } }
+  Component { id: queryComp; QueryBlock { editor: block.editor; uid: block.uid; source: block.extra; ink: block.inkColor; available: block.width - block.bx - block.boxRight } }  // [fork]
   Component { id: boardComp; BoardBlock { editor: block.editor; uid: block.uid; source: block.extra; ink: block.inkColor; available: block.width - block.bx - block.boxRight } }
 
   // ---- a habit's week --------------------------------------------------------------------------
@@ -1247,7 +1251,12 @@ Item {
         color: Qt.alpha(block.editor.ink, 0.25)
       }
     }
-    HoverHandler { id: pageHover; cursorShape: Qt.PointingHandCursor }
+    HoverHandler {
+      id: pageHover
+      cursorShape: Qt.PointingHandCursor
+      // [fork] A look at the page (PagePreview.qml).
+      onHoveredChanged: block.editor.pageHovered(hovered && pageRow.page ? (block.type === "page" ? block.uid : block.target) : "", pageRow, 32, pageRow.height - 20)
+    }
     TapHandler {
       onTapped: {
         if (!pageRow.page) { block.editor.selectBlocks(block.uid, block.uid); return }

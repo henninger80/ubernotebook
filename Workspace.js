@@ -70,7 +70,7 @@ function isUuid(value) {
 // ---- blocks ---------------------------------------------------------------------------
 
 // The kinds of block a page can have.
-var KINDS = ["p", "h1", "h2", "h3", "bullet", "number", "check", "toggle", "quote", "callout", "code", "divider", "image", "page", "link", "toc", "columns", "column", "habit", "calendar", "mindmap", "table", "sketch", "audio", "meeting", "agenda", "event", "button", "file", "video", "bookmark", "board", "synced", "contact", "email", "gallery"]
+var KINDS = ["p", "h1", "h2", "h3", "bullet", "number", "check", "toggle", "quote", "callout", "code", "divider", "image", "page", "link", "toc", "columns", "column", "habit", "calendar", "mindmap", "table", "sketch", "audio", "meeting", "agenda", "event", "button", "file", "video", "bookmark", "board", "synced", "contact", "email", "gallery", "query"]  // [fork] query
 
 function isKind(type) {
   return KINDS.indexOf(type) >= 0
@@ -1291,7 +1291,9 @@ var VERSION_WHY = {
   edit: "",
   command: "Before an agent or command changed it",
   restore: "Before an older version was put back",
-  tag: "Before a tag was renamed or taken away"
+  tag: "Before a tag was renamed or taken away",
+  // [fork] Mentions.js
+  link: "Before a mention of a page was made a link"
 }
 function versionWhy(why) { return VERSION_WHY[why] || "" }
 

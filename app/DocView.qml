@@ -110,6 +110,7 @@ FocusScope {
   readonly property alias tagView: tagView
   readonly property alias calendarView: calendarView
   readonly property alias taskView: taskView  // [fork]
+  readonly property alias pagePreview: pagePreview  // [fork]
   readonly property alias libraryView: libraryView
   readonly property alias peopleView: peopleView
   readonly property alias templatesView: templatesView
@@ -396,7 +397,47 @@ FocusScope {
       else if (what === "copy") copyText(arg)
       else if (what === "email") mailTo(arg)
       else if (what === "web") workspace.files.openUrl(arg)
+    } else if (type === "query") queryAction(uid, what, arg, d)  // [fork]
+  }
+
+  // [fork] A query block's (QueryBlock.qml): what it looks for asked when
+  // it's new (/query; /database shows the pages inside this one at once), a
+  // page made where it looks, where it looks picked, a page's status changed.
+  function queryAction(uid, what, arg, d) {
+    if (what === "new") {
+      if (d.scope === "all") Qt.callLater(function() { var it = editor.items[uid]; if (it && it.dataView) it.dataView.focusQuery() })
+    } else if (what === "newPage") newPageInside(uid, arg)
+    else if (what === "pickScope") {
+      view.pickFor = uid
+      picker.purpose = "queryScope"
+      picker.exclude = ""
+      picker.allowTop = false
+      picker.openAt(main, "Show the pages inside\u2026")
+    } else if (what === "setStatus" && arg && arg.page) {
+      var e = workspace.index.pages[arg.page]
+      projectOf(arg.page, arg.status ? { status: arg.status, due: e && e.project ? e.project.due : "" } : null, inThisFolder(function(ok) {
+        if (!ok) view.toast(Lang.t("It's locked: unlock it first"))
+      }))
     }
+  }
+  // [fork] A new page inside page `parent` (a query block's New page): on
+  // this page after the pages already on it (else after the block), or at
+  // the end of that one's; then opened, to name it.
+  function newPageInside(uid, parent) {
+    if (!workspace || !parent || !workspace.index.pages[parent]) return
+    commit()
+    var child = workspace.createPage({ parent: parent })
+    if (!child) return
+    if (page && page.id === parent) {
+      var after = uid
+      for (var i = 0; i < editor.model.count; i++) if (editor.model.get(i).type === "page") after = editor.model.get(i).uid
+      editor.placeBlock(after, { type: "page", id: child.id })
+      markDirty()
+      commit()
+    } else {
+      workspace.editPage(parent, function(p) { return Workspace.appendPageBlock(p, child.id) })
+    }
+    open(child.id, false, "title")
   }
 
   // Its colors: Pages' or your own, from the color menu (and picker).
@@ -3823,10 +3864,23 @@ FocusScope {
                 font.pixelSize: 12
                 color: view.theme.text
               }
-              HoverHandler { id: backHover; cursorShape: Qt.PointingHandCursor }
+              HoverHandler {
+                id: backHover
+                cursorShape: Qt.PointingHandCursor
+                onHoveredChanged: pagePreview.hoverAt(hovered ? modelData : "", parent, 0, parent.height - 18)  // [fork]
+              }
               TapHandler { onTapped: view.open(modelData) }
             }
           }
+        }
+        // [fork] The pages that name this one without a link (MentionsBar.qml).
+        MentionsBar {
+          width: parent.width
+          theme: view.theme
+          workspace: view.workspace
+          pageId: view.page && !view.mirrored ? view.page.id : ""
+          onOpenRequested: function(id) { pagePreview.close(); view.open(id) }
+          onPageHovered: function(id, anchor, x, y) { pagePreview.hoverAt(id, anchor, x, y) }
         }
         Item { width: 1; height: 10 }
 
@@ -3856,6 +3910,7 @@ FocusScope {
           assetInfo: function(src, done) { if (view.workspace) view.workspace.assetInfo(src, done); else done(null) }
           readClipboard: view.workspace && view.workspace.files && typeof view.workspace.files.readClipboard === "function" ? function(done, primary) { view.workspace.files.readClipboard(done, primary) } : null
           pageInfo: function(id) { return view.workspace ? view.workspace.pageMeta(id) : null }
+          pageId: view.page ? view.page.id : ""  // [fork] QueryBlock
           pagesRevision: view.workspace ? view.workspace.revision : 0
           findPages: function(query) { return view.findPages(query) }
           findPeople: function(query) { return view.findPeople(query) }
@@ -3869,7 +3924,8 @@ FocusScope {
           onChanged: { view.markDirty(); if (view.pageBlank || editor.model.count <= 1) view.updateBlank() }
           onCursorAt: function(y, h) { view.ensureVisible(y, h) }
           onLeaveTop: { titleEdit.forceActiveFocus(); titleEdit.cursorPosition = titleEdit.length }
-          onPageOpened: function(id) { view.openFromLink(id, editor.openIn) }  // [fork] openIn
+          onPageOpened: function(id) { pagePreview.close(); view.openFromLink(id, editor.openIn) }  // [fork] openIn, the look closed
+          onPageHovered: function(id, anchor, x, y) { pagePreview.hoverAt(id, anchor, x, y) }  // [fork]
           onSubpageRequested: function(uid) { view.subpageIn(uid) }
           onPageLinkRequested: function(uid) {
             view.pickFor = uid
@@ -4764,6 +4820,16 @@ FocusScope {
     onPicked: function(value) { editor.setProp(view.pickFor, "lang", value === "Plain text" ? "" : value) }
   }
 
+  // [fork] A look at a page, under a link to it (PagePreview.qml).
+  PagePreview {
+    id: pagePreview
+    objectName: "pagePreview"
+    theme: view.theme
+    workspace: view.workspace
+    parent: view
+    onOpenRequested: function(id) { view.openFromLink(id, "") }
+  }
+
   PagePicker {
     id: picker
     theme: view.theme
@@ -4774,6 +4840,7 @@ FocusScope {
       else if (purpose === "relink") view.relink(view.pickFor, id)
       else if (purpose === "moveBlocks") view.moveBlocks(view.movingBlocks, id)
       else if (purpose === "movePage") view.movePage(view.moving, id)
+      else if (purpose === "queryScope") { var qd = editor.dataOf(view.pickFor); if (qd) { qd.scope = id; editor.setData(view.pickFor, qd) } }  // [fork]
     }
   }
 

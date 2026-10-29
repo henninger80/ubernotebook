@@ -272,6 +272,14 @@ height: 240
 ![Tram 28](assets/20261002-tram.jpg)
 ![](assets/20261002-beach.png)
 ```
+
+```query
+q: Protokoll #vorstand changed:30d
+view: table
+sort: modified
+columns: status, due, tags, modified
+title: Vorstandsprotokolle
+```
 ````
 
 A `board`'s columns are `## Name` lines, each card a `- ` line under its
@@ -283,6 +291,19 @@ when it's looked at). A `link` is a link to a page, by its title or id
 Pages/assets (`blocks` and `read` give their `src`); to put new pictures in
 one, use `addGallery` or `gallery ... add`, which copy them in. To change one
 card on a board, use `board` (it keeps the board's colors), not `replace`.
+
+A `query` is a search kept on the page, found again as the notes change
+(a database view, when it's the pages inside a page as a table). Every line
+is optional: `q:` words and filters (`#tag`, `-#tag`, `status:active`
+(planning, paused, done, open), `is:project`, `is:favorite`, `is:task`,
+`changed:7d`, `created:2w`, `due:14d`, `due:overdue`, `in:Page title`);
+`scope:` `here` (the pages inside the page it's on) or a page's id (else
+every page); `deep: yes` (and the pages inside those); `view:` `list` or
+`table`; `sort:` `auto`, `order`, `title`, `modified`, `created`, `due` or
+`status`, then `desc` for the other way round; `limit:` 5 to 200;
+`columns:` (a table's) `status`, `due`, `tags`, `progress`, `modified`,
+`created`, `path`; `title:` a heading over it. For "a database of the pages
+inside this page", write `scope: here` and `view: table`.
 
 ## Mind maps
 

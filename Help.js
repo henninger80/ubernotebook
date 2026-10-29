@@ -1808,6 +1808,16 @@ var SECTIONS = [
       ""
      ],
      [
+      "/query",
+      "A search kept on the page: the pages it finds, found again as your notes change, with the words around what it found. Besides words: #tag and -#tag, status:active (planning, paused, done, open), is:project, is:favorite, is:task, changed:7d, created:2w, due:14d, due:overdue, in:Page. On it, Edit changes what it looks for (and its heading), the next button shows it as a table, and its menus sort it and say where it looks: every page, the pages inside this page or another one, and those inside them too",
+      ""
+     ],
+     [
+      "/database",
+      "The pages inside this page as a table: their status, due date, tags, to-dos, when they changed or were made, where they are (the columns are yours to pick). Click a column's heading to sort by it, again for the other way round; click a status to change it; + makes a new page in there. It's a query block, so it can look for words and tags too",
+      ""
+     ],
+     [
       "/agenda, /event",
       "Agenda: a day's events (‹ › for other days, Today to come back; + adds an event; click one to open it). Event: puts an event on the calendar and on the page; click it to open the event",
       ""
@@ -1972,6 +1982,16 @@ var SECTIONS = [
       "'↩ Linked from' under the title",
       "Lists the pages that link to this one. Click one to open it",
       "Only shown when some page links here"
+     ],
+     [
+      "'Named on … pages without a link' under the title",
+      "The pages whose text names this page's title (as a whole word, accents aside) but don't link to it. Click it for the list, with the words around each place; Link makes the first place on that page a link here (its version is kept first), Link all does it on each",
+      "Only shown when some page names it; titles shorter than three letters, or only a date, aren't looked for"
+     ],
+     [
+      "Rest the pointer on a link to a page",
+      "Shows a look at the page after a moment: where it is, the start of its text, its status, tags and when it changed. Click the look to open the page",
+      "Links in a line, page and link blocks, and the pages under 'Linked from'"
      ],
      [
       "Click under the page's last block",

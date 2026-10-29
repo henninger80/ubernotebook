@@ -34,6 +34,8 @@
 .import "Papers.js" as Papers
 .import "Sketch.js" as Sketch
 .import "Table.js" as Table
+// [fork] A query block's data (QueryData.js).
+.import "QueryData.js" as QueryData
 
 var MONO = "'iA Writer Mono S'"
 var HIGHLIGHT = "#fbf3db"
@@ -1198,6 +1200,8 @@ function fenced(lang, text, ctx) {
     var clean = Blocks.cleanData("gallery", g)
     return clean.images.length ? { type: "gallery", indent: 0, data: clean } : null
   }
+  // [fork] A query block: "q: words #tag", "scope: here", "view: table"... (QueryData.js).
+  if (l === "query") return { type: "query", indent: 0, data: QueryData.fromFence(body) }
   if (l === "bookmark") {
     var url = Bookmark.cleanUrl(body.split("\n")[0].trim())
     return url ? { type: "bookmark", indent: 0, data: { url: url } } : null

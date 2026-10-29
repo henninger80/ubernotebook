@@ -485,7 +485,7 @@ QtObject {
       fences: "read gives (and add, append, replace and insertAfter take) these as fenced code: "
         + "```board (## a column, - a card under it), ```bookmark (a link), ```contact (someone in People: their name, email or id), "
         + "```agenda (a day's events: 2026-10-05 or today), ```event (an event's id), ```link (a link to a page: its id or title), "
-        + "```gallery (columns: 3, height: 240, then ![caption](assets/...) a picture a line, pictures already in Pages/assets)",
+        + "```gallery (columns: 3, height: 240, then ![caption](assets/...) a picture a line, pictures already in Pages/assets), ```query (a search kept on the page: q: words #tag status:active changed:7d, scope: here, view: table, sort: modified desc, columns: status, due, tags)",
       columns: "Blocks side by side: a line ::columns (or ::columns 60 40, each one's share), the first column's Markdown, "
         + "::next, the next one's, ::end; two to six, at the page's own level (add, append, or insertAfter or replace a block "
         + "that isn't inside another). read gives them so",

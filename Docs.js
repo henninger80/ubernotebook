@@ -50,6 +50,7 @@ var STYLES = {
   board:   { size: 15, lh: 1.45, above: 8, below: 8 },
   gallery: { size: 15, lh: 1.45, above: 8, below: 8 },
   synced:  { size: 15, lh: 1.45, above: 4, below: 4 },
+  query:   { size: 15, lh: 1.45, above: 6, below: 6 },  // [fork]
   habit:   { size: 16, lh: 1.5, above: 3, below: 3 },
   calendar: { size: 15, lh: 1.5, above: 8, below: 8 }
 }
@@ -185,6 +186,9 @@ var COMMANDS = [
   { id: "synced", group: "Advanced", label: "Synced block", hint: "The same blocks in many places: changed in one, changed in all", icon: "synced", action: "synced", keys: "synced sync shared reuse mirror transclude copy same" },
   { id: "mindmap", group: "Advanced", label: "Mind map", hint: "Ideas branching out from one topic", icon: "mindmap", type: "mindmap", props: { outline: "Central topic\n  Main idea\n  Main idea\n  Main idea" }, keys: "mindmap brainstorm map tree ideas diagram" },
   { id: "toc", group: "Advanced", label: "Table of contents", hint: "The headings on this page", icon: "toc", type: "toc", keys: "contents outline index" },
+  // [fork] A query block (Query.js): a search kept on the page, or the pages inside it as a table.
+  { id: "query", group: "Advanced", label: "Query", hint: "The pages a search finds, kept up to date", icon: "search", type: "query", keys: "query search filter saved results find list dataview abfrage suche" },
+  { id: "database", group: "Advanced", label: "Database", hint: "The pages inside this page, as a table", icon: "table", type: "query", props: { data: { scope: "here", view: "table", limit: 100 } }, keys: "database table view pages inside children collection status notion datenbank tabelle" },
   { id: "equation", group: "Advanced", label: "Equation", hint: "Math in LaTeX, drawn on a line of its own", icon: "equation", type: "code", props: { lang: "Math" }, keys: "equation math latex tex formula mathjax katex block display" },
   // Diagrams: written in Mermaid (a code block in Mermaid), drawn; each starts with a small one to change.
   { id: "diagram", group: "Advanced", label: "Diagram", hint: "Boxes and arrows, written in Mermaid and drawn", icon: "diagram", type: "code", props: { lang: "Mermaid" }, text: Diagram.STARTERS.diagram, keys: "diagram flowchart flow chart mermaid graph boxes arrows" },
@@ -254,7 +258,7 @@ function kindLabel(type, toggle) {
     var k = TURN_INTO[i]
     if (k.type === type && !!k.toggle === !!toggle) return k.label
   }
-  return type === "page" ? "Page" : type === "link" ? "Link to page" : type === "image" ? "Image" : type === "divider" ? "Divider" : type === "toc" ? "Table of contents" : type === "calendar" ? "Calendar" : type === "mindmap" ? "Mind map" : type === "table" ? "Table" : type === "sketch" ? "Sketch" : type === "audio" ? "Audio note" : type === "meeting" ? "Meeting" : type === "agenda" ? "Agenda" : type === "event" ? "Event" : type === "button" ? "Button" : type === "file" ? "File" : type === "video" ? "Video" : type === "bookmark" ? "Web bookmark" : type === "board" ? "Board" : type === "synced" ? "Synced block" : type === "contact" ? "Contact" : type === "email" ? "Email" : type === "gallery" ? "Gallery" : "Text"
+  return type === "page" ? "Page" : type === "link" ? "Link to page" : type === "image" ? "Image" : type === "divider" ? "Divider" : type === "toc" ? "Table of contents" : type === "calendar" ? "Calendar" : type === "mindmap" ? "Mind map" : type === "table" ? "Table" : type === "sketch" ? "Sketch" : type === "audio" ? "Audio note" : type === "meeting" ? "Meeting" : type === "agenda" ? "Agenda" : type === "event" ? "Event" : type === "button" ? "Button" : type === "file" ? "File" : type === "video" ? "Video" : type === "bookmark" ? "Web bookmark" : type === "board" ? "Board" : type === "synced" ? "Synced block" : type === "contact" ? "Contact" : type === "email" ? "Email" : type === "gallery" ? "Gallery" : type === "query" ? "Query" : "Text"
 }
 
 // Languages a code block can say it's in.

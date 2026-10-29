@@ -82,6 +82,9 @@ FocusScope {
   // Pages: what a page block shows, function(id) -> { title, icon } (or
   // null); pagesRevision changes when a page's title or icon does.
   property var pageInfo: function(id) { return null }
+  // [fork] Pages: the page it shows ("" for none), for a query block's
+  // "the pages inside this page" (QueryBlock.qml).
+  property string pageId: ""
   property int pagesRevision: 0
   // Pages: pages for "[[", function(query) -> [{ id, title, icon, path }];
   // and a new page with a name, function(title) -> its id ("" if it wasn't made).
@@ -130,6 +133,9 @@ FocusScope {
   // callout's icon, a block's handle or a code block's language clicked; a
   // code block copied.
   signal pageOpened(string id)
+  // [fork] The pointer on a link to page `id` ("" when it's left it), at x,
+  // y in `anchor`: DocView shows a look at the page (PagePreview.qml).
+  signal pageHovered(string id, var anchor, real x, real y)
   // [fork] How a page link's being opened: "" here, "tab" in a new tab
   // (Ctrl+click), "split" in the other pane (Ctrl+Shift+click); DocBlock
   // sets it for the click it's for.
