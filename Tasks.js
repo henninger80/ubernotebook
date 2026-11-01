@@ -19,6 +19,14 @@
 //           "erledigt" or "done" in its line), c: 1 (cancelled: #abgebrochen,
 //           #canceled), g }], cleanDone() gives them.
 //
+// A to-do indented under another (in it, however deep, through lists and
+// toggles too) is that one's subtask, as Logseq has them: u is the to-do
+// it's under, and k the subtasks right under a to-do, ticked or not, in
+// their order (both left out when there's none). The Tasks view shows a
+// subtask under its to-do, not on its own (nest()), unless that one isn't
+// shown (ticked, or without the tag picked); a to-do comes as early as its
+// first open subtask's date (all()).
+//
 // A task's status (statusOf): "todo", "doing" (#in-arbeit), "done" or
 // "cancelled" (#abgebrochen, ticked or not).
 //
@@ -46,6 +54,9 @@ var STATUSES = [
 var MAX = 300
 var TEXT = 120
 var UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+// What the index's tasks are worked out as: an older index's are again
+// (Workspace.cleanEntry), as the pages are first read.
+var VERSION = 2
 
 // The buckets, in order, and what they're called.
 var BUCKETS = [
@@ -122,13 +133,45 @@ function doneOfBlock(b) {
 
 // A page's blocks -> its done tasks.
 function doneOfBlocks(blocks) {
+  var tree = nesting(blocks)
   var out = []
   ;(blocks || []).forEach(function(b) {
     if (out.length >= MAX) return
     var t = doneOfBlock(b)
-    if (t) out.push(t)
+    if (t) out.push(withTree(t, tree))
   })
   return out
+}
+
+// Which to-do each to-do is under (Workspace.flatten's list, its indent):
+// { up: { uid: the to-do's uid }, down: { uid: [subtasks' uids] } }, to-dos
+// with nothing written in them not counted.
+function nesting(blocks) {
+  var up = {}, down = {}
+  var stack = []
+  ;(blocks || []).forEach(function(b) {
+    if (!b) return
+    var depth = Number(b.indent) || 0
+    while (stack.length && stack[stack.length - 1].depth >= depth) stack.pop()
+    var uid = b.uid || b.id
+    var task = b.type === "check" && Html.plainText(String(b.html || "")).trim() !== ""
+    if (task) {
+      for (var i = stack.length - 1; i >= 0; i--) {
+        if (!stack[i].task) continue
+        up[uid] = stack[i].uid
+        ;(down[stack[i].uid] = down[stack[i].uid] || []).push(uid)
+        break
+      }
+    }
+    stack.push({ depth: depth, uid: uid, task: task })
+  })
+  return { up: up, down: down }
+}
+
+function withTree(t, tree) {
+  if (tree.up[t.b]) t.u = tree.up[t.b]
+  if (tree.down[t.b]) t.k = tree.down[t.b].slice(0, 50)
+  return t
 }
 
 // What an index entry keeps of them, as it may be used.
@@ -140,7 +183,7 @@ function cleanDone(list) {
     if (x.c === 1) out.c = 1
     var g = Array.isArray(x.g) ? x.g.filter(function(n) { return typeof n === "string" && Tags.clean(n) === n }).slice(0, 12) : []
     if (g.length) out.g = g
-    return out
+    return cleanTree(x, out)
   })
 }
 
@@ -168,7 +211,7 @@ function closed(index, tag) {
     e.done.forEach(function(x) {
       var g = x.g || []
       if (tag && g.indexOf(tag) < 0) return
-      out.push({ page: id, title: e.title || "Untitled", icon: e.icon || "", modified: e.modified || "", b: x.b, t: x.t || "", d: x.d || "", e: x.e || "", c: x.c || 0, p: 0, s: "", g: g, done: true, bucket: "closed" })
+      out.push({ page: id, title: e.title || "Untitled", icon: e.icon || "", modified: e.modified || "", b: x.b, t: x.t || "", d: x.d || "", e: x.e || "", c: x.c || 0, p: 0, s: "", g: g, u: x.u || "", k: x.k || [], done: true, bucket: "closed" })
     })
   }
   out.sort(function(a, b) {
@@ -193,12 +236,21 @@ function forStatus(index, now, tag, status) {
 
 // A page's blocks (Workspace.flatten) -> its tasks.
 function ofBlocks(blocks) {
+  var tree = nesting(blocks)
   var out = []
   ;(blocks || []).forEach(function(b) {
     if (out.length >= MAX) return
     var t = ofBlock(b)
-    if (t) out.push(t)
+    if (t) out.push(withTree(t, tree))
   })
+  return out
+}
+
+// The to-do it's under, and the ones under it, as kept.
+function cleanTree(x, out) {
+  if (typeof x.u === "string" && UUID.test(x.u)) out.u = x.u
+  var k = Array.isArray(x.k) ? x.k.filter(function(u) { return typeof u === "string" && UUID.test(u) }).slice(0, 50) : []
+  if (k.length) out.k = k
   return out
 }
 
@@ -212,7 +264,7 @@ function clean(list) {
     if (x.s === "doing" || x.s === "cancelled") out.s = x.s
     var g = Array.isArray(x.g) ? x.g.filter(function(n) { return typeof n === "string" && Tags.clean(n) === n }).slice(0, 12) : []
     if (g.length) out.g = g
-    return out
+    return cleanTree(x, out)
   })
 }
 
@@ -254,25 +306,57 @@ function all(index, now, tag) {
   for (var id in index.pages) {
     var e = index.pages[id]
     if (!e.tasks || !e.tasks.length || !live(index, id)) continue
+    var open = {}, every = {}
+    ;(e.done || []).forEach(function(x) { every[x.b] = x })
+    e.tasks.forEach(function(x) { open[x.b] = x; every[x.b] = x })
     e.tasks.forEach(function(x) {
       var g = x.g || []
       if (tag && g.indexOf(tag) < 0) return
-      out.push({ page: id, title: e.title || "Untitled", icon: e.icon || "", modified: e.modified || "", b: x.b, t: x.t || "", d: x.d || "", p: x.p || 0, s: x.s || "", g: g, bucket: bucketOf(x.d || "", n) })
+      // (As early as its first open subtask's date.)
+      var at = earliest(open, every, x, {})
+      out.push({ page: id, title: e.title || "Untitled", icon: e.icon || "", modified: e.modified || "", b: x.b, t: x.t || "", d: x.d || "", at: at, p: x.p || 0, s: x.s || "", g: g, u: x.u || "", k: x.k || [], bucket: bucketOf(at, n) })
     })
   }
   out.sort(function(a, b) {
-    if (a.d && b.d && a.d.slice(0, 10) !== b.d.slice(0, 10)) return a.d < b.d ? -1 : 1
-    if (a.d && !b.d) return -1
-    if (!a.d && b.d) return 1
+    if (a.at && b.at && a.at.slice(0, 10) !== b.at.slice(0, 10)) return a.at < b.at ? -1 : 1
+    if (a.at && !b.at) return -1
+    if (!a.at && b.at) return 1
     if (a.p !== b.p) return b.p - a.p
     if ((a.s === "doing") !== (b.s === "doing")) return a.s === "doing" ? -1 : 1
-    if (a.d !== b.d) return a.d < b.d ? -1 : 1
+    if (a.at !== b.at) return a.at < b.at ? -1 : 1
     return a.modified < b.modified ? 1 : a.modified > b.modified ? -1 : 0
   })
   return out
 }
 
-// How many tasks are open, and how many of them overdue: { open, late }
+// The earliest date of an open task and its open subtasks, however deep
+// (under a ticked one too): "" for none. (`open`, `every` as underOpen's.)
+function earliest(open, every, x, seen) {
+  if (seen[x.b]) return ""
+  seen[x.b] = true
+  var at = open[x.b] ? x.d || "" : ""
+  ;(x.k || []).forEach(function(u) {
+    var sub = every[u]
+    if (!sub) return
+    var d = earliest(open, every, sub, seen)
+    if (d && (!at || d.slice(0, 10) < at.slice(0, 10))) at = d
+  })
+  return at
+}
+
+// Whether a task is under an open one on its page, however deep (`open`,
+// `all`: { uid: task }, the open ones, and those and the ticked ones).
+function underOpen(open, all, x) {
+  var seen = {}
+  for (var u = x.u; u && !seen[u]; u = all[u] ? all[u].u : "") {
+    seen[u] = true
+    if (open[u]) return true
+  }
+  return false
+}
+
+// How many tasks are open (not counting subtasks under an open one), and
+// how many of them overdue (themselves, or a subtask): { open, late }
 // (all's, without making or sorting them).
 function count(index, now) {
   var today = startOfDay(now || new Date())
@@ -280,12 +364,69 @@ function count(index, now) {
   for (var id in index.pages) {
     var e = index.pages[id]
     if (!e.tasks || !e.tasks.length || !live(index, id)) continue
-    out.open += e.tasks.length
+    var open = {}, every = {}
+    ;(e.done || []).forEach(function(x) { every[x.b] = x })
+    e.tasks.forEach(function(x) { open[x.b] = x; every[x.b] = x })
     for (var i = 0; i < e.tasks.length; i++) {
-      var d = e.tasks[i].d ? Dates.fromIso(e.tasks[i].d) : null
+      if (underOpen(open, every, e.tasks[i])) continue
+      out.open++
+      var at = earliest(open, every, e.tasks[i], {})
+      var d = at ? Dates.fromIso(at) : null
       if (d && startOfDay(d.at) < today) out.late++
     }
   }
+  return out
+}
+
+// The tasks shown with their subtasks: a task under another in the list
+// (however deep) left out of it, and each with its subtasks, open and
+// ticked, in their order: subs: [{ page, b, t, d, done, c, p, s, g, depth
+// (1 right under it) }], and how many of them are ticked (doneSubs).
+function nest(index, list) {
+  var shown = {}
+  list.forEach(function(t) { shown[t.page + "/" + t.b] = true })
+  var byPage = {}
+  function tasksOf(page) {
+    if (byPage[page]) return byPage[page]
+    var e = index.pages[page] || {}
+    var m = {}
+    ;(e.tasks || []).forEach(function(x) { m[x.b] = { x: x, done: false } })
+    ;(e.done || []).forEach(function(x) { m[x.b] = { x: x, done: true } })
+    return (byPage[page] = m)
+  }
+  var out = []
+  list.forEach(function(t) {
+    var m = tasksOf(t.page)
+    var seen = {}
+    for (var u = t.u; u && !seen[u]; u = m[u] ? m[u].x.u : "") {
+      seen[u] = true
+      if (shown[t.page + "/" + u]) return
+    }
+    var subs = []
+    var done = 0
+    var walked = {}
+    walked[t.b] = true
+    function walk(k, depth) {
+      ;(k || []).forEach(function(uid) {
+        var s = m[uid]
+        if (!s || walked[uid] || subs.length >= 200) return
+        walked[uid] = true
+        var x = s.x
+        if (s.done) done++
+        subs.push({ page: t.page, b: uid, t: x.t || "", d: x.d || "", done: s.done, c: x.c || 0, p: x.p || 0, s: x.s || "", g: x.g || [], depth: depth })
+        walk(x.k, depth + 1)
+      })
+    }
+    walk(m[t.b] ? m[t.b].x.k : t.k, 1)
+    var row = {}
+    for (var key in t) row[key] = t[key]
+    row.subs = subs
+    row.doneSubs = done
+    // (The to-do it's under, when that one isn't shown.)
+    var up = t.u && m[t.u] ? m[t.u].x.t || "" : ""
+    row.under = up
+    out.push(row)
+  })
   return out
 }
 

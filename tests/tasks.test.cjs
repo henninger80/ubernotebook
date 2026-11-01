@@ -108,4 +108,35 @@ check("done and cancelled, and each one's status", () => {
   assert.deepEqual(names(Tasks.forStatus(index, now, "", "open")), ["Busy", "Open one"]);
 });
 
+check("subtasks: under their to-do, as early as its first, counted once", () => {
+  const blocks = [
+    { uid: U(1), type: "check", html: "Fest planen", indent: 0 },
+    { uid: U(2), type: "check", html: "Zelt " + date("2026-10-16"), indent: 1 },
+    { uid: U(3), type: "bullet", html: "Notes", indent: 1 },
+    { uid: U(4), type: "check", html: "Bänke", indent: 2, checked: true },
+    { uid: U(5), type: "check", html: "Strom", indent: 3 },
+    { uid: U(6), type: "check", html: "Other", indent: 0 }
+  ];
+  const open = plain(Tasks.ofBlocks(blocks));
+  const done = plain(Tasks.doneOfBlocks(blocks));
+  assert.deepEqual(open.map((t) => [t.t, t.u || "", t.k || []]), [
+    ["Fest planen", "", [U(2), U(4)]], ["Zelt", U(1), []], ["Strom", U(4), []], ["Other", "", []]]);
+  assert.deepEqual(done.map((t) => [t.t, t.u, t.k]), [["Bänke", U(1), [U(5)]]]);
+  assert.deepEqual(plain(Tasks.clean(open))[0].k, [U(2), U(4)], "kept");
+  const ix = { top: ["p"], pages: { p: { title: "Fest", parent: "", children: [], modified: "", tasks: open, done } } };
+  const rows = plain(Tasks.nest(ix, Tasks.all(ix, now, "")));
+  assert.deepEqual(rows.map((r) => r.t), ["Fest planen", "Other"], "the subtasks not on their own");
+  assert.equal(rows[0].bucket, "overdue", "as early as its subtask");
+  assert.deepEqual(rows[0].subs.map((x) => [x.t, x.depth, x.done]), [["Zelt", 1, false], ["Bänke", 1, true], ["Strom", 2, false]]);
+  assert.equal(rows[0].doneSubs, 1);
+  assert.deepEqual(plain(Tasks.count(ix, now)), { open: 2, late: 1 });
+  // Its to-do not shown (another tag picked): the subtask on its own, saying where it is.
+  ix.pages.p.tasks[1].g = ["x"];
+  const tagged = plain(Tasks.nest(ix, Tasks.all(ix, now, "x")));
+  assert.deepEqual(tagged.map((r) => [r.t, r.under]), [["Zelt", "Fest planen"]]);
+  // Under a ticked one: on its own too.
+  const strom = plain(Tasks.nest(ix, Tasks.withStatus(Tasks.all(ix, now, ""), "todo"))).map((r) => r.t);
+  assert.deepEqual(strom, ["Fest planen", "Other"]);
+});
+
 console.log("tasks: " + passed + " checks passed");

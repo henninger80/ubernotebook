@@ -2220,7 +2220,7 @@ var SECTIONS = [
      ],
      [
       "Click a tag (in a line or the sidebar)",
-      "Shows every block with the tag, grouped by page. You can tick to-dos there; click a block to open it on its page",
+      "Shows every block with the tag, grouped by page, with the blocks indented under it. You can tick to-dos there; click a block to open it on its page",
       ""
      ],
      [
@@ -2421,7 +2421,7 @@ var SECTIONS = [
      ],
      [
       "Tasks tile in the sidebar",
-      "Shows every open to-do on your pages: overdue, today, the next 7 days, later and no date (folded to start). The tags they have most filter them; ticking one does it on its page (Undo takes it back); a click opens its page there",
+      "Shows every open to-do on your pages: overdue, today, the next 7 days, later and no date (folded to start). A to-do indented under another is its subtask, shown under it (with how many are ticked) rather than on its own. The tags they have most filter them; ticking one does it on its page (Undo takes it back); a click opens its page there",
       "A to-do's date is the first @ date or reminder in its line. #prio-hoch, #dringend or #wichtig make it important, #prio-niedrig unimportant, #in-arbeit in progress. Dated ones are on the calendar too."
      ],
      [

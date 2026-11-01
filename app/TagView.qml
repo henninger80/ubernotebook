@@ -27,14 +27,22 @@ Item {
     var list = workspace ? Workspace.tagList(workspace.index) : []
     return list.filter(function(t) { return t.name === tv.name })[0] || { name: tv.name, label: "#" + tv.name, pages: 0, blocks: 0 }
   }
-  readonly property int blockCount: { var n = 0; groups.forEach(function(g) { n += g.blocks.length }); return n }
+  // [fork] (The blocks with it, not those under them: Workspace.taggedBlocks' sub.)
+  readonly property int blockCount: { var n = 0; groups.forEach(function(g) { g.blocks.forEach(function(b) { if (!b.sub) n++ }) }); return n }
   // [fork] Ticked to-dos hidden (for every tag, while the app runs): the
   // groups shown, and how many to-dos are ticked.
   property bool hideDone: false
   readonly property int doneCount: { var n = 0; groups.forEach(function(g) { g.blocks.forEach(function(b) { if (b.type === "check" && b.checked) n++ }) }); return n }
+  // (A ticked one's blocks under it hidden with it.)
   readonly property var shown: !hideDone ? groups : groups.map(function(g) {
-    return { id: g.id, title: g.title, icon: g.icon, blocks: g.blocks.filter(function(b) { return !(b.type === "check" && b.checked) }) }
-  }).filter(function(g) { return g.blocks.length > 0 })
+    var gone = -1
+    return { id: g.id, title: g.title, icon: g.icon, blocks: g.blocks.filter(function(b) {
+      if (gone >= 0 && b.sub && b.indent > gone) return false
+      gone = -1
+      if (b.type === "check" && b.checked) { gone = b.sub ? b.indent : 0; return false }
+      return true
+    }) }
+  }).filter(function(g) { return g.blocks.some(function(b) { return !b.sub }) })
 
   signal colorRequested(var anchor)
   signal renameRequested(var anchor)
@@ -224,11 +232,20 @@ Item {
               readonly property bool check: modelData.type === "check"
               readonly property bool heading: /^h[123]$/.test(modelData.type)
               objectName: "tagged"
-              x: 26 + Math.min(4, modelData.indent) * 18
+              x: 26 + Math.min(6, modelData.indent) * 22  // [fork] how deep under the block with the tag
               width: group.width - x
               height: Math.max(32, words.contentHeight + 12)
               radius: 7
               color: rowHover.hovered ? tv.theme.hover : "transparent"
+
+              // [fork] Under the block with the tag: a line beside it.
+              Rectangle {
+                visible: row.modelData.sub === true
+                x: -10
+                width: 1
+                height: parent.height
+                color: Qt.alpha(tv.theme.text, 0.15)
+              }
 
               // A to-do's box (ticks here), or a list's dot.
               Rectangle {

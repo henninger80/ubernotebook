@@ -207,5 +207,33 @@ Item {
       wait(50)
       split.close()
     }
+
+    // [fork] Subtasks: under their to-do, ticked there; in the index as
+    // tasksV, an older index's worked out again.
+    function test_6_subtasks_under_their_todo() {
+      fresh()
+      var p = ws.createPage({ parent: "", title: "Fest", blocks: [
+        { type: "check", html: "Fest planen " + tag("verein"), indent: 0 },
+        { type: "check", html: "Zelt " + dated(-1), indent: 1 },
+        { type: "check", html: "Bänke", checked: true, indent: 1 },
+        { type: "check", html: "Strom", indent: 2 }
+      ] })
+      mouseClick(named(view, "tasksTile"))
+      var tv = view.taskView
+      tv.tag = "verein"
+      compare(tv.list.map(function(t) { return t.t }), ["Fest planen"], "one row")
+      compare(tv.list[0].bucket, "overdue", "as early as its subtask")
+      compare(tv.list[0].subs.map(function(x) { return x.t }), ["Zelt", "Bänke", "Strom"])
+      tryVerify(function() { return all(tv, function(it) { return it.objectName === "taskSub" }).length === 3 }, 2000)
+      compare(named(tv, "taskProgress").text, "\u2611 1/3")
+      // A subtask ticked there: on its page.
+      wait(150)
+      mouseClick(all(tv, function(it) { return it.objectName === "taskSubCheck" })[0])
+      tryVerify(function() { return Workspace.flatten(fileOf(p.id)).some(function(b) { return b.html.indexOf("Zelt") === 0 && b.checked }) }, 2000)
+      tryVerify(function() { return tv.list.length === 1 && tv.list[0].doneSubs === 2 }, 2000)
+      ws.flush()
+      compare(JSON.parse(files.disk[Workspace.indexFile(files.rootPath)]).pages[p.id].tasksV, 2)
+      tv.tag = ""
+    }
   }
 }

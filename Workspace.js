@@ -585,9 +585,10 @@ function entry(raw) {
     project: cleanProject(e.project),
     checks: e.checks && typeof e.checks === "object" ? cleanChecks(e.checks) : null,
     // [fork] Its open to-dos, as tasks (Tasks.js; null: not worked out yet).
-    tasks: Array.isArray(e.tasks) ? Tasks.clean(e.tasks) : null,
+    // (Worked out again if they were by an older Uber Notebook: tasksV.)
+    tasks: Array.isArray(e.tasks) && e.tasksV === Tasks.VERSION ? Tasks.clean(e.tasks) : null,
     // [fork] And its ticked ones (Tasks.cleanDone; null: not worked out yet).
-    done: Array.isArray(e.done) ? Tasks.cleanDone(e.done) : null,
+    done: Array.isArray(e.done) && e.tasksV === Tasks.VERSION ? Tasks.cleanDone(e.done) : null,
     // Put away in the archive (with the pages in it).
     archived: e.archived === true,
     // A template (with the pages in it), and the template new pages inside
@@ -1068,7 +1069,7 @@ function indexJson(index) {
     if (e.collected) out.collected = e.collected
     if (e.project) out.project = e.project
     if (e.checks) out.checks = e.checks
-    if (e.tasks) out.tasks = e.tasks  // [fork] Tasks.js
+    if (e.tasks) { out.tasks = e.tasks; out.tasksV = Tasks.VERSION }  // [fork] Tasks.js
     if (e.done) out.done = e.done  // [fork] Tasks.js
     if (e.archived) out.archived = true
     if (e.template) out.template = true
@@ -1505,17 +1506,26 @@ function pagesTagged(index, name) {
 }
 
 // The blocks on a page with a tag: [{ uid, type, html, checked, indent }] (a
-// table's: the cells with it, side by side).
+// table's: the cells with it, side by side). [fork] As in Logseq, with the
+// blocks indented under one with it (their text; sub: true), indent then
+// how deep under it (0 for the one with the tag).
 function taggedBlocks(page, name) {
   var out = []
   function has(inner) { return Tags.inHtml(inner).some(function(t) { return t.name === name }) }
+  var under = -1
   flatten(page).forEach(function(b) {
+    if (under >= 0 && b.indent > under) {
+      if (Blocks.isText(b.type) && b.html) out.push({ uid: b.uid, type: b.type, html: b.html, checked: b.checked === true, indent: b.indent - under, sub: true })
+      return
+    }
+    under = -1
     if (Blocks.isText(b.type) && b.type !== "code" && b.html && has(b.html)) {
-      out.push({ uid: b.uid, type: b.type, html: b.html, checked: b.checked === true, indent: b.indent })
+      out.push({ uid: b.uid, type: b.type, html: b.html, checked: b.checked === true, indent: 0, sub: false })
+      under = b.indent
     } else if (b.type === "table" && b.table) {
       var cells = []
       b.table.rows.forEach(function(r) { r.forEach(function(c) { if (has(c)) cells.push(c) }) })
-      if (cells.length) out.push({ uid: b.uid, type: "table", html: cells.join(" \u00b7 "), checked: false, indent: b.indent })
+      if (cells.length) out.push({ uid: b.uid, type: "table", html: cells.join(" \u00b7 "), checked: false, indent: 0, sub: false })
     }
   })
   return out

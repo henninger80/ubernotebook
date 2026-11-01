@@ -33,17 +33,20 @@ Item {
   property var htmlOf: ({})
   property real nowMs: Date.now()
 
-  readonly property var list: { var r = workspace ? workspace.revision : 0; return workspace && visible ? Tasks.forStatus(workspace.index, new Date(nowMs), tag, status) : [] }
+  // [fork] As shown: a subtask under its to-do, not on its own (Tasks.nest).
+  readonly property var list: { var r = workspace ? workspace.revision : 0; return workspace && visible ? Tasks.nest(workspace.index, Tasks.forStatus(workspace.index, new Date(nowMs), tag, status)) : [] }
   readonly property var everyTag: { var r = workspace ? workspace.revision : 0; return workspace && visible ? Tasks.topTags(Tasks.forStatus(workspace.index, new Date(nowMs), "", status), 7) : [] }
   // How many of each status (the chips say).
   readonly property var counts: {
     var r = workspace ? workspace.revision : 0
     if (!workspace || !visible) return ({})
-    var open = Tasks.all(workspace.index, new Date(nowMs), tag), shut = Tasks.closed(workspace.index, tag)
-    var out = { open: open.length }
-    ;["todo", "doing"].forEach(function(k) { out[k] = Tasks.withStatus(open, k).length })
-    out.done = Tasks.withStatus(shut, "done").length
-    out.cancelled = Tasks.withStatus(shut, "cancelled").length + Tasks.withStatus(open, "cancelled").length
+    var ix = workspace.index
+    var open = Tasks.all(ix, new Date(nowMs), tag), shut = Tasks.closed(ix, tag)
+    function n(l) { return Tasks.nest(ix, l).length }
+    var out = { open: n(open) }
+    ;["todo", "doing"].forEach(function(k) { out[k] = n(Tasks.withStatus(open, k)) })
+    out.done = n(Tasks.withStatus(shut, "done"))
+    out.cancelled = n(Tasks.withStatus(open, "cancelled").concat(Tasks.withStatus(shut, "cancelled")))
     return out
   }
   readonly property var groups: closedShown
@@ -228,7 +231,7 @@ Item {
               readonly property string html: tv.htmlOf[modelData.page + "/" + modelData.b] || ""
               objectName: "task"
               width: group.width
-              height: Math.max(48, words.contentHeight + meta.height + 16)
+              height: Math.max(48, words.contentHeight + meta.height + 16) + subList.height
               radius: 7
               color: rowHover.hovered ? tv.theme.hover : "transparent"
 
@@ -304,14 +307,113 @@ Item {
                   font.pixelSize: 12
                   color: row.modelData.p > 0 ? tv.red() : tv.theme.muted
                 }
+                // [fork] How many of its subtasks are ticked.
+                Text {
+                  objectName: "taskProgress"
+                  visible: row.modelData.subs.length > 0
+                  textFormat: Text.PlainText
+                  text: "☑ " + row.modelData.doneSubs + "/" + row.modelData.subs.length
+                  font.family: tv.theme.uiFont
+                  font.pixelSize: 12
+                  color: row.modelData.doneSubs === row.modelData.subs.length ? tv.theme.accent : tv.theme.muted
+                }
                 Text {
                   textFormat: Text.PlainText
-                  text: (row.modelData.icon ? row.modelData.icon + " " : "") + row.modelData.title
+                  text: (row.modelData.icon ? row.modelData.icon + " " : "") + row.modelData.title + (row.modelData.under ? "  ›  " + row.modelData.under : "")
                   width: Math.min(implicitWidth, row.width - 200)
                   elide: Text.ElideRight
                   font.family: tv.theme.uiFont
                   font.pixelSize: 12
                   color: tv.theme.faint
+                }
+              }
+              // [fork] Its subtasks (those indented under it on its page),
+              // ticked or not: each ticks here, a click opens it there.
+              Column {
+                id: subList
+                objectName: "taskSubs"
+                anchors.top: meta.bottom
+                anchors.topMargin: row.modelData.subs.length ? 4 : 0
+                x: 34
+                width: parent.width - x - 10
+                Repeater {
+                  model: row.modelData.subs
+                  delegate: Item {
+                    id: sub
+                    required property var modelData
+                    readonly property string html: tv.htmlOf[modelData.page + "/" + modelData.b] || ""
+                    objectName: "taskSub"
+                    x: (Math.min(5, modelData.depth) - 1) * 22
+                    width: subList.width - x
+                    height: Math.max(28, subWords.contentHeight + 8)
+                    Rectangle {
+                      anchors.fill: parent
+                      anchors.leftMargin: -4
+                      radius: 6
+                      color: subHover.hovered ? Qt.alpha(tv.theme.text, 0.06) : "transparent"
+                    }
+                    Rectangle {
+                      objectName: "taskSubCheck"
+                      x: 0
+                      y: 6
+                      width: 14
+                      height: 14
+                      radius: 4
+                      color: sub.modelData.done ? Qt.alpha(tv.theme.text, 0.3) : "transparent"
+                      border.width: 1.5
+                      border.color: sub.modelData.p > 0 ? tv.red() : Qt.alpha(tv.theme.text, 0.45)
+                      Text {
+                        visible: sub.modelData.done
+                        anchors.centerIn: parent
+                        textFormat: Text.PlainText
+                        text: sub.modelData.c ? "✕" : "✓"
+                        font.pixelSize: 10
+                        color: tv.theme.background
+                      }
+                      HoverHandler { cursorShape: Qt.PointingHandCursor }
+                      TapHandler {
+                        gesturePolicy: TapHandler.ReleaseWithinBounds
+                        onTapped: tv.tick(sub.modelData.page, sub.modelData.b, !sub.modelData.done, sub.modelData.t)
+                      }
+                    }
+                    Text {
+                      id: subWords
+                      x: 22
+                      y: 4
+                      width: parent.width - x - (subDate.visible ? subDate.implicitWidth + 10 : 0)
+                      opacity: sub.modelData.done ? 0.6 : 1
+                      wrapMode: Text.Wrap
+                      textFormat: sub.html ? Text.RichText : Text.PlainText
+                      text: sub.html && tv.view ? tv.view.blockHtml(sub.html) : sub.modelData.t
+                      font.family: tv.view ? tv.view.family : tv.theme.uiFont
+                      font.pixelSize: 13
+                      font.strikeout: sub.modelData.done
+                      color: tv.theme.text
+                      onLinkActivated: function(link) { tv.view.openFromTag(link) }
+                      HoverHandler { cursorShape: subWords.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor }
+                    }
+                    Text {
+                      id: subDate
+                      visible: sub.modelData.d !== "" && !sub.modelData.done
+                      anchors.right: parent.right
+                      y: 6
+                      textFormat: Text.PlainText
+                      readonly property string bucket: Tasks.bucketOf(sub.modelData.d, new Date(tv.nowMs))
+                      text: Tasks.when(sub.modelData.d, new Date(tv.nowMs))
+                      font.family: tv.theme.uiFont
+                      font.pixelSize: 11
+                      color: bucket === "overdue" ? tv.red() : bucket === "today" ? tv.theme.accent : tv.theme.muted
+                    }
+                    HoverHandler { id: subHover; cursorShape: Qt.PointingHandCursor }
+                    TapHandler {
+                      id: subTap
+                      gesturePolicy: TapHandler.ReleaseWithinBounds
+                      onTapped: function(point) {
+                        if (subWords.linkAt(point.position.x - subWords.x, point.position.y - subWords.y)) return
+                        tv.openTask(sub.modelData, Tabs.openHow(subTap.point.modifiers))
+                      }
+                    }
+                  }
                 }
               }
               HoverHandler { id: rowHover; cursorShape: Qt.PointingHandCursor }

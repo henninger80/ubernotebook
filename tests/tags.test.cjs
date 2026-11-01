@@ -84,6 +84,16 @@ check("a page's tags, and every tag", () => {
   assert.deepEqual(tagged.map((x) => x.type), ["p", "table"]);
   assert.ok(tagged[1].html.includes(" \u00b7 "), "a table's cells with it, side by side");
   assert.equal(plain(W.taggedBlocks(page, "errand"))[0].checked, true);
+  // [fork] The blocks under one with it come with it, how deep under it.
+  const n1 = W.uuid4(), n2 = W.uuid4(), n3 = W.uuid4(), n4 = W.uuid4(), n5 = W.uuid4();
+  const nested = { id: "n", content: [n1, n4], blocks: {
+    [n1]: { type: "bullet", html: "Fest " + T.html("verein"), content: [n2] },
+    [n2]: { type: "check", html: "Zelt", content: [n3] },
+    [n3]: { type: "p", html: "groß" },
+    [n4]: { type: "bullet", html: "Other", content: [n5] },
+    [n5]: { type: "p", html: "deep " + T.html("verein") } } };
+  assert.deepEqual(plain(W.taggedBlocks(nested, "verein")).map((x) => [x.html.slice(0, 4), x.indent, x.sub]),
+    [["Fest", 0, false], ["Zelt", 1, true], ["groß", 2, true], ["deep", 0, false]]);
   // The index keeps them, and the list counts them (not the trash's).
   const p1 = W.uuid4(), p2 = W.uuid4(), p3 = W.uuid4();
   const ix = plain(W.cleanIndex({ top: [p1, p2, p3], pages: {
