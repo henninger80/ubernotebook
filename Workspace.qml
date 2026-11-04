@@ -18,6 +18,7 @@ import "Permissions.js" as Permissions
 import "Starter.js" as Starter
 import "Agent.js" as Agent
 import "Lang.js" as Lang  // [fork] German
+import "Outside.js" as Outside  // [fork] changes from outside
 
 // Pages on disk: the workspace in the Pages folder of your notebooks folder
 // (~/Documents/Uber Notebook/Pages), a JSON file per page, named by its UUID, and
@@ -45,6 +46,10 @@ Item {
   signal pageChanged(string id)
   // A page was written (the Markdown copy follows).
   signal saved(string id)
+  // [fork] A page's file changed on another computer (a sync tool brought
+  // it), just before pageChanged: a view with changes not written yet says
+  // so (markConflict), so they don't go over it unkept.
+  signal pageChangedOutside(string id)
 
   // Another folder: its own first start (the examples, if it's empty).
   onFolderChanged: {
@@ -154,6 +159,7 @@ Item {
       if (gen !== ws.generation) return
       ws.keepUnreadable(ws.indexPath(), failed)
       var ix = ws.cleaned(ws.indexPath(), got[ws.indexPath()] || "", Workspace.cleanIndex)
+      ws.outsideReset(got[ws.indexPath()] || "")  // [fork]
       files.exec(["/usr/bin/bash", "-c", ws.listScript, "uber-notebook-list", ws.folder], function(listed, output) {
         if (gen !== ws.generation) return
         var onDisk = String(output || "").split("\n").map(function(n) { return n.replace(/\.json$/, "") }).filter(Workspace.isUuid)
@@ -187,6 +193,7 @@ Item {
           ws.loadCalendar()
           ws.loadContacts()
           ws.loadChats()
+          ws.outsideLook()  // [fork] the first look: what's there now
         })
       }, { okCodes: [0, 1] })
     })
@@ -274,14 +281,21 @@ Item {
   // (The notes folder its tree was read from: written only there, never
   // into another one opened since, or while that one's tree is read.)
   property string indexRoot: ""
-  function flushIndex(done) {
+  function flushIndex(done, now) {
     indexTimer.stop()
     if (!ready && Object.keys(index.pages).length === 0) { if (done) done(false); return }
     if (!indexRoot || indexRoot !== files.rootPath) { if (done) done(false); return }
     var path = indexPath()
     if (unreadable[path]) { notSaved(path); if (done) done(false); return }
-    var text = Workspace.indexJson(index)
-    withFolder(function() { ws.write(path, text, done) }, done)
+    // [fork] index.json changed elsewhere since it was read or written
+    // here: what's new in it taken in first (outsideIndex), then written.
+    // (`now`: the shell stopping, written as it is.)
+    if (now) { ws.write(path, Workspace.indexJson(index), done); return }
+    outsideIndex(function() {
+      if (!ws.indexRoot || ws.indexRoot !== files.rootPath) { if (done) done(false); return }
+      var text = Workspace.indexJson(ws.index)
+      withFolder(function() { ws.write(path, text, function(ok) { if (ok) ws.indexWritten(text); if (done) done(ok) }) }, done)
+    })
   }
 
   function touched() {
@@ -322,7 +336,7 @@ Item {
       for (var path in got) {
         var id = path.slice(path.lastIndexOf("/") + 1, -5)
         var page = Workspace.cleanPage(files.parseJson(got[path]), id)
-        if (page) { out.push(page); ws.readJson[id] = JSON.stringify(page) }
+        if (page) { out.push(page); ws.readJson[id] = JSON.stringify(page); ws.diskHash[id] = Outside.hash(got[path]) }  // [fork] diskHash
       }
       done(out)
     }, 32 * 1024 * 1024)
@@ -408,6 +422,7 @@ Item {
         var page = Workspace.cleanPage(files.parseJson(one.text), id)
         if (!page) continue
         ws.readJson[id] = JSON.stringify(page)
+        if (!ws.written[id] && !ws.pageQueue[id]) ws.diskHash[id] = Outside.hash(one.text)  // [fork] changes from outside
         ws.texts[id] = page.text || Workspace.pageText(page)
         // [fork] Its tasks, if the tree doesn't have them yet (Tasks.js).
         var en = ws.index.pages[id]
@@ -454,7 +469,7 @@ Item {
     texts[page.id] = page.text
     var path = pagePath(page.id)
     var text = Workspace.pageJson(page)
-    withFolder(function() { ws.write(path, text, done) }, done)
+    withFolder(function() { ws.writePageFile(page.id, path, text, done) }, done)  // [fork] writePageFile
     var e = index.pages[page.id]
     if (!e) {
       index.pages[page.id] = { title: page.title, icon: page.icon, parent: "", children: [], trashed: false, created: page.created, modified: page.modified }
@@ -467,6 +482,18 @@ Item {
     e.icon = page.icon
     e.modified = page.modified
     if (Workspace.syncChildren(index, page.id, Workspace.childPages(page))) changed = true
+    var r = fillEntry(e, page)  // [fork] fillEntry, for pages from outside too
+    if (r.changed) changed = true
+    if (changed) touched()
+    else { if (r.tasksChanged) revision++; saveIndex(true) }  // [fork] lazy: only its time (or its tasks) changed
+    saved(page.id)
+  }
+
+  // What the tree keeps of a page that's worked out from its blocks: its
+  // links, reminders, tags, what's on it, project, to-dos and tasks.
+  // { changed (the tree to be written soon), tasksChanged }.
+  function fillEntry(e, page) {
+    var changed = false
     // What it links to (for backlinks) and its reminders.
     var links = Workspace.linkedPages(page)
     if (JSON.stringify(links) !== JSON.stringify(e.links)) { e.links = links; changed = true }
@@ -489,9 +516,7 @@ Item {
     var done = Tasks.doneOfBlocks(flat)
     var tasksChanged = JSON.stringify(tasks) !== JSON.stringify(e.tasks) || JSON.stringify(done) !== JSON.stringify(e.done)
     if (tasksChanged) { e.tasks = tasks; e.done = done }
-    if (changed) touched()
-    else { if (tasksChanged) revision++; saveIndex(true) }  // [fork] lazy: only its time (or its tasks) changed
-    saved(page.id)
+    return { changed: changed, tasksChanged: tasksChanged }
   }
 
   // ---- the archive ----------------------------------------------------------------------------
@@ -2256,7 +2281,318 @@ Item {
 
   // Everything still waiting is written (the shell stopping).
   function flush() {
-    if (indexTimer.running) flushIndex()
+    if (indexTimer.running) flushIndex(null, true)
+  }
+
+  // ---- [fork] changes from outside ------------------------------------------------------------
+
+  // The Pages folder is looked at every few seconds for what a sync tool
+  // (Nextcloud...) brought from another computer: pages new, changed or
+  // gone, and index.json (Outside.js says what's done with each). A page's
+  // file is written here only once what's there is known: one changed
+  // elsewhere meanwhile is kept in its history first, and said.
+  readonly property string stampScript: "exec /usr/bin/find \"$1\" -maxdepth 1 -type f -name '*.json' -printf '%f\\t%T@\\t%s\\n'"
+  property int outsideInterval: 5000
+  // The last look's stamps (Outside.stamps; null: none yet).
+  property var outsideStamps: null
+  // id -> its file's fingerprint as last read or written here.
+  property var diskHash: ({})
+  // index.json as last read or written here (parsed), and its fingerprint.
+  property var indexBase: null
+  property string indexHash: ""
+  // id -> { next, dones }: its file being written (what's to be written after).
+  property var pageQueue: ({})
+  // id -> true: changed elsewhere while a view had changes to it not
+  // written yet (markConflict): what's there is kept before they go over it.
+  property var conflicts: ({})
+  property bool looking: false
+  property bool indexLooking: false
+  property var indexWaiting: []
+
+  Timer { id: outsideTimer; interval: ws.outsideInterval; repeat: true; onTriggered: ws.outsideLook() }
+
+  function outsideReset(indexText) {
+    outsideTimer.stop()
+    outsideStamps = null
+    diskHash = ({})
+    fileStamp = ({})
+    pageQueue = ({})
+    conflicts = ({})
+    looking = false
+    indexLooking = false
+    indexWaiting = []
+    indexHash = indexText ? Outside.hash(indexText) : ""
+    indexBase = indexText ? files.parseJson(indexText) : null
+  }
+
+  // index.json written here: what's there now.
+  function indexWritten(text) {
+    indexHash = Outside.hash(text)
+    indexBase = files.parseJson(text)
+  }
+
+  function markConflict(id) { if (Workspace.isUuid(id)) conflicts[id] = true }
+
+  // A page's file written (savePage): one write at a time, the last asked
+  // for after it; each after a look at its time and size (statPage).
+  function writePageFile(id, path, text, done) {
+    var q = pageQueue[id]
+    if (q) { q.next = text; if (done) q.dones.push(done); return }
+    pageQueue[id] = { next: null, dones: [] }
+    var gen = generation
+    function run(t, dones) {
+      ws.checkPageFile(id, path, function() {
+        if (gen !== ws.generation) { dones.forEach(function(d) { d(false) }); return }
+        ws.write(path, t, function(ok) {
+          if (ok && gen === ws.generation) ws.diskHash[id] = Outside.hash(t)
+          dones.forEach(function(d) { d(ok) })
+          function next() {
+            var q2 = ws.pageQueue[id]
+            if (!q2 || gen !== ws.generation) return
+            if (q2.next !== null) { var n = q2.next, nd = q2.dones; q2.next = null; q2.dones = []; run(n, nd) }
+            else delete ws.pageQueue[id]
+          }
+          // (Its time and size now: what the next write looks for.)
+          if (!ok) { next(); return }
+          ws.statPage(path, function(stamp) {
+            if (gen !== ws.generation) return
+            if (stamp) ws.fileStamp[id] = stamp
+            else delete ws.fileStamp[id]
+            next()
+          })
+        })
+      })
+    }
+    run(text, done ? [done] : [])
+  }
+
+  // id -> its file's time and size ("<mtime> <size>") as last looked at or
+  // written here.
+  property var fileStamp: ({})
+  readonly property string statScript: "exec /usr/bin/find \"$1\" -maxdepth 0 -type f -printf '%T@\\t%s\\n'"
+  // done("<mtime> <size>"), or done(null): not there, or no answer in a
+  // few seconds (never holding up writing).
+  function statPage(path, done) {
+    var answered = false
+    function once(v) { if (answered) return; answered = true; done(v) }
+    later(3000, function() { once(null) })
+    files.exec(["/usr/bin/bash", "-c", statScript, "uber-notebook-stamp", path], function(ok, output) {
+      var line = String(output || "").split("\n")[0].split("\t")
+      once(ok && line.length === 2 ? line[0] + " " + line[1] : null)
+    }, { okCodes: [0, 1] })
+  }
+  // fn() in ms milliseconds.
+  function later(ms, fn) {
+    var t = Qt.createQmlObject("import QtQuick; Timer { repeat: false }", ws)
+    t.interval = ms
+    t.triggered.connect(function() { t.destroy(); fn() })
+    t.start()
+  }
+
+  // Its file before it's written over: one changed elsewhere since it was
+  // looked at or written here (its time or size not as they were), or
+  // while a view had changes to it, kept in its history, and said. then()
+  // either way (and if it can't be looked at in time).
+  function checkPageFile(id, path, then) {
+    var known = fileStamp[id]
+    if (known === undefined && !conflicts[id]) { then(); return }
+    statPage(path, function(stamp) {
+      if (!stamp || (stamp === known && !conflicts[id])) { delete ws.conflicts[id]; then(); return }
+      var answered = false
+      function once() { if (answered) return; answered = true; delete ws.conflicts[id]; then() }
+      ws.later(3000, once)
+      files.readFiles([path], function(got) {
+        if (answered) return
+        var text = got[path]
+        if (text !== undefined && (ws.conflicts[id] || Outside.hash(text) !== ws.diskHash[id])) {
+          var theirs = Workspace.cleanPage(files.parseJson(text), id)
+          if (theirs) ws.keepOutsideVersion(id, theirs)
+        }
+        once()
+      }, 32 * 1024 * 1024)
+    })
+  }
+
+  // A version from another computer kept in the page's history ("sync"),
+  // and said: yours is the one written.
+  function keepOutsideVersion(id, page) {
+    var now = Math.max(Date.now(), (keptAt[id] || 0) + 1)
+    keptAt[id] = now
+    delete page.text
+    var json = Workspace.pageJson(page)
+    keptJson[id] = json
+    var dir = Workspace.historyDir(files.rootPath, id)
+    var text = JSON.stringify({ kept: new Date(now).toISOString(), why: "sync", page: JSON.parse(json) })
+    files.mkdirs([dir], function(ok) {
+      if (!ok) return
+      var name = Workspace.versionName(new Date(now))
+      files.writeFile(dir + "/" + name, text, function(written) {
+        if (!written) return
+        if (ws.versionNames[id]) ws.versionNames[id] = [name].concat(ws.versionNames[id])
+        ws.versionKept(id)
+        ws.pruneVersions(id)
+      })
+    })
+    var e = index.pages[id]
+    var title = e && e.title ? e.title : Lang.t("Untitled")
+    ws.failed("„" + title + "“" + Lang.t(" was changed on another computer too: that version is in the page's history"))
+  }
+
+  // Is this page (its file's text) as last read or written here, and the
+  // tree knows it so? (A view may have read it already, before a look.)
+  function isKnown(id, text, page) {
+    var e = index.pages[id]
+    if (!e || e.modified !== page.modified || e.title !== page.title || e.icon !== page.icon) return false
+    if (diskHash[id] !== undefined && diskHash[id] === Outside.hash(text)) return true
+    return !written[id] && readJson[id] === JSON.stringify(page)
+  }
+
+  // A look at the folder: what's new, changed or gone taken in.
+  function outsideLook() {
+    if (!ready || looking || !folder || !indexRoot || indexRoot !== files.rootPath) return
+    looking = true
+    var gen = generation
+    files.exec(["/usr/bin/bash", "-c", stampScript, "uber-notebook-stamps", folder], function(ok, output) {
+      if (gen !== ws.generation) return
+      if (!outsideTimer.running) outsideTimer.start()
+      if (!ok) { ws.looking = false; return }
+      var now = Outside.stamps(output)
+      var prev = ws.outsideStamps
+      var known = {}
+      for (var k in ws.index.pages) known[k] = true
+      var d = Outside.diff(prev, now, known, Workspace.isUuid)
+      // (Its file being written here: looked at again next time.)
+      d.changed = d.changed.filter(function(id) {
+        if (!ws.pageQueue[id]) return true
+        if (prev && prev[id + ".json"] !== undefined) now[id + ".json"] = prev[id + ".json"]
+        else delete now[id + ".json"]
+        return false
+      })
+      ws.outsideStamps = now
+      var tree = false
+      var gone = Outside.plausiblyGone(d.gone.filter(function(id) { return !ws.written[id] && !ws.pageQueue[id] }), Object.keys(known).length)
+      var goneSet = {}
+      gone.forEach(function(id) { goneSet[id] = true })
+      gone.forEach(function(id) {
+        Workspace.detach(ws.index, id)
+        // (The pages in it that are still here: at the top.)
+        ws.index.pages[id].children.forEach(function(c) { if (ws.index.pages[c] && !goneSet[c]) { ws.index.pages[c].parent = ""; ws.index.top.push(c) } })
+        delete ws.index.pages[id]
+        delete ws.readJson[id]
+        delete ws.texts[id]
+        delete ws.diskHash[id]
+        delete ws.fileStamp[id]
+        tree = true
+      })
+      var ids = d.added.concat(d.changed).slice(0, 500)
+      function finish() {
+        if (gen !== ws.generation) return
+        ws.looking = false
+        // (What each file's time and size are, now what's in them is known.)
+        for (var name in now) {
+          var sid = name.slice(0, -5)
+          if (Workspace.isUuid(sid) && !ws.pageQueue[sid] && ws.index.pages[sid]) ws.fileStamp[sid] = now[name]
+        }
+        if (tree) ws.touched()
+        if (d.index) ws.outsideIndex(function() {})
+      }
+      if (!ids.length) { finish(); return }
+      files.readFiles(ids.map(function(id) { return ws.pagePath(id) }), function(got) {
+        if (gen !== ws.generation) return
+        var list = []
+        for (var path in got) list.push({ id: path.slice(path.lastIndexOf("/") + 1, -5), text: got[path] })
+        if (ws.adoptOutside(list)) tree = true
+        finish()
+      }, 32 * 1024 * 1024)
+    }, { okCodes: [0, 1] })
+  }
+
+  // Pages read as they are now elsewhere ([{ id, text }]): put in the tree,
+  // or what's known of them made what they are. true: the tree changed.
+  function adoptOutside(list) {
+    var tree = false
+    var made = []
+    var pages = []
+    list.forEach(function(one) {
+      var id = one.id
+      if (!Workspace.isUuid(id) || pageQueue[id]) return
+      var page = Workspace.cleanPage(files.parseJson(one.text), id)
+      if (!page) return
+      if (isKnown(id, one.text, page)) { diskHash[id] = Outside.hash(one.text); return }
+      // (What was written here before: kept in its history.)
+      if (written[id]) { keepVersion(id, "sync", true); delete written[id] }
+      diskHash[id] = Outside.hash(one.text)
+      readJson[id] = JSON.stringify(page)
+      texts[id] = page.text || Workspace.pageText(page)
+      if (!index.pages[id]) {
+        var seeded = Outside.seed({ title: page.title, icon: page.icon, created: page.created, modified: page.modified }, indexBase && indexBase.pages ? indexBase.pages[id] : null)
+        var e0 = Workspace.entry(seeded)
+        delete e0.rawChildren
+        index.pages[id] = e0
+        index.top.push(id)
+        made.push(id)
+      }
+      pages.push(page)
+    })
+    pages.forEach(function(page) {
+      var e = index.pages[page.id]
+      if (!e) return
+      if (made.indexOf(page.id) >= 0 || (page.parent !== e.parent && (!page.parent || index.pages[page.parent]))) {
+        Workspace.attach(index, page.id, page.parent, -1)
+        tree = true
+      }
+      if (e.title !== page.title || e.icon !== page.icon) tree = true
+      e.title = page.title
+      e.icon = page.icon
+      e.modified = page.modified
+    })
+    pages.forEach(function(page) {
+      var e = index.pages[page.id]
+      if (!e) return
+      if (Workspace.syncChildren(index, page.id, Workspace.childPages(page))) tree = true
+      var r = fillEntry(e, page)
+      if (r.changed) tree = true
+      if (r.tasksChanged) revision++
+    })
+    if (pages.length && !tree) { revision++; saveIndex(true) }
+    pages.forEach(function(page) {
+      ws.pageChangedOutside(page.id)
+      ws.pageChanged(page.id)
+    })
+    return tree
+  }
+
+  // index.json as it is on disk: one changed elsewhere merged into the
+  // tree here (Outside.mergeIndex). then() once that's done (or nothing
+  // needed doing). (One look at a time: one asked for meanwhile waits.)
+  function outsideIndex(then) {
+    if (indexLooking) { indexWaiting.push(then); return }
+    if (!ready || !indexRoot || indexRoot !== files.rootPath) { then(); return }
+    indexLooking = true
+    var gen = generation
+    var path = indexPath()
+    files.readFiles([path], function(got) {
+      var waiting = ws.indexWaiting
+      ws.indexWaiting = []
+      ws.indexLooking = false
+      function done() { then(); waiting.forEach(function(w) { w() }) }
+      if (gen !== ws.generation) { done(); return }
+      var text = got[path]
+      if (text === undefined || Outside.hash(text) === ws.indexHash) { done(); return }
+      var theirs = files.parseJson(text)
+      if (!theirs || typeof theirs !== "object") { done(); return }
+      var ours = JSON.parse(Workspace.indexJson(ws.index))
+      var merged = Outside.mergeIndex(ws.indexBase, ours, theirs)
+      ws.indexBase = theirs
+      ws.indexHash = Outside.hash(text)
+      if (JSON.stringify(merged) !== JSON.stringify(ours)) {
+        ws.index = Workspace.cleanIndex(merged)
+        ws.revision++
+        ws.scheduleReminders()
+        ws.saveIndex()
+      }
+      done()
+    }, 32 * 1024 * 1024)
   }
 
   Component.onDestruction: flush()

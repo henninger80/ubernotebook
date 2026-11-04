@@ -15,6 +15,7 @@ var WORDS = {
   " any more.": " mehr.",
   " background": " Hintergrund",
   " block": " Block",
+  " was changed on another computer too: that version is in the page's history": " wurde auch auf einem anderen Rechner geändert: Diese Fassung liegt im Seitenverlauf",
   " blocks": " Blöcke",
   " but your web browser": ", aber dein Webbrowser",
   " can't be reached or made.": " ist nicht erreichbar und kann nicht angelegt werden.",

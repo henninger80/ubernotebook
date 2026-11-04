@@ -160,6 +160,11 @@ FocusScope {
     // moved into it from elsewhere): shown as it is now. Only its title,
     // icon, cover or the like changed (a command's): just those, not every
     // block drawn again, and you stay where you were on it.
+    // [fork] Changed on another computer while it has changes here not
+    // written yet: what's there is kept in its history before they are.
+    function onPageChangedOutside(id) {
+      if (view.page && view.page.id === id && view.pageDirty) view.workspace.markConflict(id)
+    }
     function onPageChanged(id) {
       if (view.page && view.page.id === id && !view.pageDirty) view.workspace.readPage(id, function(p) {
         if (!p || !view.page || view.page.id !== id) return

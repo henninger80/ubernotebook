@@ -470,6 +470,23 @@ QtObject {
       done(true, names.join("\n") + (names.length ? "\n" : ""))
       return
     }
+    // [fork] The Pages folder's files, each with a time and a size, as
+    // find -printf gives them (Workspace.qml: changes from outside); the
+    // time changes with what's in it.
+    if (argv[0] === "/usr/bin/bash" && argv[3] === "uber-notebook-stamps") {
+      var sdir = argv[4] + "/"
+      var lines = Object.keys(disk).filter(function(p) { return p.indexOf(sdir) === 0 && p.slice(sdir.length).indexOf("/") < 0 && /\.json$/.test(p) })
+        .map(function(p) { return p.slice(sdir.length) + "\t" + parseInt(fakeHash(disk[p]).slice(0, 8), 16) + ".5\t" + String(disk[p]).length })
+      done(true, lines.join("\n") + (lines.length ? "\n" : ""))
+      return
+    }
+    // [fork] One file's time and size, the same way.
+    if (argv[0] === "/usr/bin/bash" && argv[3] === "uber-notebook-stamp") {
+      var one = disk[argv[4]]
+      if (one === undefined) { done(false, ""); return }
+      done(true, parseInt(fakeHash(one).slice(0, 8), 16) + ".5\t" + String(one).length + "\n")
+      return
+    }
     // The Markdown copy's own files in a folder (Mirror.qml).
     if (argv[0] === "/usr/bin/bash" && argv[3] === "uber-notebook-mirror-list") {
       var top = argv[4] + "/"
