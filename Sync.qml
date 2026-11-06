@@ -174,8 +174,20 @@ Item {
   function saveCache() { writeJson("cache.json", { version: 1, folder: cacheFolder, events: cached || [] }) }
   // Only the profile synced, in the folder it was first kept for.
   function cacheOn() {
+    followFolder()
     return loaded && !!workspace && !!workspace.folder && !!profile && !profile.demo && !!config.profile && config.profile === profile.id
       && (!cacheFolder || cacheFolder === workspace.folder)
+  }
+  // The profile synced given another folder (its notes moved): the cache
+  // goes with it. (Left behind, it would be off without a word, and this
+  // computer's events go into the new folder's calendar.json: on every
+  // other computer next to its own copies, twice.)
+  function followFolder() {
+    if (!loaded || !cacheFolder || !workspace || !workspace.folder || cacheFolder === workspace.folder) return
+    if (!profile || profile.demo || !config.profile || config.profile !== profile.id) return
+    console.log("uber-notebook sync: the calendar cache follows the notes from " + cacheFolder + " to " + workspace.folder)
+    cacheFolder = workspace.folder
+    saveCache()
   }
   function linkedMap() {
     var m = {}

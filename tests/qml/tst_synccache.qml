@@ -185,5 +185,27 @@ Item {
       compare(fakeFiles.disk["/notes/Pages/calendar.json"], before)
       root.openProfile = { id: "p-1", name: "Arbeit", demo: false }
     }
+
+    function test_7_the_cache_follows_the_notes_to_another_folder() {
+      // The notes moved (as Nextcloud2 -> Nextcloud): calendar.json with them.
+      fakeFiles.writeFile("/moved/Pages/calendar.json", fakeFiles.disk["/notes/Pages/calendar.json"])
+      var before = shared()
+      deskWs.folder = "/moved/Pages"
+      deskWs.loadCalendar()
+      compare(titled(deskWs, "Meeting").length, 1, "the synced ones still shown, once")
+      compare(desk.cacheFolder, "/moved/Pages")
+      compare(JSON.parse(fakeFiles.disk["/home/desk/.local/state/uber-notebook-sync/cache.json"]).folder, "/moved/Pages", "and kept so")
+      syncOnce(desk)
+      var moved = JSON.parse(fakeFiles.disk["/moved/Pages/calendar.json"]).events.map(function(e) { return e.title }).sort()
+      compare(moved, before, "calendar.json: still Here only")
+      compare(graph.events.length, 1, "nothing made twice")
+      // Another profile in that folder: not followed.
+      root.openProfile = { id: "p-2", name: "Privat", demo: false }
+      deskWs.folder = "/other/Pages"
+      verify(!desk.cacheOn())
+      compare(desk.cacheFolder, "/moved/Pages")
+      root.openProfile = { id: "p-1", name: "Arbeit", demo: false }
+      deskWs.folder = "/moved/Pages"
+    }
   }
 }
