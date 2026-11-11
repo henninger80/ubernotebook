@@ -756,12 +756,17 @@ Item {
       any = true
     })
     // (A calendar alert's key goes once its day's long gone.)
+    // [fork] Only tidied: written once the folder's quiet (saveIndexSettled),
+    // not at once: it's done as it loads, and was written over the other
+    // computer's index.json while a sync tool was still bringing it.
     var old = Calendar.dayIso(new Date(now - 4 * 86400000))
+    var tidied = false
     Object.keys(index.fired).forEach(function(k) {
       var m = /^cal\|[^|]+\|(\d{4}-\d{2}-\d{2})\|/.exec(k)
-      if (m && m[1] < old) { delete ws.index.fired[k]; any = true }
+      if (m && m[1] < old) { delete ws.index.fired[k]; tidied = true }
     })
     if (any) saveIndex()
+    else if (tidied) saveIndexSettled()
     scheduleReminders()
   }
 

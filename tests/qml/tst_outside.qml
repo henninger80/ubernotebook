@@ -229,5 +229,23 @@ Item {
       ws.flush()
       verify(files.disk[indexPath()] !== before)
     }
+
+    function test_9_old_alert_keys_tidied_wait_for_quiet() {
+      fresh()
+      ws.index.fired["cal|" + Workspace.uuid4() + "|2020-01-01|10"] = true
+      ws.flushIndex()
+      look()
+      var before = files.disk[indexPath()]
+      verify(before.indexOf("2020-01-01") >= 0)
+      ws.checkReminders()
+      compare(Object.keys(ws.index.fired).filter(function(k) { return k.indexOf("2020-01-01") >= 0 }).length, 0, "tidied")
+      wait(1000)
+      compare(files.disk[indexPath()], before, "not written at once")
+      compare(ws.indexOwn, false)
+      ws.flush()
+      compare(files.disk[indexPath()], before, "nor as it stops")
+      ws.flushIndex()
+      verify(files.disk[indexPath()].indexOf("2020-01-01") < 0, "written once quiet")
+    }
   }
 }
