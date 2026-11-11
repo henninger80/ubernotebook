@@ -101,4 +101,16 @@ check("a new page's entry takes what index.json on disk says of it", () => {
   assert.equal(O.seed({ title: "N" }, null).title, "N");
 });
 
+check("an event's notes made elsewhere are found by their title", () => {
+  const ix = { top: [a, b, c], pages: {
+    [a]: entry({ title: "BR · Tue 10 Nov", modified: "2026-11-10T07:40:00Z" }),
+    [b]: entry({ title: "BR · Tue 10 Nov", modified: "2026-11-10T09:00:00Z", trashed: true }),
+    [c]: entry({ title: "BR · Tue 10 Nov ", modified: "2026-11-10T08:00:00Z" }) } };
+  const inTrash = (ix, id) => !!ix.pages[id].trashed;
+  assert.equal(O.pageTitled(ix, "BR · Tue 10 Nov", inTrash), c, "the newest not in the trash");
+  assert.equal(O.pageTitled(ix, "Other", inTrash), "");
+  assert.equal(O.pageTitled(ix, "", inTrash), "");
+  assert.equal(O.pageTitled(null, "BR", inTrash), "");
+});
+
 console.log(`outside.test.cjs: ${passed} checks passed`);

@@ -186,7 +186,7 @@ Item {
           ws.indexRoot = files.rootPath
           ws.ready = true
           ws.revision++
-          if (changed) ws.saveIndex()
+          if (changed) ws.saveIndexSettled()  // [fork] not while a sync tool may still bring index.json
           ws.scanLinks()
           ws.scanTexts()
           ws.scheduleReminders()
@@ -214,8 +214,21 @@ Item {
   // tree, a megabyte with many pages, held up typing). Anything else is
   // written soon, and a write waiting for the pause, with it.
   function saveIndex(lazy) {
-    if (lazy) { if (!indexTimer.running || indexTimer.interval === indexTimer.lazyInterval) { indexTimer.interval = indexTimer.lazyInterval; indexTimer.restart() } return }
+    indexOwn = true  // [fork]
+    if (lazy) { if (!indexTimer.running || indexTimer.interval >= indexTimer.lazyInterval) { indexTimer.interval = indexTimer.lazyInterval; indexTimer.restart() } return }
     indexTimer.interval = 300
+    indexTimer.restart()
+  }
+  // [fork] index.json for what came from elsewhere, or was only worked out
+  // here (tasks): written once the folder has been quiet a while, so it isn't
+  // written while a sync tool is still bringing the other computer's (that
+  // made "index (conflicted copy).json" at the start), and most often isn't
+  // written at all (flushIndex: the same as on disk by then). A change made
+  // here meanwhile is written as soon as before.
+  property bool indexOwn: false
+  function saveIndexSettled() {
+    if (indexTimer.running && indexTimer.interval < indexTimer.settleInterval) return
+    indexTimer.interval = indexTimer.settleInterval
     indexTimer.restart()
   }
 
@@ -273,6 +286,7 @@ Item {
   Timer {
     id: indexTimer
     readonly property int lazyInterval: 5000  // [fork]
+    property int settleInterval: 20000  // [fork] saveIndexSettled
     interval: 300
     onTriggered: ws.flushIndex()
   }
@@ -290,10 +304,13 @@ Item {
     // [fork] index.json changed elsewhere since it was read or written
     // here: what's new in it taken in first (outsideIndex), then written.
     // (`now`: the shell stopping, written as it is.)
+    // [fork] Not written when it's what's on disk already (indexHash).
+    indexOwn = false
     if (now) { ws.write(path, Workspace.indexJson(index), done); return }
     outsideIndex(function() {
       if (!ws.indexRoot || ws.indexRoot !== files.rootPath) { if (done) done(false); return }
       var text = Workspace.indexJson(ws.index)
+      if (ws.indexHash && Outside.hash(text) === ws.indexHash) { if (done) done(true); return }
       withFolder(function() { ws.write(path, text, function(ok) { if (ok) ws.indexWritten(text); if (done) done(ok) }) }, done)
     })
   }
@@ -438,7 +455,7 @@ Item {
       if (lot.length === 0) {
         if (ids.length) { scanTimer.later(next); return }
         // [fork] Tasks found as the pages were read: shown, and kept.
-        if (tasksFound) { ws.revision++; ws.saveIndex(true) }
+        if (tasksFound) { ws.revision++; ws.saveIndexSettled() }
         warm()
         return
       }
@@ -2281,7 +2298,10 @@ Item {
 
   // Everything still waiting is written (the shell stopping).
   function flush() {
-    if (indexTimer.running) flushIndex(null, true)
+    // [fork] Only for a change made here: what came from elsewhere is in
+    // index.json there already, and written unmerged as the shell stops it
+    // went over the other computer's (a conflicted copy).
+    if (indexTimer.running && indexOwn) flushIndex(null, true)
   }
 
   // ---- [fork] changes from outside ------------------------------------------------------------
@@ -2493,7 +2513,7 @@ Item {
           var sid = name.slice(0, -5)
           if (Workspace.isUuid(sid) && !ws.pageQueue[sid] && ws.index.pages[sid]) ws.fileStamp[sid] = now[name]
         }
-        if (tree) ws.touched()
+        if (tree) { ws.revision++; ws.saveIndexSettled() }
         if (d.index) ws.outsideIndex(function() {})
       }
       if (!ids.length) { finish(); return }
@@ -2554,7 +2574,7 @@ Item {
       if (r.changed) tree = true
       if (r.tasksChanged) revision++
     })
-    if (pages.length && !tree) { revision++; saveIndex(true) }
+    if (pages.length && !tree) { revision++; saveIndexSettled() }
     pages.forEach(function(page) {
       ws.pageChangedOutside(page.id)
       ws.pageChanged(page.id)
@@ -2578,7 +2598,8 @@ Item {
       function done() { then(); waiting.forEach(function(w) { w() }) }
       if (gen !== ws.generation) { done(); return }
       var text = got[path]
-      if (text === undefined || Outside.hash(text) === ws.indexHash) { done(); return }
+      if (text === undefined) { ws.indexHash = ""; done(); return }  // (not there: written, whatever it was)
+      if (Outside.hash(text) === ws.indexHash) { done(); return }
       var theirs = files.parseJson(text)
       if (!theirs || typeof theirs !== "object") { done(); return }
       var ours = JSON.parse(Workspace.indexJson(ws.index))
@@ -2589,7 +2610,7 @@ Item {
         ws.index = Workspace.cleanIndex(merged)
         ws.revision++
         ws.scheduleReminders()
-        ws.saveIndex()
+        ws.saveIndexSettled()
       }
       done()
     }, 32 * 1024 * 1024)

@@ -3,6 +3,7 @@ import QtTest
 import "../.." as UberNotebook
 import "../../app"
 import "../../Workspace.js" as Workspace
+import "../../Outside.js" as Outside
 
 // [fork] Changes from outside (Workspace.qml, Outside.js): what a sync tool
 // brings into the Pages folder while Uber Notebook runs: a page that wasn't
@@ -188,6 +189,45 @@ Item {
       keep.forEach(function(k) { delete files.disk[path(k.id)] })
       look()
       verify(ws.index.pages[keep[0].id], "not taken out")
+    }
+
+    function test_7_index_not_written_when_it_is_on_disk() {
+      fresh()
+      ws.createPage({ parent: "", title: "Same" })
+      ws.flushIndex()
+      look()
+      // As on disk: not written (a write would fail here).
+      files.failWrites = "index.json"
+      var result = null
+      ws.flushIndex(function(ok) { result = ok })
+      compare(result, true, "nothing to write")
+      // Gone: written.
+      files.failWrites = ""
+      delete files.disk[indexPath()]
+      ws.flushIndex()
+      verify(files.disk[indexPath()] !== undefined, "written again")
+    }
+
+    function test_8_what_came_from_elsewhere_waits_and_isnt_written_as_it_stops() {
+      fresh()
+      ws.flushIndex()
+      look()
+      var id = Workspace.uuid4()
+      var p = Workspace.cleanPage({ id: id, title: "Laptop", blocks: [] }, id)
+      delete p.text
+      files.disk[path(id)] = Workspace.pageJson(p)
+      var before = files.disk[indexPath()]
+      look()
+      verify(ws.index.pages[id], "in the tree")
+      compare(files.disk[indexPath()], before, "not written at once")
+      compare(ws.indexOwn, false)
+      ws.flush()
+      compare(files.disk[indexPath()], before, "nor as it stops")
+      // A change made here is.
+      ws.createPage({ parent: "", title: "Desk" })
+      verify(ws.indexOwn)
+      ws.flush()
+      verify(files.disk[indexPath()] !== before)
     }
   }
 }

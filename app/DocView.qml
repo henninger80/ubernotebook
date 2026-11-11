@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import "../Workspace.js" as Workspace
+import "../Outside.js" as Outside  // [fork]
 import "../Docs.js" as Docs
 import "../Blocks.js" as Blocks
 import "../Markdown.js" as Markdown
@@ -1013,6 +1014,9 @@ FocusScope {
       e.page = pageId
       view.workspace.setCalendar(Calendar.withEvent(view.workspace.calendar, e))
     }
+    // [fork] Made on another computer already (Outside.pageTitled): that one.
+    var there = Outside.pageTitled(workspace.index, title, Workspace.inTrash)
+    if (there) { link(there); open(there); return }
     var mine = userTemplates.filter(function(t) { return /meeting/i.test(t.title) })[0]
     if (mine) {
       workspace.pageFromTemplate(mine.id, "", title, templateFill(), function(made) {

@@ -120,3 +120,22 @@ function seed(entry, fromDisk) {
   })
   return entry
 }
+
+// The page called `title` (not in the trash: inTrash(index, id)), the most
+// recently changed of them, or "". An event's notes made on another computer:
+// which page they are is kept with the event on each computer (the synced
+// calendars' cache), so the other one finds them by what they're called
+// ("Standup · Mon 5 Oct") before it makes them again.
+function pageTitled(index, title, inTrash) {
+  var want = String(title || "").trim()
+  if (!want || !index || !index.pages) return ""
+  var best = "", at = ""
+  for (var id in index.pages) {
+    var e = index.pages[id]
+    if (!e || String(e.title || "").trim() !== want) continue
+    if (inTrash && inTrash(index, id)) continue
+    var m = String(e.modified || "")
+    if (!best || m > at) { best = id; at = m }
+  }
+  return best
+}
